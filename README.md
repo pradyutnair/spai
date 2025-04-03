@@ -170,3 +170,16 @@ The source code and model weights of this project are released under
 the [Apache 2 License](https://www.apache.org/licenses/LICENSE-2.0).
 
 For any question you can contact [d.karageorgiou@uva.nl](mailto:d.karageorgiou@uva.nl). 
+
+## Citation
+
+If you found this work useful for your research, you can cite the following paper:
+
+```text
+@article{karageorgiou2025any,
+  title={Any-Resolution AI-Generated Image Detection by Spectral Learning},
+  author={Karageorgiou, Dimitrios and Papadopoulos, Symeon and Kompatsiaris, Ioannis and Gavves, Efstratios},
+  journal={IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+  year={2025}
+}
+```
