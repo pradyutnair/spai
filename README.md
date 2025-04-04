@@ -20,17 +20,17 @@ images under a self-supervised setup. Then, using the spectral
 reconstruction similarity it detects AI-generated images as out-of-distribution 
 samples of this learned model.**
 
-### News
+### :newspaper: News
 
 - 28/03/25: Code released.
 - 27/02/25: Paper accepted on CVPR2025.
 
-## Installation
+## :hammer: Installation
 
 ### Hardware requirements
 
 The code originally targeted Nvidia L40S 48GB GPU, however many recent cuda-enabled GPUs should be
-supported. Inference should be effortless performed with less than 8GB GPU RAM. As training originally
+supported. Inference should be effortless performed with less than 8GB of GPU RAM. As training originally
 targeted a 48GB GPU, a suitable GPU should be presented to reproduce the paper's setup
 without further modifications of the code. 
 
@@ -52,7 +52,7 @@ Furthermore, the installation of [Nvidia APEX](https://github.com/NVIDIA/apex) i
 The trained weights checkpoint can be downloaded [here](https://drive.google.com/file/d/1vvXmZqs6TVJdj8iF1oJ4L_fcgdQrp_YI/view?usp=sharing) 
 and should be placed under the `weights` directory, located under the project's root directory.
 
-## Inference
+## :fire: Inference
 
 To compute the predicted scores for a set of images, place them under a directory
 and use the following command.
@@ -69,7 +69,7 @@ The `--input` option also accepts CSV files containing the paths of the images. 
 files of the evaluation set, included under the `data` directory, can be used as examples.
 For downloading the images of these evaluation CSVs, check the instruction [here](docs/data.md).
 
-## Architecture Overview
+## :triangular_ruler: Architecture Overview
 
 <p align="center">
     <img src="docs/architecture.svg" alt="Overview of the SPAI architecture" />
@@ -81,7 +81,7 @@ detect AI-generated images as out-of-distribution samples of this model. Spectra
 the spectral reconstruction similarity values are computed, while spectral context attention enables the processing of any-resolution images
 for capturing subtle spectral inconsistencies.
 
-## Training
+## :muscle: Training
 
 ### Required pre-trained model
 Download the pre-trained ViT-B/16 MFM model from its [public repo](https://github.com/Jiahao000/MFM)
@@ -147,7 +147,7 @@ python -m spai train \
   --opt "DATA.TEST_PREFETCH_FACTOR" "1"
 ```
 
-## Evaluation
+## :mag_right: Evaluation
 
 When a model has been trained using the previous script, it can be evaluated as following:
 
@@ -169,7 +169,7 @@ where:
 - `test_csv_path`: Path to a csv file including the paths of the testing data.
 - `epoch_name`: Filename of the epoch selected during validation. 
 
-## Acknowledgments
+## :star2: Acknowledgments
 
 This work was partly supported by the Horizon Europe
 projects [ELIAS](https://elias-ai.eu/) (grant no. 101120237) and [vera.ai](https://www.veraai.eu/home) (grant
@@ -180,7 +180,7 @@ Pieces of code from the [MFM](https://github.com/Jiahao000/MFM) project
 have been used as a basis for developing this project. We thank its 
 authors for their contribution.
 
-## License & Contact
+## :black_nib: License & Contact
 
 This project will download and install additional third-party open 
 source software projects. Also, all the employed third-party data 
@@ -192,7 +192,7 @@ the [Apache 2 License](https://www.apache.org/licenses/LICENSE-2.0).
 
 For any question you can contact [d.karageorgiou@uva.nl](mailto:d.karageorgiou@uva.nl). 
 
-## Citation
+## :scroll: Citation
 
 If you found this work useful for your research, you can cite the following paper:
 
