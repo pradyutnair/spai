@@ -1,14 +1,24 @@
 # SPAI: Spectral AI-Generated Image Detector
 __Official code repository for the CVPR2025 paper [Any-Resolution AI-Generated Image Detection by Spectral Learning](https://arxiv.org/abs/2411.19417).__
 
-<p align="center">
+<div style="text-align: center;">
+
+**Dimitrios Karageorgiou<sup>1,2</sup>, Symeon Papadopoulos<sup>1</sup>, Ioannis Kompatsiaris<sup>1</sup>, Efstratios Gavves<sup>2,3</sup>**
+
+<sup>1</sup> Information Technologies Institute, CERTH, Greece  
+<sup>2</sup> University of Amsterdam, The Netherlands  
+<sup>3</sup> Archimedes/Athena RC, Greece
+
+</div>
+
+<p style="text-align: center;">
     <img src="docs/overview.svg" alt="Paper Overview" />
 </p>
 
-SPAI employs spectral learning to learn the spectral distribution of real 
+**SPAI employs spectral learning to learn the spectral distribution of real 
 images under a self-supervised setup. Then, using the spectral 
 reconstruction similarity it detects AI-generated images as out-of-distribution 
-samples of this learned model.
+samples of this learned model.**
 
 ### News
 
@@ -16,6 +26,13 @@ samples of this learned model.
 - 27/02/25: Paper accepted on CVPR2025.
 
 ## Installation
+
+### Hardware requirements
+
+The code originally targeted Nvidia L40S 48GB GPU, however many recent cuda-enabled GPUs should be
+supported. Inference should be effortless performed with less than 8GB GPU RAM. As training originally
+targeted a 48GB GPU, a suitable GPU should be presented to reproduce the paper's setup
+without further modifications of the code. 
 
 ### Required libraries
 To train and evaluate SPAI an anaconda environment can be used for installing all the 
@@ -28,14 +45,12 @@ conda install pytorch torchvision torchaudio pytorch-cuda=12.4 -c pytorch -c nvi
 pip install -r requirements.txt
 ```
 
-The installation of [Nvidia APEX](https://github.com/NVIDIA/apex) is required. The code
-has been tested on Nvidia L40S 48GB, however many recent Nvidia GPU are expected to be
-supported.
+Furthermore, the installation of [Nvidia APEX](https://github.com/NVIDIA/apex) is required for training.  
 
-### Pre-trained weights
+### Weights Checkpoint
 
-The pre-trained weights can be downloaded [here](https://drive.google.com/drive/folders/1S9RcQ23QNObWnHR_xzAKCps9LDis-kpz?usp=sharing) and should be placed under the `weights`
-directory, located under the project's root directory.
+The trained weights checkpoint can be downloaded [here](https://drive.google.com/file/d/1vvXmZqs6TVJdj8iF1oJ4L_fcgdQrp_YI/view?usp=sharing) 
+and should be placed under the `weights` directory, located under the project's root directory.
 
 ## Inference
 
@@ -50,9 +65,15 @@ where:
 - `input_dir`: is a directory where the input images are located,
 - `output_dir`: is a directory where a csv file with the predictions will be written.
 
+The `--input` option also accepts CSV files containing the paths of the images. The CSV
+files of the evaluation set, included under the `data` directory, can be used as examples.
+For downloading the images of these evaluation CSVs, check the instruction [here](docs/data.md).
+
 ## Architecture Overview
 
-![Overview of the SPAI architecture](/docs/architecture.svg)
+<p style="text-align: center;">
+    <img src="docs/architecture.svg" alt="Overview of the SPAI architecture" />
+</p>
 
 We learn a model of the spectral distribution of real images under a self-supervised setup using
 masked spectral learning. Then, we use the spectral reconstruction similarity to measure the divergence from this learned distribution and
