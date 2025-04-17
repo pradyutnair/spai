@@ -137,3 +137,7 @@ weights
 .DS_Store
 output/
 pretrains/
+
+# My additions
+data/
+outputs/
