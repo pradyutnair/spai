@@ -1,0 +1,27 @@
+#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=9
+#SBATCH --gpus=1
+#SBATCH --output="outputs/inference.out"
+#SBATCH --partition=gpu_a100
+#SBATCH --time=01:00:00
+
+cd $HOME/spai
+
+module purge
+module load 2023
+module load Anaconda3/2023.07-2
+
+# Setup 
+# conda create -n spai python=3.11
+conda activate spai
+# pip install filetype
+# conda install pytorch torchvision torchaudio pytorch-cuda=12.4 -c pytorch -c nvidia
+# pip install -r requirements.txt
+
+# Inference
+# srun python -m spai --help
+srun python -m spai infer --input "/home/scur2620/spai/tinyTest/dalle_2" \
+                        --output "output_runs" \
+                        --model "spai.pth" \

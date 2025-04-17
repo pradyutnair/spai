@@ -137,3 +137,12 @@ weights
 .DS_Store
 output/
 pretrains/
+tinyTest/
+TestSet/
+flux/
+stable-diffusion-3/
+outputs/
+output_runs/
+gigagan/
+midjourney-v6.1/
+*.pth
