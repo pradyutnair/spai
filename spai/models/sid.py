@@ -32,6 +32,7 @@ from . import vision_transformer
 from . import filters
 from . import utils
 from . import backbones
+from .semantic_fusion import SemanticFusionModule, FUSION_TYPES
 from spai.utils import save_image_with_attention_overlay
 
 
@@ -470,13 +471,17 @@ class MFViT(nn.Module):
         low_freq = self.backbone_norm(low_freq)
         hi_freq = self.backbone_norm(hi_freq)
 
+        semantic_vec = None
+        if isinstance(self.vit, backbones.CLIPBackbone):
+            semantic_vec = self.vit.get_image_embedding(x)
+
         if self.frozen_backbone:
             with torch.no_grad():
                 x, low_freq, hi_freq = self._extract_features(x, low_freq, hi_freq)
         else:
             x, low_freq, hi_freq = self._extract_features(x, low_freq, hi_freq)
 
-        x = self.features_processor(x, low_freq, hi_freq)
+        x = self.features_processor(x, low_freq, hi_freq, semantic_vec)
         if self.cls_head is not None:
             x = self.cls_head(x)
 
@@ -511,13 +516,17 @@ class MFViT(nn.Module):
         low_freq = self.backbone_norm(low_freq)
         hi_freq = self.backbone_norm(hi_freq)
 
+        semantic_vec = None
+        if isinstance(self.vit, backbones.CLIPBackbone):
+            semantic_vec = self.vit.get_image_embedding(x)
+
         if self.frozen_backbone:
             with torch.no_grad():
                 x, low_freq, hi_freq = self._extract_features(x, low_freq, hi_freq)
         else:
             x, low_freq, hi_freq = self._extract_features(x, low_freq, hi_freq)
 
-        x = self.features_processor(x, low_freq, hi_freq)
+        x = self.features_processor(x, low_freq, hi_freq, semantic_vec)
         if self.cls_head is not None:
             x = self.cls_head(x)
 
@@ -576,10 +585,14 @@ class MFViT(nn.Module):
                 low_freq = self.backbone_norm(low_freq)
                 hi_freq = self.backbone_norm(hi_freq)
 
+                semantic_vec = None
+                if isinstance(outer_instance.vit, backbones.CLIPBackbone):
+                    semantic_vec = outer_instance.vit.get_image_embedding(x)
+
                 with torch.no_grad():
                     x, low_freq, hi_freq = outer_instance._extract_features(x, low_freq, hi_freq)
 
-                x = outer_instance.features_processor.exportable_forward(x, low_freq, hi_freq)
+                x = outer_instance.features_processor.exportable_forward(x, low_freq, hi_freq, semantic_vec)
 
                 return x
         model: ExportableMFVit = ExportableMFVit()
@@ -609,7 +622,10 @@ class MFViT(nn.Module):
                 """Input size: B x C x H x W"""
                 # with torch.no_grad():
                 x, x_low, x_high = self.outer_instance._extract_features(x, x_low, x_high)
-                x = self.outer_instance.features_processor.exportable_forward(x, x_low, x_high)
+                semantic_vec = None
+                if isinstance(outer_instance.vit, backbones.CLIPBackbone):
+                    semantic_vec = outer_instance.vit.get_image_embedding(x)
+                x = self.outer_instance.features_processor.exportable_forward(x, x_low, x_high, semantic_vec)
                 return x
         model: ExportableMFVit = ExportableMFVit()
         x: torch.Tensor = torch.rand((3, 3, 224, 224))
@@ -699,7 +715,10 @@ class ClassificationVisionTransformer(nn.Module):
 
 
 class FrequencyRestorationEstimator(nn.Module):
-
+    """
+    FrequencyRestorationEstimator with semantic fusion capability.
+    Accepts a semantic context vector and fuses it into patch features at every patch.
+    """
     def __init__(
         self,
         features_num: int,
@@ -711,9 +730,21 @@ class FrequencyRestorationEstimator(nn.Module):
         proj_last_layer_activation_type: Optional[str] = "gelu",
         original_image_features_branch: bool = False,
         dropout: float = 0.5,
-        disable_reconstruction_similarity: bool = False
+        disable_reconstruction_similarity: bool = False,
+        fusion_type: str = 'concat',
+        semantic_dim: int = 512  # Default CLIP ViT-B/16 dim
     ):
         super().__init__()
+        if fusion_type not in FUSION_TYPES:
+            raise ValueError(f"Invalid fusion_type: {fusion_type}. Must be one of {FUSION_TYPES}")
+        self.fusion_type = fusion_type
+        self.semantic_dim = semantic_dim
+
+        self.semantic_fusion = SemanticFusionModule(
+            patch_dim=proj_dim,
+            semantic_dim=semantic_dim,
+            fusion_type=fusion_type
+        )
 
         if proj_last_layer_activation_type == "gelu":
             proj_last_layer_activation = nn.GELU
@@ -753,18 +784,27 @@ class FrequencyRestorationEstimator(nn.Module):
         self,
         x: torch.Tensor,
         low_freq: torch.Tensor,
-        hi_freq: torch.Tensor
+        hi_freq: torch.Tensor,
+        semantic_vec: Optional[torch.Tensor] = None
     ) -> torch.Tensor:
         """
         :param x: Dimensionality B x N x L x D where N the number of intermediate layers.
         :param low_freq:
         :param hi_freq:
-
-        :returns: Dimensionality B x (6 * N)
+        :param semantic_vec: (B, semantic_dim) global semantic context vector (required)
+        :returns: Dimensionality B x (6 * N) or (proj_dim + 6*N) if original_features_processor is used
         """
         orig = self.patch_projector(x)  # B x N x L x D
         low_freq = self.patch_projector(low_freq)  # B x N x L x D
         hi_freq = self.patch_projector(hi_freq)  # B x N x L x D
+
+        # Semantic fusion at every patch
+        if semantic_vec is not None:
+            if semantic_vec.dim() != 2 or semantic_vec.size(0) != orig.size(0):
+                raise ValueError(f"semantic_vec must have shape (B, semantic_dim), got {semantic_vec.shape}")
+            orig = self.semantic_fusion(orig, semantic_vec)  # B x N x L x D' or D'+semantic_dim
+            low_freq = self.semantic_fusion(low_freq, semantic_vec)
+            hi_freq = self.semantic_fusion(hi_freq, semantic_vec)
 
         if self.disable_reconstruction_similarity:
             x = self.original_features_processor(orig)  # B x proj_dim
@@ -799,11 +839,20 @@ class FrequencyRestorationEstimator(nn.Module):
         self,
         x: torch.Tensor,
         low_freq: torch.Tensor,
-        hi_freq: torch.Tensor
+        hi_freq: torch.Tensor,
+        semantic_vec: Optional[torch.Tensor] = None
     ) -> torch.Tensor:
         orig = self.patch_projector(x)  # B x N x L x D
         low_freq = self.patch_projector(low_freq)  # B x N x L x D
         hi_freq = self.patch_projector(hi_freq)  # B x N x L x D
+
+        # Semantic fusion at every patch
+        if semantic_vec is not None:
+            if semantic_vec.dim() != 2 or semantic_vec.size(0) != orig.size(0):
+                raise ValueError(f"semantic_vec must have shape (B, semantic_dim), got {semantic_vec.shape}")
+            orig = self.semantic_fusion(orig, semantic_vec)  # B x N x L x D' or D'+semantic_dim
+            low_freq = self.semantic_fusion(low_freq, semantic_vec)
+            hi_freq = self.semantic_fusion(hi_freq, semantic_vec)
 
         sim_x_low_freq: torch.Tensor = F.cosine_similarity(orig, low_freq, dim=-1)  # B x N x L
         sim_x_hi_freq: torch.Tensor = F.cosine_similarity(orig, hi_freq, dim=-1)  # B x N x L
