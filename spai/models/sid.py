@@ -16,7 +16,7 @@
 
 import dataclasses
 import pathlib
-from typing import Optional, Union
+from typing import Literal, Optional, Union
 
 import numpy as np
 import torch
@@ -52,7 +52,9 @@ class PatchBasedMFViT(nn.Module):
         dropout: float = .0,
         frozen_backbone: bool = True,
         minimum_patches: int = 0,
-        initialization_scope: str = "all"
+        initialization_scope: str = "all",
+        use_semantic_cross_attn_sca: Union[Literal["before", "after"], bool] = False,
+        semantic_embed_dim: Optional[int] = None,
     ) -> None:
         super().__init__()
 
@@ -87,6 +89,17 @@ class PatchBasedMFViT(nn.Module):
 
         self.norm = nn.LayerNorm(cls_vector_dim)
         self.cls_head = cls_head
+        # adding semantic cross-attention before or after the SCA module or not using it at all
+        self.use_semantic_cross_attn_sca = use_semantic_cross_attn_sca
+        self.semantic_embed_dim = semantic_embed_dim
+
+        if self.use_semantic_cross_attn_sca == "after":
+            self.semantic_mha = nn.MultiheadAttention(embed_dim=cls_vector_dim,
+                                                        num_heads=self.heads,
+                                                        dropout=dropout)
+            # add projection from semantic embed_dim to cls_vector_dim
+            self.semantic_projection = nn.Linear(self.semantic_embed_dim, cls_vector_dim)
+            self.semantic_layer_norm = nn.LayerNorm(cls_vector_dim)
 
         if initialization_scope == "all":
             self.apply(_init_weights)
@@ -167,8 +180,32 @@ class PatchBasedMFViT(nn.Module):
         x = torch.stack(patch_features, dim=1)  # B x L x D
         del patch_features
 
+        # Spectral context attention (SCA)
         x = self.patches_attention(x)  # B x D
         x = self.norm(x)  # B x D
+
+        # Spectral-semantic cross-attention
+        if self.use_semantic_cross_attn_sca == "before":
+            ...
+            # TODO: implement this
+        elif self.use_semantic_cross_attn_sca == "after":
+
+            # Q - semantic context, K, V - spectral context
+            batch_size, _ = x.size()
+            # NOTE: for now we are using a random image encoding; later CLIP/BLIP/other
+            global_image_encoding = torch.rand(
+                batch_size, self.semantic_embed_dim, device=x.device
+            )
+            query = self.semantic_projection(global_image_encoding) # B x D
+
+            # Cross-attention
+            attn_output, _ = self.semantic_mha(
+                query=query, key=x, value=x, need_weights=True
+            )
+            x += attn_output # residual connection
+            # layer normalization
+            x = self.semantic_layer_norm(x)
+
         x = self.cls_head(x)  # B x 1
 
         return x
