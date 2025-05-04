@@ -53,8 +53,9 @@ class PatchBasedMFViT(nn.Module):
         frozen_backbone: bool = True,
         minimum_patches: int = 0,
         initialization_scope: str = "all",
-        use_semantic_cross_attn_sca: Union[Literal["before", "after"], bool] = False,
+        use_semantic_cross_attn_sca: Union[Literal["before", "after"], None] = None,
         semantic_embed_dim: Optional[int] = None,
+        semantic_heads: Optional[int] = None,
     ) -> None:
         super().__init__()
 
@@ -93,10 +94,11 @@ class PatchBasedMFViT(nn.Module):
         # adding semantic cross-attention before or after the SCA module or not using it at all
         self.use_semantic_cross_attn_sca = use_semantic_cross_attn_sca
         self.semantic_embed_dim = semantic_embed_dim
+        self.semantic_heads = semantic_heads if semantic_heads is not None else num_heads
 
         if self.use_semantic_cross_attn_sca in ["before", "after"]:
             self.semantic_mha = nn.MultiheadAttention(
-                embed_dim=cls_vector_dim, num_heads=self.heads, dropout=dropout
+                embed_dim=cls_vector_dim, num_heads=self.semantic_heads, dropout=dropout
             )
             # add projection from semantic embed_dim to cls_vector_dim
             self.semantic_projection = nn.Linear(
@@ -1424,6 +1426,7 @@ def build_mf_vit(config) -> MFViT:
         )
     elif config.MODEL.RESOLUTION_MODE == "arbitrary":
         # TODO: add changes there to support before/after semantic cross-attention
+        print("LOADING ARBITRARY RESOLUTION MODEL: PatchBasedMFViT")
         model = PatchBasedMFViT(
             vit,
             fre,
@@ -1439,6 +1442,7 @@ def build_mf_vit(config) -> MFViT:
             initialization_scope=initialization_scope,
             use_semantic_cross_attn_sca=config.MODEL.SEMANTIC.CROSS_ATTN_SCA,
             semantic_embed_dim=config.MODEL.SEMANTIC.EMBED_DIM,
+            semantic_heads=config.MODEL.SEMANTIC.NUM_HEADS,
         )
     else:
         raise RuntimeError(

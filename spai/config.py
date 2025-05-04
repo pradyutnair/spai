@@ -223,8 +223,9 @@ _C.MODEL.FREQ_LOSS.BATCH_MATRIX = False
 
 # Semantic cross-attention parameters
 _C.MODEL.SEMANTIC = CN()
-_C.MODEL.SEMANTIC.CROSS_ATTN_SCA = False
+_C.MODEL.SEMANTIC.CROSS_ATTN_SCA = None
 _C.MODEL.SEMANTIC.EMBED_DIM = 768
+_C.MODEL.SEMANTIC.NUM_HEADS = None
 
 # -----------------------------------------------------------------------------
 # Training settings
