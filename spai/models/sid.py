@@ -181,10 +181,10 @@ class PatchBasedMFViT(nn.Module):
             global_image_encoding = self.mfvit.vit.get_image_embedding(
                 x
             )  # B x semantic_embed_dim
-            print(
-                "Using CLIP backbone for global image encoding!",
-                global_image_encoding.shape,
-            )
+            # print(
+            #     "Using CLIP backbone for global image encoding!",
+            #     global_image_encoding.shape,
+            # )
         else:
             # NOTE: Fallback to random encoding if no CLIP backbone is used
             print("Warning: Using random global image encoding!")
