@@ -1423,6 +1423,7 @@ def build_mf_vit(config) -> MFViT:
             img_size=config.DATA.IMG_SIZE,
         )
     elif config.MODEL.RESOLUTION_MODE == "arbitrary":
+        # TODO: add changes there to support before/after semantic cross-attention
         model = PatchBasedMFViT(
             vit,
             fre,
@@ -1436,6 +1437,8 @@ def build_mf_vit(config) -> MFViT:
             dropout=config.MODEL.SID_DROPOUT,
             minimum_patches=config.MODEL.PATCH_VIT.MINIMUM_PATCHES,
             initialization_scope=initialization_scope,
+            use_semantic_cross_attn_sca=config.MODEL.SEMANTIC.CROSS_ATTN_SCA,
+            semantic_embed_dim=config.MODEL.SEMANTIC.EMBED_DIM,
         )
     else:
         raise RuntimeError(
