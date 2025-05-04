@@ -47,6 +47,7 @@ class CLIPBackbone(nn.Module):
         # Load and freeze CLIP
         self.clip, self.preprocess = clip.load(clip_model, device=device)
         # self.clip = self.clip.float()
+        self.device = device
         for name, param in self.clip.named_parameters():
             param.requires_grad = False
 
@@ -56,6 +57,30 @@ class CLIPBackbone(nn.Module):
             for name, module in self.clip.visual.named_modules()
             if "ln_2" in name
         ]
+
+    def get_image_embedding(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Returns the global image embedding from CLIP for the input image tensor.
+        x: (B, C, H, W)
+        Returns: (B, D)
+        """
+        x = x.to(self.device)
+        with torch.no_grad():
+            img_emb = self.clip.encode_image(x)
+        return img_emb
+
+    def get_text_embedding(self, text_prompts) -> torch.Tensor:
+        """
+        Returns the global text embedding from CLIP for the given text prompts.
+        text_prompts: list[str] or str
+        Returns: (B, D)
+        """
+        if isinstance(text_prompts, str):
+            text_prompts = [text_prompts]
+        with torch.no_grad():
+            text_tokens = clip.tokenize(text_prompts).to(self.device)
+            text_emb = self.clip.encode_text(text_tokens)
+        return text_emb
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Processes a batch of images using a CLIP backbone and returns intermediate layers."""
