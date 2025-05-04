@@ -1,0 +1,37 @@
+#!/bin/bash
+#SBATCH --partition=gpu_a100
+#SBATCH --gpus=1
+#SBATCH --job-name=create_eval_ds
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --time=01:00:00
+#SBATCH --output=/home/scur2605/spai/jobs/outputs/datasets/create_%A.out
+
+# Go to working directory
+cd $HOME/spai
+
+# Load Anaconda
+module purge
+module load 2023
+module load Anaconda3/2023.07-2
+
+# Activate existing environment
+source activate spai_2
+
+# Create evaluation datasets for each model
+echo "Creating dataset for Flux..."
+srun python /home/scur2605/spai/evaluation_ds.py \
+  --fake-csv /home/scur2605/spai/data/fake_gigagan.csv \
+  --fake-name gigagan
+
+# echo "Creating dataset for Firefly..."
+# srun python /home/scur2605/spai/evaluation_ds.py \
+#   --fake-csv /home/scur2605/spai/data/fake_firefly.csv \
+#   --fake-name firefly
+
+# echo "Creating dataset for GLIDE..."
+# srun python /home/scur2605/spai/evaluation_ds.py \
+#   --fake-csv /home/scur2605/spai/data/fake_glide.csv \
+#   --fake-name glide
+
+echo "All datasets created successfully!"

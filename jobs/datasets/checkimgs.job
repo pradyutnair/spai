@@ -1,0 +1,61 @@
+#!/bin/bash
+#SBATCH --partition=gpu_a100
+#SBATCH --gpus=1
+#SBATCH --job-name=download_raise
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --time=01:00:00
+#SBATCH --output=/home/scur2605/spai/jobs/outputs/datasets/checkimgs_%A.out
+
+# Go to working directory
+cd $HOME/spai
+
+# Load Anaconda
+module purge
+module load 2023
+module load Anaconda3/2023.07-2
+
+# Activate existing environment
+source activate spai_2
+
+# Set variables
+CSV_FILE="/home/scur2605/spai/data/real_fake_combined.csv"
+COLUMN_NAME="image"
+OUTPUT_BROKEN_LIST="/home/scur2605/spai/broken_images.txt"
+
+# Create the check script inline
+python3 - <<EOF
+import pandas as pd
+from PIL import Image, UnidentifiedImageError
+import os
+
+csv_file = "${CSV_FILE}"
+column_name = "${COLUMN_NAME}"
+output_file = "${OUTPUT_BROKEN_LIST}"
+
+# Load the CSV
+df = pd.read_csv(csv_file)
+
+broken_images = []
+
+for idx, row in df.iterrows():
+    img_path = row[column_name]
+    if not os.path.isabs(img_path):
+        img_path = os.path.join(os.path.dirname(csv_file), img_path)
+    try:
+        with Image.open(img_path) as img:
+            img.verify()
+    except (OSError, UnidentifiedImageError, FileNotFoundError) as e:
+        print(f"❌ Broken image at index {idx}: {img_path} | Error: {e}")
+        broken_images.append(img_path)
+
+# Save broken images
+if broken_images:
+    with open(output_file, "w") as f:
+        for path in broken_images:
+            f.write(f"{path}\n")
+    print(f"Broken images saved to {output_file}")
+else:
+    print("✅ All images are OK.")
+
+EOF
