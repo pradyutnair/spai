@@ -93,7 +93,7 @@ class PatchBasedMFViT(nn.Module):
         self.use_semantic_cross_attn_sca = use_semantic_cross_attn_sca
         self.semantic_embed_dim = semantic_embed_dim
 
-        if self.use_semantic_cross_attn_sca == "after":
+        if self.use_semantic_cross_attn_sca in ["before", "after"]:
             self.semantic_mha = nn.MultiheadAttention(embed_dim=cls_vector_dim,
                                                         num_heads=self.heads,
                                                         dropout=dropout)
@@ -180,16 +180,31 @@ class PatchBasedMFViT(nn.Module):
         x = torch.stack(patch_features, dim=1)  # B x L x D
         del patch_features
 
+        # Spectral-semantic cross-attention
+        if self.use_semantic_cross_attn_sca == "before":
+            # Q - semantic context, K, V - spectral context
+            batch_size, num_patches, _ = x.size()  # B x L x D
+            # NOTE: for now we are using a random image encoding; later CLIP/BLIP/other
+            global_image_encoding = torch.rand(
+                batch_size, self.semantic_embed_dim, device=x.device
+            )
+            query = self.semantic_projection(global_image_encoding) # B x D
+            
+            # Cross-attention with semantic features as query and spectral features as key/value
+            attn_output, _ = self.semantic_mha(
+                query=query.unsqueeze(1),  # B x 1 x D
+                key=x,                     # B x L x D
+                value=x,                   # B x L x D
+                need_weights=True
+            )
+            x = attn_output.squeeze(1)  # B x D
+            x = self.semantic_layer_norm(x)
+
         # Spectral context attention (SCA)
         x = self.patches_attention(x)  # B x D
         x = self.norm(x)  # B x D
 
-        # Spectral-semantic cross-attention
-        if self.use_semantic_cross_attn_sca == "before":
-            ...
-            # TODO: implement this
-        elif self.use_semantic_cross_attn_sca == "after":
-
+        if self.use_semantic_cross_attn_sca == "after":
             # Q - semantic context, K, V - spectral context
             batch_size, _ = x.size()
             # NOTE: for now we are using a random image encoding; later CLIP/BLIP/other
