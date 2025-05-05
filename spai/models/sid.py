@@ -49,12 +49,15 @@ class PatchBasedMFViT(nn.Module):
         cls_vector_dim: int,
         num_heads: int,
         attn_embed_dim: int,
+        context_backbone: Optional[nn.Module],
         dropout: float = .0,
         frozen_backbone: bool = True,
         minimum_patches: int = 0,
         initialization_scope: str = "all"
     ) -> None:
         super().__init__()
+
+        self.context_backbone = context_backbone
 
         self.mfvit = MFViT(
             vit,
@@ -115,7 +118,10 @@ class PatchBasedMFViT(nn.Module):
         :param feature_extraction_batch_size:
         :param export_dirs:
         """
+
+        x_context = self.context_backbone(x) if self.context_backbone is not None else None
         if isinstance(x, torch.Tensor):
+            
             x =  self.forward_batch(x)
         elif isinstance(x, list):
             if feature_extraction_batch_size is None:
@@ -125,11 +131,12 @@ class PatchBasedMFViT(nn.Module):
                     x, feature_extraction_batch_size, export_dirs
                 )
             else:
-                x = self.forward_arbitrary_resolution_batch(x, feature_extraction_batch_size)
+                x = self.forward_arbitrary_resolution_batch(x, feature_extraction_batch_size, x_context)
         else:
             raise TypeError('x must be a tensor or a list of tensors')
 
         return x
+        # return torch.cat([x, x_context], dim=1) if x_context is not None else x
 
     def patches_attention(
         self,
@@ -176,7 +183,8 @@ class PatchBasedMFViT(nn.Module):
     def forward_arbitrary_resolution_batch(
         self,
         x: list[torch.Tensor],
-        feature_extraction_batch_size: int
+        feature_extraction_batch_size: int,
+        x_context: Optional[torch.Tensor] = None
     ) -> torch.Tensor:
         """Forward pass of a batch of images of different resolutions.
 
@@ -232,6 +240,8 @@ class PatchBasedMFViT(nn.Module):
         del attended
 
         x = self.norm(x)  # B x D
+        x = torch.cat([x, x_context], dim=1) if x_context is not None else x
+
         x = self.cls_head(x)  # B x 1
 
         return x
@@ -668,16 +678,23 @@ class ClassificationVisionTransformer(nn.Module):
         vit: vision_transformer.VisionTransformer,
         features_processor: 'DenseIntermediateFeaturesProcessor',
         cls_head: Optional[nn.Module],
+        context_backbone: Optional[nn.Module],
         frozen_backbone: bool = True
     ):
         super().__init__()
         self.vit = vit
         self.features_processor = features_processor
         self.cls_head = cls_head
+        self.context_backbone = context_backbone
         self.apply(_init_weights)
         self.frozen_backbone: bool = frozen_backbone
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        
+        print("Uses classification vit")
+        if self.context_backbone is not None:
+            x_context = self.context_backbone(x)
+
         if self.frozen_backbone:
             with torch.no_grad():
                 x = self.vit(x)
@@ -685,7 +702,12 @@ class ClassificationVisionTransformer(nn.Module):
             x = self.vit(x)
         x = self.features_processor(x)
         if self.cls_head is not None:
-            x = self.cls_head(x)
+
+            if self.context_backbone is not None:
+                x = self.cls_head(x)
+            else:
+                print("Uses classification vit with context")
+                x = self.cls_head(torch.cat([x, x_context], dim=1))
         return x
 
     def get_vision_transformer(self) -> vision_transformer.VisionTransformer:
@@ -890,6 +912,51 @@ class Projector(nn.Module):
         x = self.norm2(x)
         return x
 
+
+import clip
+from torchvision.transforms import Resize, Compose, Normalize, ToTensor
+
+class SemanticFeatureEmbedding(nn.Module):
+    """Projector that embeds the CLIP features into a lower-dimensional space."""
+    def __init__(self, model_name="ViT-B/32", device='cuda' if torch.cuda.is_available() else 'cpu', proj_dim=256):
+        super().__init__()
+        self.device = device
+        self.clip_model, _ = clip.load(model_name, device=device)
+        self.clip_model.eval()  # Freeze CLIP
+        for param in self.clip_model.parameters():
+            param.requires_grad = False
+
+        self.projection = nn.Linear(self.clip_model.visual.output_dim, proj_dim)
+
+    def forward(self, images):
+        # Handle input types: list of tensors vs 4D tensor
+        if isinstance(images, list):
+            # Assume list of 3D tensors: [C, H, W]
+            processed_images = torch.stack([
+                self.preprocess_image(img).to(self.device).squeeze(0) for img in images
+            ])
+            print(f"Shape of processed images: {processed_images.shape}")
+        else:
+            # Assume 4D tensor: [B, C, H, W]
+            processed_images = images.to(self.device)
+
+        # Extract CLIP features
+        with torch.no_grad():
+            features = self.clip_model.encode_image(processed_images)
+
+        # Project to lower dimension
+        features = features.float()
+        embedded = self.projection(features)
+        return embedded
+
+    def preprocess_image(self, image_tensor):
+        # Manually define CLIP's preprocessing pipeline (default 224x224)
+        preprocess = Compose([
+            Resize((224, 224)),
+            Normalize(mean=(0.4815, 0.4578, 0.4082),
+                      std=(0.2686, 0.2613, 0.2758))
+        ])
+        return preprocess(image_tensor)
 
 class ClassificationHead(nn.Module):
 
@@ -1158,19 +1225,20 @@ def build_cls_vit(config) -> ClassificationVisionTransformer:
     else:
         raise RuntimeError(f"Unsupported features processor: {config.MODEL.VIT.FEATURES_PROCESSOR}")
 
+
     cls_head: Optional[ClassificationHead]
     if config.TRAIN.MODE == "contrastive":
         cls_head = None
     elif config.TRAIN.MODE == "supervised":
         # Build classification head.
         cls_head = ClassificationHead(
-            input_dim=cls_vector_dim,
+            input_dim=cls_vector_dim + 256,
             num_classes=config.MODEL.NUM_CLASSES if config.MODEL.NUM_CLASSES > 2 else 1
         )
     else:
         raise RuntimeError(f"Unsupported train mode: {config.TRAIN.MODE}")
 
-    return ClassificationVisionTransformer(vit, features_processor, cls_head)
+    return ClassificationVisionTransformer(vit, features_processor, cls_head, SemanticFeatureEmbedding())
 
 
 def build_mf_vit(config) -> MFViT:
@@ -1219,7 +1287,7 @@ def build_mf_vit(config) -> MFViT:
     elif config.TRAIN.MODE == "supervised":
         # Build classification head.
         cls_head = ClassificationHead(
-            input_dim=cls_vector_dim,
+            input_dim=cls_vector_dim + 256,
             num_classes=config.MODEL.NUM_CLASSES if config.MODEL.NUM_CLASSES > 2 else 1,
             mlp_ratio=config.MODEL.CLS_HEAD.MLP_RATIO,
             dropout=config.MODEL.SID_DROPOUT
@@ -1228,6 +1296,7 @@ def build_mf_vit(config) -> MFViT:
         raise RuntimeError(f"Unsupported train mode: {config.TRAIN.MODE}")
 
     if config.MODEL.RESOLUTION_MODE == "fixed":
+
         model = MFViT(
             vit,
             fre,
@@ -1235,7 +1304,9 @@ def build_mf_vit(config) -> MFViT:
             masking_radius=config.MODEL.FRE.MASKING_RADIUS,
             img_size=config.DATA.IMG_SIZE
         )
+
     elif config.MODEL.RESOLUTION_MODE == "arbitrary":
+
         model = PatchBasedMFViT(
             vit,
             fre,
@@ -1245,6 +1316,7 @@ def build_mf_vit(config) -> MFViT:
             img_patch_stride=config.MODEL.PATCH_VIT.PATCH_STRIDE,
             cls_vector_dim=cls_vector_dim,
             attn_embed_dim=config.MODEL.PATCH_VIT.ATTN_EMBED_DIM,
+            context_backbone=SemanticFeatureEmbedding(),
             num_heads=config.MODEL.PATCH_VIT.NUM_HEADS,
             dropout=config.MODEL.SID_DROPOUT,
             minimum_patches=config.MODEL.PATCH_VIT.MINIMUM_PATCHES,

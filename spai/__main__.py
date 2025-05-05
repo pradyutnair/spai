@@ -469,7 +469,7 @@ def test(
                    "dataset's CSV file. If this option is not provided, the data will be "
                    "loaded from the filesystem.")
 @click.option("--model", default="./weights/spai.pth",
-              type=click.Path(exists=True, path_type=Path),
+              type=click.Path(exists=False, path_type=Path),
               help="Path to the a weight file of SPAI.")
 @click.option("--output", default="./output",
               type=click.Path(file_okay=False, path_type=Path),
@@ -519,12 +519,16 @@ def infer(
     )
 
     # Load the trained weights' checkpoint.
-    model_ckpt: pathlib.Path = find_pretrained_checkpoints(config)[0]
     criterion = losses.build_loss(config)
     logger.info(f"Creating model:{config.MODEL.TYPE}/{config.MODEL.NAME}")
+    print("broooo")
     model = build_cls_model(config)
     model.cuda()
-    load_pretrained(config, model, logger,  checkpoint_path=model_ckpt, verbose=False)
+
+    if False:
+        model_ckpt: pathlib.Path = find_pretrained_checkpoints(config)[0]
+        load_pretrained(config, model, logger,  checkpoint_path=model_ckpt, verbose=False)
+
 
     # Infer predictions and compute performance metrics (only on csv inputs with ground-truths).
     for test_data_loader, test_dataset, test_data_name, input_path in zip(test_loaders,

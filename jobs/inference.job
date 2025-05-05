@@ -3,7 +3,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=9
 #SBATCH --gpus=1
-#SBATCH --output="outputs/inference.out"
+#SBATCH --output="outputs/inference_%A.out"
 #SBATCH --partition=gpu_a100
 #SBATCH --time=01:00:00
 
@@ -19,9 +19,10 @@ conda activate spai
 # pip install filetype
 # conda install pytorch torchvision torchaudio pytorch-cuda=12.4 -c pytorch -c nvidia
 # pip install -r requirements.txt
-
+# pip install open_clip_torch
 # Inference
 # srun python -m spai --help
-srun python -m spai infer --input "/home/scur2620/spai/tinyTest/dalle_2" \
+# pip install timm==0.4.12
+srun python -m spai infer --input "/home/ekarasev/spai/TinyTest" \
                         --output "output_runs" \
-                        --model "spai.pth" \
+                        --model "None" \

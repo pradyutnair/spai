@@ -36,11 +36,14 @@ def build_model(config, is_pretrain=True):
 
 
 def build_cls_model(config):
+
+    print("Building cls model")
     model_type = config.MODEL.TYPE
     task_type = config.MODEL.SID_APPROACH
     if model_type == "vit" and task_type == "single_extraction":
         model = build_cls_vit(config)
     elif model_type == "vit" and task_type == "freq_restoration":
+        print("wooo cls")
         model = build_mf_vit(config)
     else:
         raise NotImplementedError(f"Unknown cls model: {model_type}")
