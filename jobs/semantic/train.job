@@ -1,0 +1,42 @@
+#!/bin/bash
+#SBATCH --partition=gpu_h100
+#SBATCH --gpus=1
+#SBATCH --job-name=train
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --time=01:00:00
+#SBATCH --output=/home/scur2605/spai/jobs/outputs/semantic/train_%A.out
+
+# Set the correct Python path
+cd /home/scur2605/spai
+export PYTHONPATH=/home/scur2605:$PYTHONPATH
+
+# Load modules
+module purge
+module load 2023
+module load Anaconda3/2023.07-2
+
+source activate spai_2
+export NEPTUNE_MODE=offline
+
+# Print the Python path for debugging
+echo "PYTHONPATH: $PYTHONPATH"
+echo "Current directory: $(pwd)"
+#pip install timm==0.4.12
+#pip install timm --upgrade
+
+
+
+
+# Run the training script
+python /home/scur2605/spai/semantic_pipeline/train.py \
+  --cfg "/home/scur2605/spai/configs/spai.yaml" \
+  --spai-model "/home/scur2605/spai/weights/spai.pth" \
+  --data-path "/home/scur2605/spai/data/train/ldm_train_val.csv" \
+  --batch-size 32 \
+  --epochs 5 \
+  --lr 5e-4 \
+  --output "./output/combined" \
+  --tag "first_run" \
+  --data-workers 4 \
+  --save-all

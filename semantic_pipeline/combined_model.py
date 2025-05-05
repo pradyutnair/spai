@@ -4,8 +4,7 @@ from typing import Optional, List, Dict, Tuple
 from pathlib import Path
 
 # Import your semantic pipeline
-from semantic_pipeline.semantic import SemanticPipeline, build_semantic_pipeline
-
+from semantic import SemanticPipeline, build_semantic_pipeline
 class CombinedModel(nn.Module):
     """
     Combined model that fuses SPAI and the Semantic Pipeline architectures.
@@ -111,10 +110,14 @@ class CombinedModel(nn.Module):
         
         Args:
             x: Input tensor [B, C, H, W] or [B, T, C, H, W]
-                
+                    
         Returns:
             Classification logits
         """
+        # Ensure input is float32
+        if x.dtype != torch.float32:
+            x = x.float()
+            
         # Handle both 4D and 5D inputs 
         if x.dim() == 5:  # [B, T, C, H, W]
             b, t, c, h, w = x.shape
@@ -126,15 +129,25 @@ class CombinedModel(nn.Module):
         # 1. Get SPAI features
         with torch.no_grad():
             spai_features = self._extract_spai_features(x)
+            # Ensure features are float32
+            if spai_features.dtype != torch.float32:
+                spai_features = spai_features.float()
         
         # 2. Get semantic features
         semantic_features = self.semantic_model(tokens)
+        # Ensure features are float32
+        if semantic_features.dtype != torch.float32:
+            semantic_features = semantic_features.float()
         
         # 3. Concatenate features
         combined_features = torch.cat([spai_features, semantic_features], dim=1)
         
         # 4. Process through MLP
         logits = self.fusion_mlp(combined_features)
+        
+        # Ensure output is float32
+        if logits.dtype != torch.float32:
+            logits = logits.float()
         
         return logits
     
@@ -143,15 +156,20 @@ class CombinedModel(nn.Module):
         feature_store = []
         
         def hook_fn(module, input, output):
-            feature_store.append(output.detach())
+            # Ensure the stored feature is float32
+            if output.dtype != torch.float32:
+                feature_store.append(output.detach().float())
+            else:
+                feature_store.append(output.detach())
         
         # Check what type of model we have
         if hasattr(self.spai_model, 'patches_attention'):
             hook_handle = self.spai_model.norm.register_forward_hook(hook_fn)
             
-            # SPAI expects [B, C, H, W] but we have [B, T, C, H, W]
-            # Just use the main RGB view (typically the last one)
-            spai_input = x[:, 0] if x.dim() > 4 else x  # Handle both 4D and 5D inputs
+            # Ensure input is float32
+            spai_input = x[:, 0] if x.dim() > 4 else x
+            if spai_input.dtype != torch.float32:
+                spai_input = spai_input.float()
             
             with torch.no_grad():
                 _ = self.spai_model(spai_input)
@@ -160,19 +178,54 @@ class CombinedModel(nn.Module):
         else:
             # Similar approach for MFViT
             hook_handle = self.spai_model.features_processor.register_forward_hook(hook_fn)
+            
+            # Ensure input is float32
             spai_input = x[:, 0] if x.dim() > 4 else x
+            if spai_input.dtype != torch.float32:
+                spai_input = spai_input.float()
             
             with torch.no_grad():
                 _ = self.spai_model(spai_input)
                 
             hook_handle.remove()
         
+        # Final check to ensure we're returning float32
+        if not feature_store or feature_store[0].dtype != torch.float32:
+            return feature_store[0].float() if feature_store else torch.zeros(1, dtype=torch.float32)
         return feature_store[0]
     
     def get_trainable_parameters(self):
-        """Get only the trainable parameters for the optimizer"""
-        return [p for p in self.parameters() if p.requires_grad]
-
+        """Return only the parameters that should be trained."""
+        # We want to train:
+        # 1. The fusion MLP
+        # 2. The projection layer in the semantic model
+        
+        # Make sure the backbone in semantic model is frozen
+        # But NOT the projection layer
+        for param in self.semantic_model.backbone.parameters():
+            param.requires_grad = False
+        
+        # Ensure projection layer is trainable
+        for param in self.semantic_model.convnext_proj.parameters():
+            param.requires_grad = True
+        
+        # Collect all trainable parameters
+        trainable_params = []
+        
+        # Add fusion MLP parameters
+        trainable_params.extend(self.fusion_mlp.parameters())
+        
+        # Add semantic model projection layer parameters
+        trainable_params.extend(self.semantic_model.convnext_proj.parameters())
+        
+        # Print parameter counts for debugging
+        mlp_params = sum(p.numel() for p in self.fusion_mlp.parameters())
+        proj_params = sum(p.numel() for p in self.semantic_model.convnext_proj.parameters())
+        print(f"Training {mlp_params} parameters in fusion MLP")
+        print(f"Training {proj_params} parameters in projection layer")
+        print(f"Total trainable parameters: {mlp_params + proj_params}")
+        
+        return trainable_params
 
 def build_combined_model(
     spai_path: str,

@@ -1,0 +1,26 @@
+#!/bin/bash
+#SBATCH --partition=gpu_a100
+#SBATCH --gpus=1
+#SBATCH --job-name=download_weights
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --time=01:00:00
+#SBATCH --output=/home/scur2605/spai/jobs/outputs/semantic/weights_%A.out
+
+# Activate your environment if needed
+# module load python/3.10
+# source /path/to/your/env/bin/activate
+
+# Ensure target directory exists
+mkdir -p /home/scur2605/spai/weights
+cd /home/scur2605/spai/weights
+
+# Install gdown if not already installed in your environment
+pip install --user gdown
+
+# File ID from Google Drive
+FILE_ID="1y0I7DadQPKF_G_0IEKlOXTc7DMZbelQQ"
+OUTPUT_NAME="sd14_train.pth"
+
+# Download the file
+~/.local/bin/gdown https://drive.google.com/uc?id=$FILE_ID -O $OUTPUT_NAME
