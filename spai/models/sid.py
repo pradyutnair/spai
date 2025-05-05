@@ -179,23 +179,24 @@ class PatchBasedMFViT(nn.Module):
     def forward_batch(self, x: torch.Tensor) -> torch.Tensor:
         print(f"Input shape: {x.shape}")
         # Compute global image encoding before patchifying
-        if isinstance(self.mfvit.vit, backbones.CLIPBackbone):
-            global_image_encoding = self.mfvit.vit.get_image_embedding(
-                x
-            )  # B x semantic_embed_dim
-            # print(
-            #     "Using CLIP backbone for global image encoding!",
-            #     global_image_encoding.shape,
-            # )
-        else:
-            # NOTE: Fallback to random encoding if no CLIP backbone is used
-            print("Warning: Using random global image encoding!")
-            global_image_encoding = torch.rand(
-                x.size(0), self.semantic_embed_dim, device=x.device
-            )  # B x semantic_embed_dim
+        if self.use_semantic_cross_attn_sca in  ["before", "after"]:
+            if isinstance(self.mfvit.vit, backbones.CLIPBackbone):
+                global_image_encoding = self.mfvit.vit.get_image_embedding(
+                    x
+                )  # B x semantic_embed_dim
+                # print(
+                #     "Using CLIP backbone for global image encoding!",
+                #     global_image_encoding.shape,
+                # )
+            else:
+                # NOTE: Fallback to random encoding if no CLIP backbone is used
+                print("Warning: Using random global image encoding!")
+                global_image_encoding = torch.rand(
+                    x.size(0), self.semantic_embed_dim, device=x.device
+                )  # B x semantic_embed_dim
 
-        # Project global image encoding to match the cross-attention query dimension
-        global_image_encoding = self.semantic_projection(global_image_encoding)  # B x D
+            # Project global image encoding to match the cross-attention query dimension
+            global_image_encoding = self.semantic_projection(global_image_encoding)  # B x D
 
         # Patchify the input image
         x = utils.patchify_image(
