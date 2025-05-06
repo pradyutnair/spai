@@ -104,48 +104,48 @@ class CombinedModel(nn.Module):
         
         self.fusion_mlp = nn.Sequential(*layers)
     
+
     def forward(self, x):
-        """
-        Forward pass through the combined model.
-        
-        Args:
-            x: Input tensor [B, C, H, W] or [B, T, C, H, W]
-                    
-        Returns:
-            Classification logits
-        """
+        """Forward pass through the combined model."""
         # Ensure input is float32
         if x.dtype != torch.float32:
             x = x.float()
-            
+                
+        # Handle validation data format (6D tensor)
+        if x.dim() == 6:  # [1, B, T, C, H, W]
+            x = x.squeeze(0)  # Convert to [B, T, C, H, W]
+                
         # Handle both 4D and 5D inputs 
         if x.dim() == 5:  # [B, T, C, H, W]
-            b, t, c, h, w = x.shape
-            # Extract RGB image for semantic pipeline
-            tokens = x[:, -1]  
+            # Extract RGB image for semantic pipeline (last frame)
+            tokens = x[:, -1]  # Shape: [B, C, H, W]
         else:  # [B, C, H, W]
             tokens = x  # Just use the input directly
         
         # 1. Get SPAI features
         with torch.no_grad():
             spai_features = self._extract_spai_features(x)
-            # Ensure features are float32
             if spai_features.dtype != torch.float32:
                 spai_features = spai_features.float()
         
-        # 2. Get semantic features
+        # 2. Get semantic features - make sure tokens is 4D
+        if tokens.dim() != 4:
+            # If tokens is not 4D, reshape it
+            print(f"Warning: tokens shape is {tokens.shape}, reshaping to 4D")
+            if tokens.dim() == 5:  # [B, T, C, H, W]
+                tokens = tokens[:, -1]  # Get last frame
+        
+        # Add debug info
+        # print(f"DEBUG: Tokens shape before semantic model: {tokens.shape}")
+        
         semantic_features = self.semantic_model(tokens)
-        # Ensure features are float32
         if semantic_features.dtype != torch.float32:
             semantic_features = semantic_features.float()
         
-        # 3. Concatenate features
+        # Rest of the method stays the same
         combined_features = torch.cat([spai_features, semantic_features], dim=1)
-        
-        # 4. Process through MLP
         logits = self.fusion_mlp(combined_features)
         
-        # Ensure output is float32
         if logits.dtype != torch.float32:
             logits = logits.float()
         
@@ -167,7 +167,18 @@ class CombinedModel(nn.Module):
             hook_handle = self.spai_model.norm.register_forward_hook(hook_fn)
             
             # Ensure input is float32
-            spai_input = x[:, 0] if x.dim() > 4 else x
+
+            if x.dim() == 6:
+                original_shape = x.shape
+                # Reshape [1, 64, 1, 3, 256, 256] -> [64, 1, 3, 256, 256]
+                x = x.squeeze(0)
+                print(f"Reshaped validation tensor from {original_shape} to {x.shape}")
+            if x.dim() == 5:
+                spai_input = x[:, 0]  # shape [B, C, H, W]
+            elif x.dim() == 4:
+                spai_input = x
+            else:
+                raise ValueError(f"Expected input of 4D or 5D, but got shape {x.shape}")
             if spai_input.dtype != torch.float32:
                 spai_input = spai_input.float()
             
@@ -180,7 +191,17 @@ class CombinedModel(nn.Module):
             hook_handle = self.spai_model.features_processor.register_forward_hook(hook_fn)
             
             # Ensure input is float32
-            spai_input = x[:, 0] if x.dim() > 4 else x
+            if x.dim() == 6:
+                original_shape = x.shape
+                # Reshape [1, 64, 1, 3, 256, 256] -> [64, 1, 3, 256, 256]
+                x = x.squeeze(0)
+                print(f"Reshaped validation tensor from {original_shape} to {x.shape}")
+            if x.dim() == 5:
+                spai_input = x[:, 0]  # shape [B, C, H, W]
+            elif x.dim() == 4:
+                spai_input = x
+            else:
+                raise ValueError(f"Expected input of 4D or 5D, but got shape {x.shape}")
             if spai_input.dtype != torch.float32:
                 spai_input = spai_input.float()
             
