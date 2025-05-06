@@ -56,6 +56,7 @@ class PatchBasedMFViT(nn.Module):
         use_semantic_cross_attn_sca: Union[Literal["before", "after"], None] = None,
         semantic_embed_dim: Optional[int] = None,
         semantic_heads: Optional[int] = None,
+        freeze_backbone_for_semantics: bool = True,
     ) -> None:
         super().__init__()
 
@@ -94,9 +95,12 @@ class PatchBasedMFViT(nn.Module):
         # adding semantic cross-attention before or after the SCA module or not using it at all
         self.use_semantic_cross_attn_sca = use_semantic_cross_attn_sca
         self.semantic_embed_dim = semantic_embed_dim
-        self.semantic_heads = semantic_heads if semantic_heads is not None else num_heads
+        self.semantic_heads = (
+            semantic_heads if semantic_heads is not None else num_heads
+        )
 
         if self.use_semantic_cross_attn_sca in ["before", "after"]:
+            print(f"Using semantic cross-attention {self.use_semantic_cross_attn_sca}!")
             self.semantic_mha = nn.MultiheadAttention(
                 embed_dim=cls_vector_dim, num_heads=self.semantic_heads, dropout=dropout
             )
@@ -119,6 +123,12 @@ class PatchBasedMFViT(nn.Module):
             raise TypeError(
                 f"Non-supported weight initialization type: {initialization_scope}"
             )
+
+
+        if freeze_backbone_for_semantics:
+            self.mfvit.freeze_backbone()
+            # TODO: freeze all but the semantic projections and cls_head 
+
 
     def forward(
         self,
@@ -179,7 +189,7 @@ class PatchBasedMFViT(nn.Module):
     def forward_batch(self, x: torch.Tensor) -> torch.Tensor:
         print(f"Input shape: {x.shape}")
         # Compute global image encoding before patchifying
-        if self.use_semantic_cross_attn_sca in  ["before", "after"]:
+        if self.use_semantic_cross_attn_sca in ["before", "after"]:
             if isinstance(self.mfvit.vit, backbones.CLIPBackbone):
                 global_image_encoding = self.mfvit.vit.get_image_embedding(
                     x
@@ -196,7 +206,9 @@ class PatchBasedMFViT(nn.Module):
                 )  # B x semantic_embed_dim
 
             # Project global image encoding to match the cross-attention query dimension
-            global_image_encoding = self.semantic_projection(global_image_encoding)  # B x D
+            global_image_encoding = self.semantic_projection(
+                global_image_encoding
+            )  # B x D
 
         # Patchify the input image
         x = utils.patchify_image(
@@ -1444,6 +1456,7 @@ def build_mf_vit(config) -> MFViT:
             use_semantic_cross_attn_sca=config.MODEL.SEMANTIC.CROSS_ATTN_SCA,
             semantic_embed_dim=config.MODEL.SEMANTIC.EMBED_DIM,
             semantic_heads=config.MODEL.SEMANTIC.NUM_HEADS,
+            freeze_backbone_for_semantics=config.MODEL.SEMANTIC.FREEZE_BACKBONE, # only the semantic cross-attn and the classification head are trained
         )
     else:
         raise RuntimeError(

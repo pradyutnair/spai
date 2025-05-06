@@ -226,6 +226,7 @@ _C.MODEL.SEMANTIC = CN()
 _C.MODEL.SEMANTIC.CROSS_ATTN_SCA = None
 _C.MODEL.SEMANTIC.EMBED_DIM = 768
 _C.MODEL.SEMANTIC.NUM_HEADS = None
+_C.MODEL.SEMANTIC.FREEZE_BACKBONE = True
 
 # -----------------------------------------------------------------------------
 # Training settings

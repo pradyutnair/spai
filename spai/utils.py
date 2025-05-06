@@ -145,7 +145,7 @@ def load_pretrained(
     if verbose:
         logger.info(f">>>>>>>>>> Fine-tuned from {config.PRETRAINED} ..........")
     checkpoint = torch.load(checkpoint_path, map_location='cpu', weights_only=False)
-    checkpoint_model = checkpoint['model']
+    checkpoint_model = checkpoint['model'] if 'model' in checkpoint else checkpoint
     checkpoint_epoch: Optional[int] = checkpoint.get('epoch', None)
 
     if any([True if 'encoder.' in k else False for k in checkpoint_model.keys()]):
@@ -274,6 +274,7 @@ def remap_pretrained_keys_vit(model, checkpoint_model, logger):
     # Geometric interpolation when pre-trained patch size mismatch with fine-tuned patch size
     all_keys = list(checkpoint_model.keys())
     for key in all_keys:
+        print(f"key: {key}")
         if "relative_position_index" in key:
             checkpoint_model.pop(key)
 
