@@ -239,6 +239,14 @@ def train(
         model, optimizer = amp.initialize(model, optimizer, opt_level=config.AMP_OPT_LEVEL)
     model_without_ddp = model
 
+    # freeze all but the semantic projections and cls_head 
+    if config.MODEL.SEMANTIC.FREEZE_BACKBONE:
+        for name, param in model.named_parameters():
+            if "semantic" in name or "cls_head" in name:
+                param.requires_grad = True
+            else:
+                param.requires_grad = False
+
     n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
     logger.info(f"number of params: {n_parameters}")
     if hasattr(model_without_ddp, 'flops'):

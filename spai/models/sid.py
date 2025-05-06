@@ -56,7 +56,7 @@ class PatchBasedMFViT(nn.Module):
         use_semantic_cross_attn_sca: Union[Literal["before", "after"], None] = None,
         semantic_embed_dim: Optional[int] = None,
         semantic_heads: Optional[int] = None,
-        freeze_backbone_for_semantics: bool = True,
+        # freeze_backbone_for_semantics: bool = True,
     ) -> None:
         super().__init__()
 
@@ -125,9 +125,6 @@ class PatchBasedMFViT(nn.Module):
             )
 
 
-        if freeze_backbone_for_semantics:
-            self.mfvit.freeze_backbone()
-            # TODO: freeze all but the semantic projections and cls_head 
 
 
     def forward(
@@ -1456,7 +1453,7 @@ def build_mf_vit(config) -> MFViT:
             use_semantic_cross_attn_sca=config.MODEL.SEMANTIC.CROSS_ATTN_SCA,
             semantic_embed_dim=config.MODEL.SEMANTIC.EMBED_DIM,
             semantic_heads=config.MODEL.SEMANTIC.NUM_HEADS,
-            freeze_backbone_for_semantics=config.MODEL.SEMANTIC.FREEZE_BACKBONE, # only the semantic cross-attn and the classification head are trained
+            # freeze_backbone_for_semantics=config.MODEL.SEMANTIC.FREEZE_BACKBONE,
         )
     else:
         raise RuntimeError(
