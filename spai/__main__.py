@@ -235,12 +235,21 @@ def train(
     logger.info(str(model))
 
     # Freeze backbone and only train semantic fusion
-    model.freeze_backbone()
+    # Step 2: Freeze all parameters
+    logger.info("🚨 Freezing all parameters from pretrained model")
     for param in model.parameters():
         param.requires_grad = False
-    # Unfreeze semantic fusion module
-    for param in model.features_processor.parameters():
+
+    # Step 3: Unfreeze semantic fusion and classification head
+    logger.info("🚨 Unfreezing semantic fusion and classification head")
+    for param in model.features_processor.semantic_fusion.parameters():
         param.requires_grad = True
+    for param in model.cls_head.parameters():
+        param.requires_grad = True
+
+    # Step 4: Freeze the backbone
+    model.freeze_backbone()
+    logger.info("🚨 Backbone frozen, semantic fusion and classification head unfrozen.")
 
     optimizer = build_optimizer(config, model, logger, is_pretrain=False)
     if config.AMP_OPT_LEVEL != "O0":

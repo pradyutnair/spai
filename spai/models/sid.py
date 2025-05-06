@@ -731,7 +731,7 @@ class FrequencyRestorationEstimator(nn.Module):
         original_image_features_branch: bool = False,
         dropout: float = 0.5,
         disable_reconstruction_similarity: bool = False,
-        fusion_type: str = 'concat',
+        fusion_type: str = 'attention',
         semantic_dim: int = 512  # Default CLIP ViT-B/16 dim
     ):
         super().__init__()
@@ -767,9 +767,14 @@ class FrequencyRestorationEstimator(nn.Module):
             self.patch_projector: nn.Module = nn.Identity()
 
         self.original_features_processor = None
+        if patch_projection:
+            dim_after_patch_projector = proj_dim # Output of Projector or FeatureSpecificProjector
+        else:
+            dim_after_patch_projector = input_dim # Output of nn.Identity() (ViT embed_dim)
+
         if original_image_features_branch:
             self.original_features_processor = FeatureImportanceProjector(
-                features_num, proj_dim, proj_dim, proj_layers, dropout=dropout
+                features_num, dim_after_patch_projector, proj_dim, proj_layers, dropout=dropout
             )
 
         # A flag that when set stops the computation of reconstruction similarity scores.
@@ -935,6 +940,7 @@ class Projector(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.norm1(x)
+        print(f"Projector input shape: {x.shape}")
         x = self.projector(x)
         x = self.norm2(x)
         return x
@@ -976,29 +982,39 @@ class FeatureImportanceProjector(nn.Module):
     ) -> None:
         super().__init__()
         self.alpha = nn.Parameter(torch.randn([1, intermediate_features_num, proj_dim]))
-        self.proj1 = Projector(proj_layers, 2*proj_dim, proj_dim, input_norm=False, dropout=dropout)
+        # Change input dimension to match the concatenated mean and std
+        self.proj1 = Projector(proj_layers, 2*input_dim, proj_dim, input_norm=False, dropout=dropout)
         self.proj2 = Projector(proj_layers, proj_dim, proj_dim, input_norm=False, dropout=dropout)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x_mean: torch.Tensor = x.mean(dim=2)  # B x N x input_dim
-        x_std: torch.Tensor = x.std(dim=2)  # B x N x input_dim
-        x = torch.cat([x_mean, x_std], dim=-1)  # B x N x 2*input_dim
+        # Reshape input to (B*N, L, D) where B=batch_size, N=num_features, L=seq_len, D=dim
+        B, N, L, D = x.shape
+        x = x.reshape(B*N, L, D)
+        
+        x_mean: torch.Tensor = x.mean(dim=1)  # (B*N, D)
+        x_std: torch.Tensor = x.std(dim=1)  # (B*N, D)
+        x = torch.cat([x_mean, x_std], dim=-1)  # (B*N, 2*D)
 
-        x = self.proj1(x)  # B x N x 2*proj_dim
+        x = self.proj1(x)  # (B*N, proj_dim)
+        x = x.reshape(B, N, -1)  # (B, N, proj_dim)
         x = torch.softmax(self.alpha, dim=1) * x
-        x = torch.sum(x, dim=1)  # B x proj_dim
+        x = torch.sum(x, dim=1)  # (B, proj_dim)
         x = self.proj2(x)
 
         return x
 
     def exportable_forward(self, x: torch.Tensor) -> torch.Tensor:
-        x_mean: torch.Tensor = x.mean(dim=2)  # B x N x input_dim
-        x_std: torch.Tensor = utils.exportable_std(x, dim=2)  # B x N x input_dim
-        x = torch.cat([x_mean, x_std], dim=-1)  # B x N x 2*input_dim
+        B, N, L, D = x.shape
+        x = x.reshape(B*N, L, D)
+        
+        x_mean: torch.Tensor = x.mean(dim=1)  # (B*N, D)
+        x_std: torch.Tensor = utils.exportable_std(x, dim=1)  # (B*N, D)
+        x = torch.cat([x_mean, x_std], dim=-1)  # (B*N, 2*D)
 
-        x = self.proj1(x)  # B x N x 2*proj_dim
+        x = self.proj1(x)  # (B*N, proj_dim)
+        x = x.reshape(B, N, -1)  # (B, N, proj_dim)
         x = torch.softmax(self.alpha, dim=1) * x
-        x = torch.sum(x, dim=1)  # B x proj_dim
+        x = torch.sum(x, dim=1)  # (B, proj_dim)
         x = self.proj2(x)
 
         return x

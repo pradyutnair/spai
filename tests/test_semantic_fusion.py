@@ -9,6 +9,7 @@ def get_dummy_inputs(batch=2, n=3, l=4, d=8, semantic_dim=6):
 
 @pytest.mark.parametrize("fusion_type", FUSION_TYPES)
 def test_fusion_shapes(fusion_type):
+    print(fusion_type)
     patch_feats, semantic_vec = get_dummy_inputs()
     module = SemanticFusionModule(patch_dim=8, semantic_dim=6, fusion_type=fusion_type)
     out = module(patch_feats, semantic_vec)
@@ -33,3 +34,9 @@ def test_fusion_broadcast_and_grad(fusion_type):
 def test_invalid_fusion_type():
     with pytest.raises(ValueError):
         SemanticFusionModule(8, 6, fusion_type='invalid')
+
+
+if __name__ == "__main__":
+    test_fusion_shapes('concat')
+    test_fusion_broadcast_and_grad('concat')
+    test_invalid_fusion_type()
