@@ -1,0 +1,64 @@
+#!/bin/bash
+#SBATCH --partition=cbuild
+#SBATCH --cpus-per-task=16
+#SBATCH --job-name=download
+#SBATCH --output=job_outputs/download_dataset_ld.out
+#SBATCH --error=job_outputs/download_dataset_ld.err
+#SBATCH --time=6:00:00
+
+echo "✅ Job started: $(date)"
+
+# Create target directory
+echo "📁 Creating target directory..."
+mkdir -p /scratch-shared/dl2_spai
+
+# Change to working directory
+cd /scratch-shared/dl2_spai
+echo "📍 Changed to working directory: $(pwd)"
+
+# # Download all 7z parts
+# echo "⬇️ Starting download of ProGAN multi-part archives..."
+# wget https://huggingface.co/datasets/sywang/CNNDetection/resolve/main/progan_train.7z.001 &
+# wget https://huggingface.co/datasets/sywang/CNNDetection/resolve/main/progan_train.7z.002 &
+# wget https://huggingface.co/datasets/sywang/CNNDetection/resolve/main/progan_train.7z.003 &
+# wget https://huggingface.co/datasets/sywang/CNNDetection/resolve/main/progan_train.7z.004 &
+# wget https://huggingface.co/datasets/sywang/CNNDetection/resolve/main/progan_train.7z.005 &
+# wget https://huggingface.co/datasets/sywang/CNNDetection/resolve/main/progan_train.7z.006 &
+# wget https://huggingface.co/datasets/sywang/CNNDetection/resolve/main/progan_train.7z.007 &
+
+# # Wait for all background downloads
+# wait $(jobs -p)
+# echo "✅ All .7z part files downloaded."
+
+# # Extract 7z archive
+# echo "📦 Extracting 7z archive..."
+# ./7zz x progan_train.7z.001
+# rm progan_train.7z.*
+# echo "🧹 Removed .7z part files."
+
+# # Unzip the extracted archive
+# echo "🗂️ Unzipping progan_train.zip..."
+# unzip progan_train.zip
+# rm progan_train.zip
+# echo "🧹 Removed progan_train.zip."
+
+# # Download and extract CNN_synth_testset
+# echo "⬇️ Downloading CNN_synth_testset.zip..."
+# wget https://huggingface.co/datasets/sywang/CNNDetection/resolve/main/CNN_synth_testset.zip
+
+# echo "🗂️ Unzipping CNN_synth_testset.zip..."
+# unzip CNN_synth_testset.zip
+# rm CNN_synth_testset.zip
+# echo "🧹 Removed CNN_synth_testset.zip."
+
+## Download and extract latent_diffusion_trainingset
+#echo "⬇️ Downloading latent_diffusion_trainingset.zip..."
+#wget https://www.grip.unina.it/download/prog/DMimageDetection/latent_diffusion_trainingset.zip
+
+echo "🗂️ Creating folder and unzipping latent_diffusion_trainingset.zip..."
+mkdir -p /scratch-shared/dl2_spai/datasets/
+unzip -n latent_diffusion_trainingset.zip -d /scratch-shared/dl2_spai/datasets/ | tee unzip_resume.log
+#rm latent_diffusion_trainingset.zip
+#echo "🧹 Removed latent_diffusion_trainingset.zip."
+
+echo "✅ Job completed: $(date)"

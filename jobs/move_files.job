@@ -1,0 +1,20 @@
+#!/bin/bash
+#SBATCH --partition=cbuild
+#SBATCH --cpus-per-task=8
+#SBATCH --job-name=copy_latent
+#SBATCH --output=job_outputs/copy_latent.out
+#SBATCH --error=job_outputs/copy_latent.err
+#SBATCH --time=00:30:00
+#SBATCH --mem=4G
+
+echo "✅ Job started at: $(date)"
+
+# Create destination directory if it doesn't exist
+mkdir -p /scratch-shared/dl2_spai/datasets/latent_diffusion_trainingset
+
+# Copy folders
+cp -r /scratch-shared/dl2_spai/latent_diffusion_trainingset/latent_diffusion_trainingset/train \
+      /scratch-shared/dl2_spai/latent_diffusion_trainingset/latent_diffusion_trainingset/valid \
+      /scratch-shared/dl2_spai/datasets/latent_diffusion_trainingset/
+
+echo "✅ Copy completed at: $(date)"

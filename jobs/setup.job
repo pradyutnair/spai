@@ -1,11 +1,8 @@
 #!/bin/bash
-#SBATCH --partition=gpu_a100
-#SBATCH --nodes=1
-#SBATCH --ntasks=1
+#SBATCH --partition=cbuild
 #SBATCH --cpus-per-task=16
-#SBATCH --gpus=1
-#SBATCH --output="job_outputs/weights.out"
-#SBATCH --time=00:15:00
+#SBATCH --output="job_outputs/setup.out"
+#SBATCH --time=00:35:00
 
 
 module purge
@@ -14,19 +11,21 @@ module load Anaconda3/2023.07-2
 
 
 # Setup 
-#conda create -n spai python=3.11
-#conda activate spai
-#pip install filetype
-#conda install pytorch torchvision torchaudio pytorch-cuda=12.4 -c pytorch -c nvidia
-#pip install -r requirements.txt
+conda create -n spai python=3.11
+conda activate spai
+pip install filetype
+conda install pytorch torchvision torchaudio pytorch-cuda=12.4 -c pytorch -c nvidia
+pip install -r /home/pnair/spai/requirements.txt
+pip install tensorflow-datasets
+
 
 # Download the SPAI model weights file
-wget -O weights/spai.pth "https://drive.usercontent.google.com/download?id=1vvXmZqs6TVJdj8iF1oJ4L_fcgdQrp_YI&export=download&authuser=0&confirm=t&uuid=eb449e5a-e6f1-4214-b330-936787323915&at=APcmpoyQoNVkKHxMzixPJBUCJts3%3A1745418882640"
+# wget -O weights/spai.pth "https://drive.usercontent.google.com/download?id=1vvXmZqs6TVJdj8iF1oJ4L_fcgdQrp_YI&export=download&authuser=0&confirm=t&uuid=eb449e5a-e6f1-4214-b330-936787323915&at=APcmpoyQoNVkKHxMzixPJBUCJts3%3A1745418882640"
 
-# Verify download was successful
-if [ -f "weights/spai.pth" ]; then
-    echo "Spai weights downloaded successfully to weights folder"
-else
-    echo "Failed to download model weights"
-    exit 1
-fi
+# # Verify download was successful
+# if [ -f "weights/spai.pth" ]; then
+#     echo "Spai weights downloaded successfully to weights folder"
+# else
+#     echo "Failed to download model weights"
+#     exit 1
+# fi

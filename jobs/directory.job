@@ -1,0 +1,16 @@
+#!/bin/bash
+#SBATCH --partition=cbuild
+#SBATCH --cpus-per-task=16
+#SBATCH --job-name=copy_latent
+#SBATCH --output=job_outputs/copy_latent.out
+#SBATCH --time=00:30:00
+#SBATCH --mem=16G
+
+echo "✅ Job started at: $(date)"
+
+python /home/pnair/spai/spai/tools/create_dmid_ldm_train_val_csv.py \
+  --train_dir "/scratch-shared/dl2_spai/datasets/latent_diffusion_trainingset/train" \
+  --val_dir "/scratch-shared/dl2_spai/datasets/latent_diffusion_trainingset/scratch-shared/dl2_spai/datasets/latent_diffusion_trainingset/valid" \
+  --coco_dir "/scratch-nvme/ml-datasets/coco" \
+  --lsun_dir "./datasets/LSUN" \
+  -o "./datasets/ldm_train_val.csv"

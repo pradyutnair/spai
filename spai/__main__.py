@@ -234,6 +234,14 @@ def train(
     model.cuda()
     logger.info(str(model))
 
+    # Freeze backbone and only train semantic fusion
+    model.freeze_backbone()
+    for param in model.parameters():
+        param.requires_grad = False
+    # Unfreeze semantic fusion module
+    for param in model.features_processor.parameters():
+        param.requires_grad = True
+
     optimizer = build_optimizer(config, model, logger, is_pretrain=False)
     if config.AMP_OPT_LEVEL != "O0":
         model, optimizer = amp.initialize(model, optimizer, opt_level=config.AMP_OPT_LEVEL)

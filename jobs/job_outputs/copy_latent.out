@@ -1,0 +1,15 @@
+✅ Job started at: Sat May  3 21:41:50 CEST 2025
+
+JOB STATISTICS
+==============
+Job ID: 11549869
+Cluster: snellius
+User/Group: pnair/pnair
+State: TIMEOUT (exit code 0)
+Nodes: 1
+Cores per node: 32
+CPU Utilized: 00:00:00
+CPU Efficiency: 0.00% of 16:09:36 core-walltime
+Job Wall-clock time: 00:30:18
+Memory Utilized: 9.94 MB
+Memory Efficiency: 0.24% of 4.00 GB (4.00 GB/node)

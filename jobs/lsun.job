@@ -1,0 +1,43 @@
+#!/bin/bash
+#SBATCH --partition=cbuild
+#SBATCH --cpus-per-task=8
+#SBATCH --job-name=download_lsun
+#SBATCH --output=download_lsun.out
+#SBATCH --time=02:00:00
+#SBATCH --mem=8G
+
+echo "✅ Job started at: $(date)"
+
+# Load a module if needed (e.g., Python)
+module purge
+module load 2023
+module load Anaconda3/2023.07-2
+
+conda activate spai
+
+python3 /home/pnair/spai/jobs/lsun.py
+# # Set destination directory
+# TARGET_DIR="/scratch-shared/dl2_spai/datasets/LSUN"
+# mkdir -p "$TARGET_DIR"
+# cd "$TARGET_DIR"
+
+# # Clone the LSUN dataset repo (if not already cloned)
+# if [ ! -d "lsun" ]; then
+#     echo "📥 Cloning LSUN repo..."
+#     git clone https://github.com/fyu/lsun.git
+# fi
+
+# cd lsun
+
+# # Install required Python package (requests)
+# echo "📦 Ensuring 'requests' is installed..."
+# pip install --user requests
+
+# # Download the entire dataset
+# echo "⬇️ Downloading the entire dataset..."
+# python3 download.py -o "$TARGET_DIR"
+
+# echo "⬇️ Downloading 'test' set..."
+# python3 download.py -c test -o "$TARGET_DIR"
+
+# echo "✅ All downloads complete at: $(date)"
