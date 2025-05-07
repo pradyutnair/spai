@@ -38,7 +38,7 @@ def write_csv_file(
 ) -> None:
     if fieldnames is None:
         fieldnames = list(data[0].keys())
-    with output_file.open("w", newline="") as f:
+    with output_file.open("w", newline="", encoding="utf-8") as f:
         writer: csv.DictWriter = csv.DictWriter(f, fieldnames=fieldnames, delimiter=delimiter)
         writer.writeheader()
         for r in data:

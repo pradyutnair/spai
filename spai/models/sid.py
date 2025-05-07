@@ -16,7 +16,7 @@
 
 import dataclasses
 import pathlib
-from typing import Optional, Union
+from typing import Optional, Union, List
 
 import numpy as np
 import torch
@@ -43,13 +43,14 @@ class PatchBasedMFViT(nn.Module):
                    backbones.DINOv2Backbone],
         features_processor: 'FrequencyRestorationEstimator',
         cls_head: Optional[nn.Module],
+        semantics_head: Optional[nn.Module],
         masking_radius: int,
         img_patch_size: int,
         img_patch_stride: int,
         cls_vector_dim: int,
         num_heads: int,
         attn_embed_dim: int,
-        context_backbone: Optional[nn.Module],
+        context_backbone: Optional[nn.Module] = None,
         dropout: float = .0,
         frozen_backbone: bool = True,
         minimum_patches: int = 0,
@@ -90,6 +91,7 @@ class PatchBasedMFViT(nn.Module):
 
         self.norm = nn.LayerNorm(cls_vector_dim)
         self.cls_head = cls_head
+        self.semantics_head = semantics_head
 
         if initialization_scope == "all":
             self.apply(_init_weights)
@@ -120,9 +122,11 @@ class PatchBasedMFViT(nn.Module):
         """
 
         x_context = self.context_backbone(x) if self.context_backbone is not None else None
+
         if isinstance(x, torch.Tensor):
             
-            x =  self.forward_batch(x)
+            x =  self.forward_batch(x, x_context)
+            
         elif isinstance(x, list):
             if feature_extraction_batch_size is None:
                 feature_extraction_batch_size = len(x)
@@ -161,7 +165,7 @@ class PatchBasedMFViT(nn.Module):
         else:
             return x
 
-    def forward_batch(self, x: torch.Tensor) -> torch.Tensor:
+    def forward_batch(self, x: torch.Tensor, x_context: torch.Tensor = None) -> torch.Tensor:
         x = utils.patchify_image(
             x,
             (self.img_patch_size, self.img_patch_size),
@@ -176,7 +180,12 @@ class PatchBasedMFViT(nn.Module):
 
         x = self.patches_attention(x)  # B x D
         x = self.norm(x)  # B x D
+
+        
         x = self.cls_head(x)  # B x 1
+
+        x = torch.cat([x, x_context], dim=1) if x_context is not None else x
+        x = self.semantics_head(x) if self.semantics_head is not None else x
 
         return x
 
@@ -240,9 +249,11 @@ class PatchBasedMFViT(nn.Module):
         del attended
 
         x = self.norm(x)  # B x D
-        x = torch.cat([x, x_context], dim=1) if x_context is not None else x
 
+        
         x = self.cls_head(x)  # B x 1
+        x = torch.cat([x, x_context], dim=1) if x_context is not None else x
+        x = self.semantics_head(x) if self.semantics_head is not None else x
 
         return x
 
@@ -932,14 +943,21 @@ class SemanticFeatureEmbedding(nn.Module):
         # Handle input types: list of tensors vs 4D tensor
         if isinstance(images, list):
             # Assume list of 3D tensors: [C, H, W]
+            # print(f"Shape of imageL {images[0].shape}")
             processed_images = torch.stack([
                 self.preprocess_image(img).to(self.device).squeeze(0) for img in images
             ])
-            print(f"Shape of processed images: {processed_images.shape}")
-        else:
+            # print(f"Shape of processed imagesList: {processed_images.shape}")
+        else: 
             # Assume 4D tensor: [B, C, H, W]
-            processed_images = images.to(self.device)
+            # processed_images = images.to(self.device)
+            # print(f"Shape of imageL {images[0].shape}")
+            processed_images = torch.stack([
+                self.preprocess_image(img).to(self.device).squeeze(0) for img in images
+            ])
+            # print(f"Shape of processed imagesTensor: {processed_images.shape}")
 
+        # print(f"Shape of processed images: {processed_images.shape}")
         # Extract CLIP features
         with torch.no_grad():
             features = self.clip_model.encode_image(processed_images)
@@ -965,21 +983,52 @@ class ClassificationHead(nn.Module):
         input_dim: int,
         num_classes: int,
         mlp_ratio: int = 1,
-        dropout: float = 0.5
+        dropout: float = 0.5,
     ):
         super().__init__()
+
         self.head = nn.Sequential(
             nn.Linear(input_dim, input_dim*mlp_ratio),
             nn.ReLU(),
             nn.Dropout(dropout),
             nn.Linear(input_dim*mlp_ratio, input_dim*mlp_ratio),
-            nn.ReLU(),
-            nn.Dropout(dropout),
-            nn.Linear(input_dim*mlp_ratio, num_classes)
+            # nn.ReLU(),
+            # nn.Dropout(dropout),
+            # nn.Linear(input_dim*mlp_ratio, num_classes)
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-         return self.head(x)
+        return self.head(x)
+
+    def preprocess_image(self, image_tensor):
+        # Manually define CLIP's preprocessing pipeline (default 224x224)
+        preprocess = Compose([
+            Resize((224, 224)),
+            Normalize(mean=(0.4815, 0.4578, 0.4082),
+                      std=(0.2686, 0.2613, 0.2758))
+        ])
+        return preprocess(image_tensor)
+
+class ClassificationHeadSemantics(nn.Module):
+    def __init__(
+        self,
+        input_dim: int,
+        num_classes: int,
+        mlp_ratio: int = 1,
+        dropout: float = 0.5,
+        semantic_dim: int = 0,
+    ):
+        super().__init__()
+
+        self.head = nn.Sequential(
+            nn.Linear(input_dim*mlp_ratio + semantic_dim, 512),
+            nn.ReLU(),
+            nn.Dropout(dropout),
+            nn.Linear(512, num_classes)
+        )
+    
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.head(x)
 
 
 class FeatureImportanceProjector(nn.Module):
@@ -1231,6 +1280,8 @@ def build_cls_vit(config) -> ClassificationVisionTransformer:
         cls_head = None
     elif config.TRAIN.MODE == "supervised":
         # Build classification head.
+
+        raise RuntimeError("not implemented yet")
         cls_head = ClassificationHead(
             input_dim=cls_vector_dim + 256,
             num_classes=config.MODEL.NUM_CLASSES if config.MODEL.NUM_CLASSES > 2 else 1
@@ -1238,7 +1289,7 @@ def build_cls_vit(config) -> ClassificationVisionTransformer:
     else:
         raise RuntimeError(f"Unsupported train mode: {config.TRAIN.MODE}")
 
-    return ClassificationVisionTransformer(vit, features_processor, cls_head, SemanticFeatureEmbedding())
+    return ClassificationVisionTransformer(vit, features_processor, cls_head,)
 
 
 def build_mf_vit(config) -> MFViT:
@@ -1260,7 +1311,7 @@ def build_mf_vit(config) -> MFViT:
         initialization_scope: str = "local"
     else:
         raise RuntimeError(f"Unsupported ViT weights type: {config.MODEL_WEIGHTS}")
-
+    correct_setup = False
     # Build features processor.
     fre: FrequencyRestorationEstimator = FrequencyRestorationEstimator(
         features_num=len(config.MODEL.VIT.INTERMEDIATE_LAYERS),
@@ -1287,10 +1338,18 @@ def build_mf_vit(config) -> MFViT:
     elif config.TRAIN.MODE == "supervised":
         # Build classification head.
         cls_head = ClassificationHead(
-            input_dim=cls_vector_dim + 256,
+            input_dim=cls_vector_dim,
             num_classes=config.MODEL.NUM_CLASSES if config.MODEL.NUM_CLASSES > 2 else 1,
             mlp_ratio=config.MODEL.CLS_HEAD.MLP_RATIO,
             dropout=config.MODEL.SID_DROPOUT
+        )
+
+        semantics_head = ClassificationHeadSemantics(
+            input_dim=cls_vector_dim,
+            num_classes=config.MODEL.NUM_CLASSES if config.MODEL.NUM_CLASSES > 2 else 1,
+            mlp_ratio=config.MODEL.CLS_HEAD.MLP_RATIO,
+            dropout=config.MODEL.SID_DROPOUT,
+            semantic_dim=256
         )
     else:
         raise RuntimeError(f"Unsupported train mode: {config.TRAIN.MODE}")
@@ -1311,6 +1370,7 @@ def build_mf_vit(config) -> MFViT:
             vit,
             fre,
             cls_head,
+            semantics_head,
             masking_radius=config.MODEL.FRE.MASKING_RADIUS,
             img_patch_size=config.DATA.IMG_SIZE,
             img_patch_stride=config.MODEL.PATCH_VIT.PATCH_STRIDE,
@@ -1320,11 +1380,15 @@ def build_mf_vit(config) -> MFViT:
             num_heads=config.MODEL.PATCH_VIT.NUM_HEADS,
             dropout=config.MODEL.SID_DROPOUT,
             minimum_patches=config.MODEL.PATCH_VIT.MINIMUM_PATCHES,
-            initialization_scope=initialization_scope
+            initialization_scope=initialization_scope,
+
         )
+        print("Using Semantic Context Embedding")
+        correct_setup = True
     else:
         raise RuntimeError(f"Unsupported resolution mode: {config.MODEL.RESOLUTION_MODE}")
-
+    if not correct_setup:
+        raise RuntimeError("Incorrect setup for MFViT model.")
     return model
 
 

@@ -23,7 +23,8 @@ from pathlib import Path
 from typing import Optional
 
 import numpy as np
-
+import torch
+from torch.utils.data import Subset, DataLoader, random_split
 import neptune
 import cv2
 import click
@@ -130,6 +131,7 @@ def cli() -> None:
 @click.option("--disable-pin-memory", is_flag=True)
 @click.option("--data-prefetch-factor", type=int)
 @click.option("--save-all", is_flag=True)
+@click.option("--with_semantics", is_flag=False,)
 @click.option("--opt", "extra_options", type=(str, str), multiple=True)
 def train(
     cfg: Path,
@@ -152,6 +154,7 @@ def train(
     disable_pin_memory: bool,
     data_prefetch_factor: Optional[int],
     save_all: bool,
+    with_semantics: bool,
     extra_options: tuple[str, str]
 ) -> None:
     if csv_root_dir is None:
@@ -162,7 +165,8 @@ def train(
         "learning_rate": learning_rate,
         "data_path": str(data_path),
         "csv_root_dir": str(csv_root_dir),
-        "lmdb_path": str(lmdb_path),
+        # "lmdb_path": str(lmdb_path),
+        "lmdb_path": None,
         "pretrained": str(pretrained) if pretrained is not None else None,
         "resume": resume,
         "accumulation_steps": accumulation_steps,
@@ -191,7 +195,10 @@ def train(
     # random.seed(seed)
     cudnn.benchmark = True
 
+    print(f"Base learning rate: {config.TRAIN.BASE_LR} ---- {learning_rate}")
     if config.TRAIN.SCALE_LR:
+
+        
         # Linear scale the learning rate according to total batch size - may not be optimal.
         linear_scaled_lr = config.TRAIN.BASE_LR * config.DATA.BATCH_SIZE / 512.0
         linear_scaled_warmup_lr = config.TRAIN.WARMUP_LR * config.DATA.BATCH_SIZE / 512.0
@@ -224,8 +231,26 @@ def train(
         config, logger, is_pretrain=False, is_test=False
     )
 
+    full_dataset = data_loader_train.dataset
+    total_len = len(full_dataset)
+    sample_len = int(0.1 * total_len)
+
+    # Optionally shuffle indices
+    subset, _ = random_split(full_dataset, [sample_len, total_len - sample_len])
+
+    # Re-create a new DataLoader with the subset
+    data_loader_train = DataLoader(
+        subset,
+        batch_size=data_loader_train.batch_size,
+        shuffle=True,
+        num_workers=data_loader_train.num_workers,
+        pin_memory=True,
+        drop_last=data_loader_train.drop_last,
+    )
+
     neptune_run = neptune.init_run(
         name=config.TAG,
+        project="SPAI-with-CLIP/SPAI-CLIP",
         tags=["mfm", "train", config.TRAIN.MODE, data_path.stem]
     )
 
@@ -234,13 +259,15 @@ def train(
     model.cuda()
     logger.info(str(model))
 
+    for name, param in model.named_parameters():
+        if "mfvit" in name or "to_kv" in name or "to_out.0." in name:
+            param.requires_grad = False
+
     optimizer = build_optimizer(config, model, logger, is_pretrain=False)
     if config.AMP_OPT_LEVEL != "O0":
         model, optimizer = amp.initialize(model, optimizer, opt_level=config.AMP_OPT_LEVEL)
     model_without_ddp = model
 
-    n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    logger.info(f"number of params: {n_parameters}")
     if hasattr(model_without_ddp, 'flops'):
         flops = model_without_ddp.flops()
         logger.info(f"number of GFLOPs: {flops / 1e9}")
@@ -250,12 +277,31 @@ def train(
     logger.info(f"Loss: \n{criterion}")
 
     if config.PRETRAINED:
-        load_pretrained(config, model_without_ddp.get_vision_transformer(), logger)
+        # load_pretrained(config, model_without_ddp.get_vision_transformer(), logger)
+
+        model_ckpt: pathlib.Path = find_pretrained_checkpoints(config)[0]
+        load_pretrained(config, model, logger,  checkpoint_path=model_ckpt, verbose=True)
+        
     else:
         model_without_ddp.unfreeze_backbone()
         logger.info(f"No pretrained model. Backbone parameters are trainable.")
+        raise RuntimeError("Don't Train the backbone my friend")
 
     test_datasets_names, test_datasets, test_loaders = build_loader_test(config, logger)
+
+    for name, param in model.named_parameters():
+        if "semantics_head" in name:
+            param.requires_grad = True
+        else:
+            param.requires_grad = False
+    
+    total_params = sum(p.numel() for p in model.parameters())
+    n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    logger.info(f"Total number of params: {total_params} | Training: {n_parameters} params")
+
+    for name, param in model.named_parameters():
+        if param.requires_grad:
+            print(f"{name}: {param.numel():,}")
 
     train_model(
         config,
@@ -521,15 +567,14 @@ def infer(
     # Load the trained weights' checkpoint.
     criterion = losses.build_loss(config)
     logger.info(f"Creating model:{config.MODEL.TYPE}/{config.MODEL.NAME}")
-    print("broooo")
+
     model = build_cls_model(config)
     model.cuda()
 
-    if False:
-        model_ckpt: pathlib.Path = find_pretrained_checkpoints(config)[0]
-        load_pretrained(config, model, logger,  checkpoint_path=model_ckpt, verbose=False)
+    model_ckpt: pathlib.Path = find_pretrained_checkpoints(config)[0]
+    load_pretrained(config, model, logger,  checkpoint_path=model_ckpt, verbose=True)
 
-
+    logger.info(str(model))
     # Infer predictions and compute performance metrics (only on csv inputs with ground-truths).
     for test_data_loader, test_dataset, test_data_name, input_path in zip(test_loaders,
                                                                           test_datasets,
@@ -924,7 +969,9 @@ def train_model(
 
         # Save only the checkpoints that decrease validation loss.
         if len(val_loss_per_epoch) == 1 or loss < min(val_loss_per_epoch[:-1]) or save_all:
-            save_checkpoint(config, epoch, model_without_ddp, max(val_accuracy_per_epoch),
+            # save_checkpoint(config, epoch, model_without_ddp, max(val_accuracy_per_epoch),
+                            # optimizer, lr_scheduler, logger)
+            save_checkpoint(config, epoch, model, max(val_accuracy_per_epoch),
                             optimizer, lr_scheduler, logger)
 
         # Test the model.
