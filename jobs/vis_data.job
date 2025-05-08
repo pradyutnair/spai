@@ -2,8 +2,8 @@
 #SBATCH --partition=gpu_h100
 #SBATCH --gpus=1
 #SBATCH --cpus-per-task=16
-#SBATCH --job-name=train
-#SBATCH --output=/home/pnair/spai/job_outputs/train.out
+#SBATCH --job-name=vis_data
+#SBATCH --output=/home/pnair/spai/job_outputs/vis.out
 #SBATCH --time=14:00:00
 #SBATCH --mem=180G
 #SBATCH --hint=nomultithread
@@ -36,16 +36,18 @@ export CUDA_LAUNCH_BLOCKING=0
 #   -o ./datasets/ldm_val_augm.csv \
 #   -d ./datasets/latent_diffusion_trainingset_augm
 
-python -m spai train \
-  --cfg "/home/pnair/spai/configs/spai.yaml" \
-  --batch-size 192 \
-  --pretrained "/home/pnair/spai/weights/mfm_pretrain_vit_base.pth" \
-  --output "/home/pnair/spai/output/train" \
-  --data-path "/home/pnair/spai/datasets/ldm_train_val_subset.csv" \
-  --tag "spai" \
-  --amp-opt-level "O2" \
-  --data-workers 16 \
-  --save-all \
-  --opt "DATA.VAL_BATCH_SIZE" "256" \
-  --opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
-  --opt "DATA.TEST_PREFETCH_FACTOR" "4"
+# python -m spai train \
+#   --cfg "/home/pnair/spai/configs/spai.yaml" \
+#   --batch-size 192 \
+#   --pretrained "/home/pnair/spai/weights/mfm_pretrain_vit_base.pth" \
+#   --output "/home/pnair/spai/output/train" \
+#   --data-path "/home/pnair/spai/datasets/ldm_train_val_subset.csv" \
+#   --tag "spai" \
+#   --amp-opt-level "O2" \
+#   --data-workers 16 \
+#   --save-all \
+#   --opt "DATA.VAL_BATCH_SIZE" "256" \
+#   --opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
+#   --opt "DATA.TEST_PREFETCH_FACTOR" "4"
+
+python /home/pnair/spai/spai/tools/visualize_dataset.py

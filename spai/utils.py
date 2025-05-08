@@ -262,20 +262,21 @@ def remap_pretrained_keys_swin(model, checkpoint_model, logger):
 
 
 def remap_pretrained_keys_vit(model, checkpoint_model, logger):
-    # Duplicate shared rel_pos_bias to each layer
+    # 1) Duplicate shared rel_pos_bias to each layer
     if getattr(model, 'use_rel_pos_bias', False) and "rel_pos_bias.relative_position_bias_table" in checkpoint_model:
         logger.info("Expand the shared relative position embedding to each transformer block.")
         num_layers = model.get_num_layers()
         rel_pos_bias = checkpoint_model["rel_pos_bias.relative_position_bias_table"]
         for i in range(num_layers):
-            checkpoint_model["blocks.%d.attn.relative_position_bias_table" % i] = rel_pos_bias.clone()
+            checkpoint_model[f"blocks.{i}.attn.relative_position_bias_table"] = rel_pos_bias.clone()
         checkpoint_model.pop("rel_pos_bias.relative_position_bias_table")
-    
-    # Geometric interpolation when pre-trained patch size mismatch with fine-tuned patch size
+
+    # 2) Geometric interpolation for positional bias when patch sizes differ
     all_keys = list(checkpoint_model.keys())
     for key in all_keys:
         if "relative_position_index" in key:
             checkpoint_model.pop(key)
+            continue
 
         if "relative_position_bias_table" in key:
             rel_pos_bias = checkpoint_model[key]
@@ -283,62 +284,62 @@ def remap_pretrained_keys_vit(model, checkpoint_model, logger):
             dst_num_pos, _ = model.state_dict()[key].size()
             dst_patch_shape = model.patch_embed.patch_shape
             if dst_patch_shape[0] != dst_patch_shape[1]:
-                raise NotImplementedError()
-            num_extra_tokens = dst_num_pos - (dst_patch_shape[0] * 2 - 1) * (dst_patch_shape[1] * 2 - 1)
+                raise NotImplementedError("Asymmetric patch shapes not supported")
+            num_extra_tokens = dst_num_pos - (dst_patch_shape[0]*2 - 1)*(dst_patch_shape[1]*2 - 1)
             src_size = int((src_num_pos - num_extra_tokens) ** 0.5)
             dst_size = int((dst_num_pos - num_extra_tokens) ** 0.5)
             if src_size != dst_size:
-                logger.info("Position interpolate for %s from %dx%d to %dx%d" % (key, src_size, src_size, dst_size, dst_size))
+                logger.info(f"Position interpolate for {key} from {src_size}×{src_size} → {dst_size}×{dst_size}")
                 extra_tokens = rel_pos_bias[-num_extra_tokens:, :]
-                rel_pos_bias = rel_pos_bias[:-num_extra_tokens, :]
+                base_bias = rel_pos_bias[:-num_extra_tokens, :]
 
-                def geometric_progression(a, r, n):
-                    return a * (1.0 - r ** n) / (1.0 - r)
-
+                # compute geometric grid for interpolation
+                def geo_prog(a, r, n):
+                    return a * (1.0 - r**n) / (1.0 - r)
                 left, right = 1.01, 1.5
                 while right - left > 1e-6:
-                    q = (left + right) / 2.0
-                    gp = geometric_progression(1, q, src_size // 2)
-                    if gp > dst_size // 2:
+                    q = (left + right)/2
+                    if geo_prog(1, q, src_size//2) > dst_size//2:
                         right = q
                     else:
                         left = q
-
-                # if q > 1.090307:
-                #     q = 1.090307
+                q = (left + right)/2
 
                 dis = []
                 cur = 1
-                for i in range(src_size // 2):
+                for i in range(src_size//2):
                     dis.append(cur)
-                    cur += q ** (i + 1)
+                    cur += q**(i+1)
+                coords = [-_ for _ in reversed(dis)] + [0] + dis
+                dx = np.arange(-dst_size//2, dst_size//2 + 1, 1.0)
+                dy = dx
 
-                r_ids = [-_ for _ in reversed(dis)]
+                # interpolate per head
+                all_bias = []
+                for h in range(num_attn_heads):
+                    z = base_bias[:, h].view(src_size, src_size).float().numpy()
+                    f = interpolate.interp2d(coords, coords, z, kind='cubic')
+                    resized = torch.tensor(f(dx, dy), device=base_bias.device).view(-1, 1)
+                    all_bias.append(resized)
+                new_table = torch.cat(all_bias, dim=-1)
+                checkpoint_model[key] = torch.cat([new_table, extra_tokens], dim=0)
 
-                x = r_ids + [0] + dis
-                y = r_ids + [0] + dis
+    # 3) ——— Stretch any mismatched LayerNorm parameters ———
+    model_state = model.state_dict()
+    for name in ("norm.weight", "norm.bias"):
+        if name in checkpoint_model and name in model_state:
+            old = checkpoint_model[name]
+            new = model_state[name]
+            if old.shape != new.shape:
+                # LayerNorm defaults: weights = 1.0, biases = 0.0
+                init = torch.ones if name.endswith("weight") else torch.zeros
+                adapted = init(new.shape, dtype=old.dtype, device=old.device)
+                adapted[:old.shape[0]] = old
+                checkpoint_model[name] = adapted
+                logger.info(f"Expanded `{name}` from {tuple(old.shape)} → {tuple(new.shape)}")
 
-                t = dst_size // 2.0
-                dx = np.arange(-t, t + 0.1, 1.0)
-                dy = np.arange(-t, t + 0.1, 1.0)
-
-                logger.info("Original positions = %s" % str(x))
-                logger.info("Target positions = %s" % str(dx))
-
-                all_rel_pos_bias = []
-
-                for i in range(num_attn_heads):
-                    z = rel_pos_bias[:, i].view(src_size, src_size).float().numpy()
-                    f = interpolate.interp2d(x, y, z, kind='cubic')
-                    all_rel_pos_bias.append(
-                        torch.Tensor(f(dx, dy)).contiguous().view(-1, 1).to(rel_pos_bias.device))
-
-                rel_pos_bias = torch.cat(all_rel_pos_bias, dim=-1)
-
-                new_rel_pos_bias = torch.cat((rel_pos_bias, extra_tokens), dim=0)
-                checkpoint_model[key] = new_rel_pos_bias
-    
     return checkpoint_model
+
 
 
 def remove_imagenet_norm(image: np.ndarray) -> np.ndarray:

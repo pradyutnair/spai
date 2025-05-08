@@ -234,22 +234,40 @@ def train(
     model.cuda()
     logger.info(str(model))
 
-    # Freeze backbone and only train semantic fusion
     # Step 2: Freeze all parameters
     logger.info("🚨 Freezing all parameters from pretrained model")
+    model.freeze_backbone()
     for param in model.parameters():
         param.requires_grad = False
 
     # Step 3: Unfreeze semantic fusion and classification head
-    logger.info("🚨 Unfreezing semantic fusion and classification head")
-    for param in model.features_processor.semantic_fusion.parameters():
+    #logger.info("🚨 Unfreezing semantic fusion and classification head")
+    # Print all the modules in the model
+    logger.info(f"🚨 Modules in the model: {model.named_modules()}")
+    # Unfreeze semantic fusion
+    for param in model.mfvit.features_processor.semantic_fusion.parameters():
         param.requires_grad = True
+        print(f"🚨 Unfreezing semantic fusion: Param: {param}, Requires grad: {param.requires_grad}")
+    # Unfreeze classification head
     for param in model.cls_head.parameters():
         param.requires_grad = True
+        print(f"🚨 Unfreezing classification head: Param: {param}, Requires grad: {param.requires_grad}")
 
     # Step 4: Freeze the backbone
-    model.freeze_backbone()
     logger.info("🚨 Backbone frozen, semantic fusion and classification head unfrozen.")
+
+    # Step 5: Log and show which parameters are trainable
+    logger.info("🚨 Trainable parameters:")
+    for name, param in model.named_parameters():
+        logger.info(f"  ⍟ Parameter: {name}, ⛭ Trainable: {param.requires_grad}")
+    
+    # Step 6: Number of trainable parameters
+    n_semantic = sum(p.numel() for p in model.mfvit.features_processor.semantic_fusion.parameters() if p.requires_grad)
+    n_cls_head = sum(p.numel() for p in model.cls_head.parameters() if p.requires_grad)
+    n_total = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    logger.info(f"⛭ Trainable params in semantic_fusion: {n_semantic}")
+    logger.info(f"⛭ Trainable params in cls_head: {n_cls_head}")
+    logger.info(f"⛭ Total trainable params: {n_total}")
 
     optimizer = build_optimizer(config, model, logger, is_pretrain=False)
     if config.AMP_OPT_LEVEL != "O0":
@@ -267,7 +285,9 @@ def train(
     logger.info(f"Loss: \n{criterion}")
 
     if config.PRETRAINED:
-        load_pretrained(config, model_without_ddp.get_vision_transformer(), logger)
+        #load_pretrained(config, model_without_ddp.get_vision_transformer(), logger)
+        model_ckpt: pathlib.Path = find_pretrained_checkpoints(config)[0]
+        load_pretrained(config, model, logger, model_ckpt, verbose=True)
     else:
         model_without_ddp.unfreeze_backbone()
         logger.info(f"No pretrained model. Backbone parameters are trainable.")

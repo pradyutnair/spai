@@ -940,7 +940,6 @@ class Projector(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.norm1(x)
-        print(f"Projector input shape: {x.shape}")
         x = self.projector(x)
         x = self.norm2(x)
         return x

@@ -1,0 +1,45 @@
+✅ Job started at: Wed May  7 17:28:25 CEST 2025
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+/home/pnair/.local/lib/python3.11/site-packages/onnxscript/converter.py:816: FutureWarning: 'onnxscript.values.Op.param_schemas' is deprecated in version 0.1 and will be removed in the future. Please use '.op_signature' instead.
+  param_schemas = callee.param_schemas()
+/home/pnair/.local/lib/python3.11/site-packages/onnxscript/converter.py:816: FutureWarning: 'onnxscript.values.OnnxFunction.param_schemas' is deprecated in version 0.1 and will be removed in the future. Please use '.op_signature' instead.
+  param_schemas = callee.param_schemas()
+Traceback (most recent call last):
+  File "/home/pnair/spai/tests/compare_params.py", line 38, in <module>
+    model = build_cls_model(cfg)
+            ^^^^^^^^^^^^^^^^^^^^
+  File "/gpfs/home2/pnair/spai/spai/models/build.py", line 44, in build_cls_model
+    model = build_mf_vit(config)
+            ^^^^^^^^^^^^^^^^^^^^
+  File "/gpfs/home2/pnair/spai/spai/models/sid.py", line 1242, in build_mf_vit
+    if config.MODEL_WEIGHTS == "mfm":
+       ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Config' object has no attribute 'MODEL_WEIGHTS'
+
+JOB STATISTICS
+==============
+Job ID: 11624179
+Cluster: snellius
+User/Group: pnair/pnair
+State: FAILED (exit code 1)
+Nodes: 1
+Cores per node: 16
+CPU Utilized: 00:00:09
+CPU Efficiency: 2.08% of 00:07:12 core-walltime
+Job Wall-clock time: 00:00:27
+Memory Utilized: 1.51 MB
+Memory Efficiency: 0.00% of 180.00 GB (180.00 GB/node)
