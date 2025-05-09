@@ -241,6 +241,9 @@ def train(
 
     # freeze all but the semantic projections and cls_head 
     if config.MODEL.SEMANTIC.FREEZE_BACKBONE:
+        logger.info("Freezing all but the semantic projections and cls_head")
+        n_params_before = sum(p.numel() for p in model.parameters() if p.requires_grad)
+        logger.info(f"Number of trainable params before: {n_params_before}")
         for name, param in model.named_parameters():
             if "semantic" in name or "cls_head" in name:
                 param.requires_grad = True

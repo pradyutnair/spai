@@ -274,7 +274,7 @@ def remap_pretrained_keys_vit(model, checkpoint_model, logger):
     # Geometric interpolation when pre-trained patch size mismatch with fine-tuned patch size
     all_keys = list(checkpoint_model.keys())
     for key in all_keys:
-        print(f"key: {key}")
+        # print(f"key: {key}")
         if "relative_position_index" in key:
             checkpoint_model.pop(key)
 
