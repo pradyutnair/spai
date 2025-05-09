@@ -227,6 +227,9 @@ class PatchBasedMFViT(nn.Module):
             query = global_image_encoding.unsqueeze(1).expand(
                 -1, x.size(1), -1
             )  # B x L x D
+            # normalize the query, key and value
+            query = F.normalize(query, dim=-1)  # B x L x D
+            x = F.normalize(x, dim=-1)  # B x L x D
 
             # Cross-attention with semantic features as query and spectral features as key/value
             attn_output, _ = self.semantic_mha(
@@ -245,6 +248,10 @@ class PatchBasedMFViT(nn.Module):
         if self.use_semantic_cross_attn_sca == "after":
             # Q - semantic context, K, V - spectral context
             query = global_image_encoding  # B x D
+
+            # normalize the query, key and value
+            query = F.normalize(query, dim=-1)  # B x D
+            x = F.normalize(x, dim=-1)
 
             # Cross-attention
             attn_output, _ = self.semantic_mha(
