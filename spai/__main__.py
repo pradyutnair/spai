@@ -259,9 +259,10 @@ def train(
     lr_scheduler = build_scheduler(config, optimizer, len(data_loader_train))
     criterion: nn.Module = losses.build_loss(config)
     logger.info(f"Loss: \n{criterion}")
-
     if config.PRETRAINED:
         load_pretrained(config, model_without_ddp.get_vision_transformer(), logger)
+        #model_ckpt: pathlib.Path = find_pretrained_checkpoints(config)[0]
+        #load_pretrained(config, model, logger, checkpoint_path=model_ckpt, verbose=True)
     else:
         model_without_ddp.unfreeze_backbone()
         logger.info(f"No pretrained model. Backbone parameters are trainable.")

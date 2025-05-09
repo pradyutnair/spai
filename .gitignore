@@ -144,3 +144,5 @@ weights
 .DS_Store
 output/
 pretrains/
+
+output_*/
