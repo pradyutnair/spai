@@ -1,3 +1,10 @@
+# spai
+*.job
+*.out
+*/ldm_train_val.csv
+spai-env/*
+output_*/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
