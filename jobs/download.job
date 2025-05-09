@@ -1,22 +1,24 @@
 #!/bin/bash
-#SBATCH --partition=cbuild
+#SBATCH --partition=gpu_a100
+#SBATCH --gpus=1
 #SBATCH --cpus-per-task=16
 #SBATCH --job-name=download
 #SBATCH --output=job_outputs/download_dataset_ld.out
-#SBATCH --error=job_outputs/download_dataset_ld.err
 #SBATCH --time=6:00:00
 
 echo "✅ Job started: $(date)"
 
 # Create target directory
-echo "📁 Creating target directory..."
-mkdir -p /scratch-shared/dl2_spai
+#echo "📁 Creating target directory..."
+#mkdir -p /scratch-shared/dl2_spai
 
 # Change to working directory
-cd /scratch-shared/dl2_spai
-echo "📍 Changed to working directory: $(pwd)"
+#cd /scratch-shared/dl2_spai
+#echo "📍 Changed to working directory: $(pwd)"
 
+wget https://drive.usercontent.google.com/download?id=1vvXmZqs6TVJdj8iF1oJ4L_fcgdQrp_YI&export=download&authuser=0&confirm=t&uuid=a6a73ccb-94ec-48ad-a538-13f5aa6d9265&at=ALoNOgnLvBS_WrmJVgRaj7RBc-KK%3A1746714299923
 # # Download all 7z parts
+
 # echo "⬇️ Starting download of ProGAN multi-part archives..."
 # wget https://huggingface.co/datasets/sywang/CNNDetection/resolve/main/progan_train.7z.001 &
 # wget https://huggingface.co/datasets/sywang/CNNDetection/resolve/main/progan_train.7z.002 &
@@ -55,9 +57,9 @@ echo "📍 Changed to working directory: $(pwd)"
 #echo "⬇️ Downloading latent_diffusion_trainingset.zip..."
 #wget https://www.grip.unina.it/download/prog/DMimageDetection/latent_diffusion_trainingset.zip
 
-echo "🗂️ Creating folder and unzipping latent_diffusion_trainingset.zip..."
-mkdir -p /scratch-shared/dl2_spai/datasets/
-unzip -n latent_diffusion_trainingset.zip -d /scratch-shared/dl2_spai/datasets/ | tee unzip_resume.log
+# echo "🗂️ Creating folder and unzipping latent_diffusion_trainingset.zip..."
+# mkdir -p /scratch-shared/dl2_spai/datasets/
+# unzip -n latent_diffusion_trainingset.zip -d /scratch-shared/dl2_spai/datasets/ | tee unzip_resume.log
 #rm latent_diffusion_trainingset.zip
 #echo "🧹 Removed latent_diffusion_trainingset.zip."
 

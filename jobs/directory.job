@@ -39,7 +39,7 @@ export CUDA_LAUNCH_BLOCKING=0
 python -m spai train \
   --cfg "/home/pnair/spai/configs/spai.yaml" \
   --batch-size 192 \
-  --pretrained "/home/pnair/spai/weights/mfm_pretrain_vit_base.pth" \
+  --pretrained "/home/pnair/spai/weights/spai.pth" \
   --output "/home/pnair/spai/output/train" \
   --data-path "/home/pnair/spai/datasets/ldm_train_val_subset.csv" \
   --tag "spai" \

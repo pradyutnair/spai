@@ -1,4 +1,4 @@
-✅ Job started at: Wed May  7 17:28:25 CEST 2025
+✅ Job started at: Fri May  9 14:38:56 CEST 2025
 ============================================================================================== 
 Warning! Mixing Conda and module environments may lead to corruption of the
 user environment. 
@@ -14,32 +14,18 @@ the 'module load <package__name>' command. If you are uncertain if a package is
 already available 
 on the system, please use 'module avail' or 'module spider' to search for it.
 ============================================================================================== 
-/home/pnair/.local/lib/python3.11/site-packages/onnxscript/converter.py:816: FutureWarning: 'onnxscript.values.Op.param_schemas' is deprecated in version 0.1 and will be removed in the future. Please use '.op_signature' instead.
-  param_schemas = callee.param_schemas()
-/home/pnair/.local/lib/python3.11/site-packages/onnxscript/converter.py:816: FutureWarning: 'onnxscript.values.OnnxFunction.param_schemas' is deprecated in version 0.1 and will be removed in the future. Please use '.op_signature' instead.
-  param_schemas = callee.param_schemas()
-Traceback (most recent call last):
-  File "/home/pnair/spai/tests/compare_params.py", line 38, in <module>
-    model = build_cls_model(cfg)
-            ^^^^^^^^^^^^^^^^^^^^
-  File "/gpfs/home2/pnair/spai/spai/models/build.py", line 44, in build_cls_model
-    model = build_mf_vit(config)
-            ^^^^^^^^^^^^^^^^^^^^
-  File "/gpfs/home2/pnair/spai/spai/models/sid.py", line 1242, in build_mf_vit
-    if config.MODEL_WEIGHTS == "mfm":
-       ^^^^^^^^^^^^^^^^^^^^
-AttributeError: 'Config' object has no attribute 'MODEL_WEIGHTS'
+slurmstepd: error: *** JOB 11693058 ON srv5 CANCELLED AT 2025-05-09T16:39:08 DUE TO TIME LIMIT ***
 
 JOB STATISTICS
 ==============
-Job ID: 11624179
+Job ID: 11693058
 Cluster: snellius
 User/Group: pnair/pnair
-State: FAILED (exit code 1)
+State: TIMEOUT (exit code 0)
 Nodes: 1
-Cores per node: 16
-CPU Utilized: 00:00:09
-CPU Efficiency: 2.08% of 00:07:12 core-walltime
-Job Wall-clock time: 00:00:27
-Memory Utilized: 1.51 MB
-Memory Efficiency: 0.00% of 180.00 GB (180.00 GB/node)
+Cores per node: 32
+CPU Utilized: 00:00:01
+CPU Efficiency: 0.00% of 2-16:11:44 core-walltime
+Job Wall-clock time: 02:00:22
+Memory Utilized: 8.35 MB
+Memory Efficiency: 0.00% of 224.00 GB (7.00 GB/core)
