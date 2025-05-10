@@ -16,7 +16,7 @@
 
 from .swin_transformer import build_swin
 from .vision_transformer import build_vit
-from .sid import build_cls_vit, build_mf_vit
+from .sid import build_cls_vit, build_mf_vit,build_semantic_context_model
 from .mfm import build_mfm
 
 
@@ -42,6 +42,8 @@ def build_cls_model(config):
         model = build_cls_vit(config)
     elif model_type == "vit" and task_type == "freq_restoration":
         model = build_mf_vit(config)
+    elif model_type == "vit" and task_type == "semantic_context":
+        model = build_semantic_context_model(config)
     else:
         raise NotImplementedError(f"Unknown cls model: {model_type}")
     return model

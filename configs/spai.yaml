@@ -1,5 +1,6 @@
 MODEL:
-  SID_APPROACH: "freq_restoration"
+  # SID_APPROACH: "freq_restoration"
+  SID_APPROACH: "semantic_context"
   TYPE: vit
   NAME: finetune
   DROP_PATH_RATE: 0.1
@@ -7,6 +8,11 @@ MODEL:
   REQUIRED_NORMALIZATION: "positive_0_1"
   RESOLUTION_MODE: "arbitrary"
   FEATURE_EXTRACTION_BATCH: 400
+  SEMANTIC_CONTEXT:
+    SPAI_MODEL_PATH: "./weights/spai.pth"
+    OUTPUT_DIM: 1096
+    HIDDEN_DIMS: [1024, 512]
+    DROPOUT: 0.5
   VIT:
     EMBED_DIM: 768
     DEPTH: 12
@@ -40,7 +46,8 @@ AUG:
   COLOR_JITTER: 0.
 TRAIN:
   EPOCHS: 35
-  WARMUP_EPOCHS: 5
+  #EPOCHS: 1
+  WARMUP_EPOCHS: 0
   BASE_LR: 5e-4
   WARMUP_LR: 2.5e-7
   MIN_LR: 2.5e-7

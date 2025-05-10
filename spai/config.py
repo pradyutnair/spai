@@ -221,6 +221,13 @@ _C.MODEL.FREQ_LOSS.WITH_MATRIX = False
 _C.MODEL.FREQ_LOSS.LOG_MATRIX = False
 _C.MODEL.FREQ_LOSS.BATCH_MATRIX = False
 
+# Semantic Context Addition !
+_C.MODEL.SEMANTIC_CONTEXT = CN()
+_C.MODEL.SEMANTIC_CONTEXT.SPAI_MODEL_PATH = './weights/spai.pth'
+_C.MODEL.SEMANTIC_CONTEXT.OUTPUT_DIM = 1096
+_C.MODEL.SEMANTIC_CONTEXT.HIDDEN_DIMS = [1024, 512]
+_C.MODEL.SEMANTIC_CONTEXT.DROPOUT = 0.5
+
 # -----------------------------------------------------------------------------
 # Training settings
 # -----------------------------------------------------------------------------

@@ -162,7 +162,8 @@ def train(
         "learning_rate": learning_rate,
         "data_path": str(data_path),
         "csv_root_dir": str(csv_root_dir),
-        "lmdb_path": str(lmdb_path),
+        # "lmdb_path": str(lmdb_path),
+        "lmdb_path":None,
         "pretrained": str(pretrained) if pretrained is not None else None,
         "resume": resume,
         "accumulation_steps": accumulation_steps,
@@ -364,24 +365,24 @@ def test(
     # print config
     logger.info(config.dump())
 
-    # neptune_tags: list[str] = ["mfm", "test"]
-    # neptune_tags.extend([p.stem for p in test_csv])
-    # neptune_run = neptune.init_run(
-    #     name=config.TAG,
-    #     tags=neptune_tags
-    # )
+    neptune_tags: list[str] = ["mfm", "test"]
+    neptune_tags.extend([p.stem for p in test_csv])
+    neptune_run = neptune.init_run(
+        name=config.TAG,
+        tags=neptune_tags
+    )
 
-    # Comment out Neptune initialization - Iwo Addition
+    # # Comment out Neptune initialization - Iwo Addition
 
-    # Create a simple mock instead 
-    class MockNeptuneRun:
-        def __init__(self): pass
-        def __getitem__(self, key): return self
-        def append(self, *args, **kwargs): pass
-        def sync(self): pass
-        def __setitem__(self, key, value): pass
+    # # Create a simple mock instead 
+    # class MockNeptuneRun:
+    #     def __init__(self): pass
+    #     def __getitem__(self, key): return self
+    #     def append(self, *args, **kwargs): pass
+    #     def sync(self): pass
+    #     def __setitem__(self, key, value): pass
 
-    neptune_run = MockNeptuneRun()
+    # neptune_run = MockNeptuneRun()
 
     test_datasets_names, test_datasets, test_loaders = build_loader_test(config, logger,
                                                                          split=split)
