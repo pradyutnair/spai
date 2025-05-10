@@ -54,9 +54,9 @@ class PatchBasedMFViT(nn.Module):
         minimum_patches: int = 0,
         initialization_scope: str = "all",
         use_semantic_cross_attn_sca: Union[Literal["before", "after"], None] = None,
+        use_dual_cross_attn_sca: bool = False,
         semantic_embed_dim: Optional[int] = None,
         semantic_heads: Optional[int] = None,
-        # freeze_backbone_for_semantics: bool = True,
     ) -> None:
         super().__init__()
 
@@ -94,13 +94,14 @@ class PatchBasedMFViT(nn.Module):
         self.cls_head = cls_head
         # adding semantic cross-attention before or after the SCA module or not using it at all
         self.use_semantic_cross_attn_sca = use_semantic_cross_attn_sca
+        self.use_dual_cross_attn_sca = use_dual_cross_attn_sca
         self.semantic_embed_dim = semantic_embed_dim
         self.semantic_heads = (
             semantic_heads if semantic_heads is not None else num_heads
         )
 
         if self.use_semantic_cross_attn_sca in ["before", "after"]:
-            print(f"Using semantic cross-attention {self.use_semantic_cross_attn_sca}!")
+            print(f"Using semantic cross-attention: {self.use_semantic_cross_attn_sca}")
             self.semantic_mha = nn.MultiheadAttention(
                 embed_dim=cls_vector_dim, num_heads=self.semantic_heads, dropout=dropout
             )
@@ -109,6 +110,12 @@ class PatchBasedMFViT(nn.Module):
                 self.semantic_embed_dim, cls_vector_dim
             )
             self.semantic_layer_norm = nn.LayerNorm(cls_vector_dim)
+
+            if self.use_dual_cross_attn_sca:
+                print("Using dual cross-attention SCA")
+                self.semantic_mha2 = nn.MultiheadAttention(
+                    embed_dim=cls_vector_dim, num_heads=self.semantic_heads, dropout=dropout
+                )
 
         if initialization_scope == "all":
             self.apply(_init_weights)
@@ -204,7 +211,7 @@ class PatchBasedMFViT(nn.Module):
 
             # Project global image encoding to match the cross-attention query dimension
             global_image_encoding = self.semantic_projection(
-                global_image_encoding
+                global_image_encoding.to(self.semantic_projection.weight.dtype)
             )  # B x D
 
         # Patchify the input image
@@ -224,22 +231,38 @@ class PatchBasedMFViT(nn.Module):
         # Spectral-semantic cross-attention
         if self.use_semantic_cross_attn_sca == "before":
             # Q - semantic context, K, V - spectral context
-            query = global_image_encoding.unsqueeze(1).expand(
+            semantic_enc = global_image_encoding.unsqueeze(1).expand(
                 -1, x.size(1), -1
             )  # B x L x D
-            # normalize the query, key and value
-            query = F.normalize(query, dim=-1)  # B x L x D
-            x = F.normalize(x, dim=-1)  # B x L x D
+
+            # NOTE: normalize the query, key and value - double check if needed
+            # semantic_enc = F.normalize(semantic_enc, dim=-1)  # B x L x D
+            # x = F.normalize(x, dim=-1)  # B x L x D
 
             # Cross-attention with semantic features as query and spectral features as key/value
             attn_output, _ = self.semantic_mha(
-                query=query,  # B x L x D
+                query=semantic_enc,  # B x L x D
                 key=x,  # B x L x D
                 value=x,  # B x L x D
                 need_weights=True,
             )
             # Residual connection and layer normalization
-            x = self.semantic_layer_norm(query + attn_output)  # B x L x D
+            x_out = attn_output  # B x L x D
+
+            if self.use_dual_cross_attn_sca:
+                # KV - semantic context, Q - spectral context
+                attn_output, _ = self.semantic_mha2(
+                    query=x,  # B x L x D
+                    key=semantic_enc,  # B x D
+                    value=semantic_enc,  # B x D
+                    need_weights=True,
+                )
+                x2 = attn_output  # B x L x D
+                # take the mean 
+                x_out = (x_out + x2) / 2
+            
+            # Residual connection and layer normalization
+            x = self.semantic_layer_norm(x + x_out)  # B x L x D
 
         # Spectral context attention (SCA)
         x = self.patches_attention(x)  # B x D
@@ -247,18 +270,33 @@ class PatchBasedMFViT(nn.Module):
 
         if self.use_semantic_cross_attn_sca == "after":
             # Q - semantic context, K, V - spectral context
-            query = global_image_encoding  # B x D
+            semantic_enc = global_image_encoding  # B x D
 
-            # normalize the query, key and value
-            query = F.normalize(query, dim=-1)  # B x D
-            x = F.normalize(x, dim=-1)
+            # NOTE: normalize the query, key and value - double check if needed
+            # query = F.normalize(query, dim=-1)  # B x D
+            # x = F.normalize(x, dim=-1)
 
             # Cross-attention
             attn_output, _ = self.semantic_mha(
-                query=query, key=x, value=x, need_weights=True
+                query=semantic_enc, key=x, value=x, need_weights=True
             )
+            x_out = attn_output  # B x D
+
+            if self.use_dual_cross_attn_sca:
+                # KV - semantic context, Q - spectral context
+                attn_output, _ = self.semantic_mha2(
+                    query=x,
+                    key=semantic_enc,
+                    value=semantic_enc,
+                    need_weights=True
+                )
+                x2 = attn_output
+                # take the mean
+                x_out = (x_out + x2) / 2
+            
+
             # Residual connection and layer normalization
-            x = self.semantic_layer_norm(query + attn_output)  # B x D
+            x = self.semantic_layer_norm(x + x_out)  # B x D
 
         x = self.cls_head(x)  # B x 1
 
@@ -1442,7 +1480,7 @@ def build_mf_vit(config) -> MFViT:
             img_size=config.DATA.IMG_SIZE,
         )
     elif config.MODEL.RESOLUTION_MODE == "arbitrary":
-        # TODO: add changes there to support before/after semantic cross-attention
+        # NOTE: changes added here to support before/after semantic cross-attention
         print("LOADING ARBITRARY RESOLUTION MODEL: PatchBasedMFViT")
         model = PatchBasedMFViT(
             vit,
@@ -1460,7 +1498,7 @@ def build_mf_vit(config) -> MFViT:
             use_semantic_cross_attn_sca=config.MODEL.SEMANTIC.CROSS_ATTN_SCA,
             semantic_embed_dim=config.MODEL.SEMANTIC.EMBED_DIM,
             semantic_heads=config.MODEL.SEMANTIC.NUM_HEADS,
-            # freeze_backbone_for_semantics=config.MODEL.SEMANTIC.FREEZE_BACKBONE,
+            use_dual_cross_attn_sca=config.MODEL.SEMANTIC.DUAL_CROSS_ATTN_SCA,
         )
     else:
         raise RuntimeError(
