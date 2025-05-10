@@ -2,9 +2,9 @@
 #SBATCH --partition=gpu_h100
 #SBATCH --gpus=1
 #SBATCH --cpus-per-task=16
-#SBATCH --job-name=train
-#SBATCH --output=/home/pnair/spai/job_outputs/train.out
-#SBATCH --time=14:00:00
+#SBATCH --job-name=train_sca
+#SBATCH --output=/home/pnair/spai/job_outputs/train_sca_cross_attn.out
+#SBATCH --time=01:00:00
 #SBATCH --mem=180G
 #SBATCH --hint=nomultithread
 
@@ -19,8 +19,8 @@ source activate spai
 cd /home/pnair/spai
 #pip install -r requirements.txt
 #pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu121
-export NEPTUNE_API_TOKEN="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiJlZDBmOTg4MS04MTU0LTQ4YTItYTI1Mi1lNjdjZjhiMzJkMzAifQ==" 
-export NEPTUNE_PROJECT="spai/beast-mode"
+export NEPTUNE_API_TOKEN="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiJjMGEzN2M5OS0zYjQ3LTRlYTQtOTdhNy1hMGM3ZTFlZTU1MzYifQ==" 
+export NEPTUNE_PROJECT="dl2-spai/beast-mode"
 export PYTHONPATH=$PYTHONPATH:/home/pnair/spai
 export NCCL_DEBUG=INFO
 export CUDA_LAUNCH_BLOCKING=0
@@ -43,7 +43,7 @@ python -m spai train \
   --output "/home/pnair/spai/output/train" \
   --data-path "/home/pnair/spai/datasets/ldm_train_val_subset.csv" \
   --tag "spai" \
-  --amp-opt-level "O2" \
+  --amp-opt-level "O0" \
   --data-workers 16 \
   --save-all \
   --opt "DATA.VAL_BATCH_SIZE" "256" \

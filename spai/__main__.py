@@ -235,6 +235,10 @@ def train(
     logger.info(str(model))
 
     optimizer = build_optimizer(config, model, logger, is_pretrain=False)
+    # print("*"*30)
+    # for name, param in model.named_parameters():
+    #     print(name, param.dtype)
+    # print("*"*30)
     if config.AMP_OPT_LEVEL != "O0":
         model, optimizer = amp.initialize(model, optimizer, opt_level=config.AMP_OPT_LEVEL)
     model_without_ddp = model
@@ -251,7 +255,11 @@ def train(
                 param.requires_grad = False
 
     n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    logger.info(f"number of params: {n_parameters}")
+    # Show the parameters that are trainable and the number of parameters
+    for name, param in model.named_parameters():
+        if param.requires_grad:
+            logger.info(f"Trainable parameter: {name}, requires_grad: {param.requires_grad}, Number of parameters: {param.numel()}")
+    logger.info(f"Number of params: {n_parameters}")
     if hasattr(model_without_ddp, 'flops'):
         flops = model_without_ddp.flops()
         logger.info(f"number of GFLOPs: {flops / 1e9}")
@@ -260,9 +268,9 @@ def train(
     criterion: nn.Module = losses.build_loss(config)
     logger.info(f"Loss: \n{criterion}")
     if config.PRETRAINED:
-        load_pretrained(config, model_without_ddp.get_vision_transformer(), logger)
-        #model_ckpt: pathlib.Path = find_pretrained_checkpoints(config)[0]
-        #load_pretrained(config, model, logger, checkpoint_path=model_ckpt, verbose=True)
+        #load_pretrained(config, model_without_ddp.get_vision_transformer(), logger)
+        model_ckpt: pathlib.Path = find_pretrained_checkpoints(config)[0]
+        load_pretrained(config, model, logger, checkpoint_path=model_ckpt, verbose=True)
     else:
         model_without_ddp.unfreeze_backbone()
         logger.info(f"No pretrained model. Backbone parameters are trainable.")

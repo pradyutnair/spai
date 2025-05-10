@@ -117,6 +117,10 @@ class PatchBasedMFViT(nn.Module):
                     embed_dim=cls_vector_dim, num_heads=self.semantic_heads, dropout=dropout
                 )
 
+            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            self.clip_backbone = backbones.CLIPBackbone(device=self.device)
+            self.clip_backbone = self.clip_backbone.float()
+
         if initialization_scope == "all":
             self.apply(_init_weights)
         elif initialization_scope == "local":
@@ -191,23 +195,17 @@ class PatchBasedMFViT(nn.Module):
             return x
 
     def forward_batch(self, x: torch.Tensor) -> torch.Tensor:
-        print(f"Input shape: {x.shape}")
+        # print(f"Input shape: {x.shape}")
         # Compute global image encoding before patchifying
         if self.use_semantic_cross_attn_sca in ["before", "after"]:
-            if isinstance(self.mfvit.vit, backbones.CLIPBackbone):
-                global_image_encoding = self.mfvit.vit.get_image_embedding(
-                    x
-                )  # B x semantic_embed_dim
-                # print(
-                #     "Using CLIP backbone for global image encoding!",
-                #     global_image_encoding.shape,
-                # )
-            else:
-                # NOTE: Fallback to random encoding if no CLIP backbone is used
-                print("Warning: Using random global image encoding!")
-                global_image_encoding = torch.rand(
-                    x.size(0), self.semantic_embed_dim, device=x.device
-                )  # B x semantic_embed_dim
+            # Get the global image encoding from the CLIP backbone
+            # Resize the image to 224x224 for CLIP
+            x_resized = F.interpolate(x, size=(224, 224), mode="bilinear", align_corners=False)
+            global_image_encoding = self.clip_backbone.get_image_embedding(x_resized.float())
+            # print(
+            #     "Using CLIP backbone for global image encoding!",
+            #     global_image_encoding.shape,
+            # )
 
             # Project global image encoding to match the cross-attention query dimension
             global_image_encoding = self.semantic_projection(

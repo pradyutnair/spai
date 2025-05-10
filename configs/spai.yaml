@@ -29,7 +29,7 @@ MODEL:
   SEMANTIC:
     CROSS_ATTN_SCA: before # None/before/after
     DUAL_CROSS_ATTN_SCA: False # True/False
-    EMBED_DIM: 137
+    EMBED_DIM: 512
     NUM_HEADS: 8
     FREEZE_BACKBONE: True
   CLS_HEAD:
