@@ -34,6 +34,8 @@ from . import utils
 from . import backbones
 from spai.utils import save_image_with_attention_overlay
 
+from typing import Union, List
+
 
 class PatchBasedMFViT(nn.Module):
     def __init__(
@@ -1352,66 +1354,105 @@ class SemanticContextModel(nn.Module):
         self.fusion_head = nn.Sequential(*fusion_layers)
         self.fusion_head.apply(_init_weights)
 
-    def forward(self, x: torch.Tensor, feature_extraction_batch_size: Optional[int] = None) -> torch.Tensor:
+    def forward(self, x: Union[torch.Tensor, List[torch.Tensor]], feature_extraction_batch_size: Optional[int] = None) -> torch.Tensor:
         """
-        Forward pass handling both tensor and list inputs
+        Forward pass handling both tensor (training) and list inputs (validation/inference).
+
+        During validation/inference (list inputs), images are resized to 224×224 to enable batching.
+        During training (tensor inputs), images are processed as-is, assuming already batched and preprocessed.
         """
-        # 1. Handle list inputs (from validation)
+
+        device = next(self.parameters()).device
+
+        # Handle list inputs (validation/inference)
         if isinstance(x, list):
-            # Process each image in the list separately and stack results
-            outputs = []
+            # Resize transform for inference efficiency
+            resize_transform = transforms.Resize((224, 224), antialias=True)
+
+            # ImageNet normalization (same as used by SPAI)
+            normalize = transforms.Normalize(
+                mean=IMAGENET_DEFAULT_MEAN,
+                std=IMAGENET_DEFAULT_STD
+            )
+            # Resize and stack images safely
+            resized_images = []
             for img in x:
-                # Add batch dimension if needed
-                if img.dim() == 3:
-                    img = img.unsqueeze(0)
-                # Process single image
-                with torch.no_grad():
-                    # Get SPAI features
-                    original_cls_head = self.spai_model.cls_head
-                    self.spai_model.cls_head = nn.Identity()
-                    spectral_features = self.spai_model(img)
-                    self.spai_model.cls_head = original_cls_head
-                    
-                    # Get semantic features
-                    semantic_features = self.semantic_backbone(img)
-                    semantic_features = self.global_pool(semantic_features)
-                    semantic_features = semantic_features.flatten(1)
-                    
-                # Project semantic features
-                semantic_features = self.semantic_projection(semantic_features)
+                # Ensure each image tensor has shape [C, H, W]
+                if img.dim() == 4 and img.size(0) == 1:
+                    img = img.squeeze(0)
+                elif img.dim() != 3:
+                    raise ValueError(f"Inference tensors must have shape C×H×W or 1×C×H×W, got {img.shape}")
                 
-                # Concatenate and get final prediction
-                combined_features = torch.cat([spectral_features, semantic_features], dim=1)
-                output = self.fusion_head(combined_features)
-                outputs.append(output)
-                
-            # Stack all outputs
-            return torch.cat(outputs, dim=0)
-            
-        # 2. Regular tensor input (from training)
+                # First ensure values are in [0,1] range
+                if img.max() > 1.0:
+                    img = img / 255.0
+
+                img = resize_transform(img)
+                img = normalize(img)
+                resized_images.append(img)
+
+            # Stack all resized images into one tensor batch
+            x = torch.stack(resized_images).to(device).float()
+
+            with torch.no_grad():
+                # Temporarily remove SPAI classification head for feature extraction
+                original_cls_head = self.spai_model.cls_head
+                self.spai_model.cls_head = nn.Identity()
+                spectral_features = self.spai_model(x)
+                self.spai_model.cls_head = original_cls_head
+
+                # Extract semantic features from ConvNeXt backbone
+                semantic_features = self.semantic_backbone(x)
+                semantic_features = self.global_pool(semantic_features)
+                semantic_features = semantic_features.flatten(1)
+
+            # Project semantic features to common space
+            semantic_features = self.semantic_projection(semantic_features)
+
+            # Concatenate spectral and semantic features
+            combined_features = torch.cat([spectral_features, semantic_features], dim=1)
+
+            # Get final predictions
+            output = self.fusion_head(combined_features)
+
+            # Clear CUDA cache after inference
+            torch.cuda.empty_cache()
+
+            return output
+
+        # Handle tensor inputs directly (training)
         else:
+            # Ensure tensor input is a batched tensor [B, C, H, W]
+            if x.dim() != 4:
+                raise ValueError(f"Training tensor input must be batched (B×C×H×W), got {x.shape}")
+
+            x = x.to(device).float()
+
             # Extract spectral features from SPAI model
             with torch.no_grad():
                 original_cls_head = self.spai_model.cls_head
                 self.spai_model.cls_head = nn.Identity()
                 spectral_features = self.spai_model(x)
                 self.spai_model.cls_head = original_cls_head
-            
-            # Extract semantic features from ConvNeXT
-            with torch.no_grad():
+
+                # Extract semantic features from ConvNeXt backbone
                 semantic_features = self.semantic_backbone(x)
                 semantic_features = self.global_pool(semantic_features)
                 semantic_features = semantic_features.flatten(1)
-            
+
             # Project semantic features
             semantic_features = self.semantic_projection(semantic_features)
-            
+
             # Concatenate features
             combined_features = torch.cat([spectral_features, semantic_features], dim=1)
-            
-            # Final prediction
+
+            # Final prediction from fusion head
             output = self.fusion_head(combined_features)
-            
+
+            # Clear CUDA cache if gradients are not needed (validation mode)
+            if not torch.is_grad_enabled():
+                torch.cuda.empty_cache()
+
             return output
 
     def unfreeze_backbone(self) -> None:
