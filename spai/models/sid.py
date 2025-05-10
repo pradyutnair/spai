@@ -1276,184 +1276,153 @@ def _init_weights(m: nn.Module) -> None:
 
 class SemanticContextModel(nn.Module):
     """
-    A model that combines the SPAI approach pre classification with a semantic context model.
-    So we will use the SPAI model to extract features and remove the classification head.
-    The spectral approach will be combined with a semantic context model with an MLP head.
+    A model that combines the SPAI approach pre-classification with a semantic context model.
+    Uses SPAI to extract spectral features (without classification head) and a ConvNeXt backbone for semantic features.
     """
     def __init__(
         self,
         spai_model_path: str,
         semantic_output_dim=1096,
+        projection_dim=512,
         hidden_dims: list[int] = [512, 256],
         dropout: float = 0.5,
     ):
         super().__init__()
 
         # 1. Load and freeze the SPAI model
-        # Import here to avoid circular imports
         from spai.models.build import build_cls_model
         from spai.config import get_config
 
-        # Build the SPAI model using your project's build function
         cfg = get_config({"cfg": "configs/spai.yaml"})
         self.spai_model = build_mf_vit(cfg)
-        print(f"SPAI model type: {type(self.spai_model).__name__}")
-        
-        # Load weights : know that weights are 'model'
         checkpoint = torch.load(spai_model_path, map_location='cpu', weights_only=False)
         if "model" in checkpoint:
             checkpoint = checkpoint["model"]
         else:
             raise RuntimeError("Checkpoint does not contain 'model' or 'state_dict' key.")
         self.spai_model.load_state_dict(checkpoint)
-
-        # Freeze the SPAI model
         for param in self.spai_model.parameters():
             param.requires_grad = False
         self.spai_model.eval()
 
-        # 2. Define the semantic context model
+        # Determine SPAI embedding dimension (extract programmatically or set manually)
+        spectral_features_dim = 1096  # This is a hardcoded known value for SPAI
+
+        # 2. Load and freeze semantic ConvNeXt model
         import open_clip
-        print("Building semantic understanding pipeline with ConvNeXt-XXL")
-        
         convnext_model, _, _ = open_clip.create_model_and_transforms(
             "convnext_xxlarge", pretrained="laion2b_s34b_b82k_augreg"
         )
-
-        # Extract just the visual backbone
         self.semantic_backbone = convnext_model.visual.trunk
-        
-        # Replace pooling with identity to access the feature maps
         self.semantic_backbone.head.global_pool = nn.Identity()
         self.semantic_backbone.head.flatten = nn.Identity()
-        
-        # Add a global pooling layer
         self.global_pool = nn.AdaptiveAvgPool2d((1, 1))
-        
-        # Freeze the semantic backbone
         for param in self.semantic_backbone.parameters():
             param.requires_grad = False
         self.semantic_backbone.eval()
-        # 3. Build feature projection head from ConvNeXt-XXL to the output dimension
+
+        # 3. Projection head from ConvNeXt to output dimension
         self.semantic_projection = nn.Sequential(
-        nn.LayerNorm(3072),
-        nn.Linear(3072, semantic_output_dim),
-        nn.GELU(),
-        nn.Dropout(dropout)
+            nn.LayerNorm(3072),
+            nn.Linear(3072, projection_dim),
+            nn.GELU(),
+            nn.Dropout(dropout)
         )
 
-        # 4. Fusion MLP head
+        # === IMPROVEMENTS START HERE ===
+        # 4. Small projection heads before fusion
+        self.spectral_proj = nn.Sequential(
+            nn.LayerNorm(spectral_features_dim),
+            nn.Linear(spectral_features_dim, projection_dim),
+            nn.GELU(),
+            nn.Dropout(dropout)
+        )
+
+        # 5. Improved fusion MLP head
+        fusion_input_dim = 2 * projection_dim
         fusion_layers = []
-        input_dim = semantic_output_dim+semantic_output_dim
         for hidden_dim in hidden_dims:
-            fusion_layers.append(nn.Linear(input_dim, hidden_dim))
-            fusion_layers.append(nn.GELU())
-            fusion_layers.append(nn.Dropout(dropout))
-            input_dim = hidden_dim
-        fusion_layers.append(nn.Linear(input_dim, 1)) # !!!! output dim = 1
+            fusion_layers.extend([
+                nn.Linear(fusion_input_dim, hidden_dim),
+                nn.GELU(),
+                nn.Dropout(dropout)
+            ])
+            fusion_input_dim = hidden_dim
+        fusion_layers.append(nn.Linear(fusion_input_dim, 1))
         self.fusion_head = nn.Sequential(*fusion_layers)
         self.fusion_head.apply(_init_weights)
+        # === IMPROVEMENTS END HERE ===
 
     def forward(self, x: Union[torch.Tensor, List[torch.Tensor]], feature_extraction_batch_size: Optional[int] = None) -> torch.Tensor:
         """
         Forward pass handling both tensor (training) and list inputs (validation/inference).
 
-        During validation/inference (list inputs), images are resized to 224×224 to enable batching.
-        During training (tensor inputs), images are processed as-is, assuming already batched and preprocessed.
+        - SPAI expects unnormalized [0, 1] inputs.
+        - ConvNeXt expects ImageNet-normalized inputs.
         """
 
         device = next(self.parameters()).device
 
-        # Handle list inputs (validation/inference)
-        if isinstance(x, list):
-            # Resize transform for inference efficiency
-            resize_transform = transforms.Resize((224, 224), antialias=True)
+        # Normalize function for ConvNeXt
+        normalize = transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD)
+        resize_transform = transforms.Resize((224, 224), antialias=True)
 
-            # ImageNet normalization (same as used by SPAI)
-            normalize = transforms.Normalize(
-                mean=IMAGENET_DEFAULT_MEAN,
-                std=IMAGENET_DEFAULT_STD
-            )
-            # Resize and stack images safely
-            resized_images = []
+        # === 1. Handle list input (validation / inference) ===
+        if isinstance(x, list):
+            spai_input, convnext_input = [], []
+
             for img in x:
-                # Ensure each image tensor has shape [C, H, W]
                 if img.dim() == 4 and img.size(0) == 1:
                     img = img.squeeze(0)
                 elif img.dim() != 3:
-                    raise ValueError(f"Inference tensors must have shape C×H×W or 1×C×H×W, got {img.shape}")
-                
-                # First ensure values are in [0,1] range
+                    raise ValueError(f"Expected C×H×W or 1×C×H×W, got {img.shape}")
+
+                # Scale if in [0, 255]
                 if img.max() > 1.0:
                     img = img / 255.0
 
-                img = resize_transform(img)
-                img = normalize(img)
-                resized_images.append(img)
+                spai_input.append(img)
+                convnext_input.append(normalize(resize_transform(img)))
 
-            # Stack all resized images into one tensor batch
-            x = torch.stack(resized_images).to(device).float()
+            x_spai = torch.stack(spai_input).to(device).float()  # for SPAI
+            x_convnext = torch.stack(convnext_input).to(device).float()  # for ConvNeXt
 
-            with torch.no_grad():
-                # Temporarily remove SPAI classification head for feature extraction
-                original_cls_head = self.spai_model.cls_head
-                self.spai_model.cls_head = nn.Identity()
-                spectral_features = self.spai_model(x)
-                self.spai_model.cls_head = original_cls_head
+        # === 2. Handle batched tensor input (training) ===
+        else:
+            if x.dim() != 4:
+                raise ValueError(f"Expected batched input (B×C×H×W), got {x.shape}")
 
-                # Extract semantic features from ConvNeXt backbone
-                semantic_features = self.semantic_backbone(x)
-                semantic_features = self.global_pool(semantic_features)
-                semantic_features = semantic_features.flatten(1)
+            if x.max() > 1.0:
+                x = x / 255.0
 
-            # Project semantic features to common space
-            semantic_features = self.semantic_projection(semantic_features)
+            x_spai = x.to(device).float()
+            x_convnext = normalize(x).to(device).float()
 
-            # Concatenate spectral and semantic features
-            combined_features = torch.cat([spectral_features, semantic_features], dim=1)
+        # === 3. Extract Features ===
+        with torch.no_grad():
+            original_cls_head = self.spai_model.cls_head
+            self.spai_model.cls_head = nn.Identity()
+            spectral_features = self.spai_model(x_spai)
+            self.spai_model.cls_head = original_cls_head
 
-            # Get final predictions
-            output = self.fusion_head(combined_features)
+            semantic_features = self.semantic_backbone(x_convnext)
+            semantic_features = self.global_pool(semantic_features)
+            semantic_features = semantic_features.flatten(1)
 
-            # Clear CUDA cache after inference
+        # === 4. Project & Normalize ===
+        spectral_proj = F.normalize(self.spectral_proj(spectral_features), dim=1)
+        semantic_proj = F.normalize(self.semantic_projection(semantic_features), dim=1)
+
+        # === 5. Fuse & Predict ===
+        combined_features = torch.cat([spectral_proj, semantic_proj], dim=1)
+        output = self.fusion_head(combined_features)
+
+        if not self.training:
             torch.cuda.empty_cache()
 
-            return output
+        return output
 
-        # Handle tensor inputs directly (training)
-        else:
-            # Ensure tensor input is a batched tensor [B, C, H, W]
-            if x.dim() != 4:
-                raise ValueError(f"Training tensor input must be batched (B×C×H×W), got {x.shape}")
 
-            x = x.to(device).float()
-
-            # Extract spectral features from SPAI model
-            with torch.no_grad():
-                original_cls_head = self.spai_model.cls_head
-                self.spai_model.cls_head = nn.Identity()
-                spectral_features = self.spai_model(x)
-                self.spai_model.cls_head = original_cls_head
-
-                # Extract semantic features from ConvNeXt backbone
-                semantic_features = self.semantic_backbone(x)
-                semantic_features = self.global_pool(semantic_features)
-                semantic_features = semantic_features.flatten(1)
-
-            # Project semantic features
-            semantic_features = self.semantic_projection(semantic_features)
-
-            # Concatenate features
-            combined_features = torch.cat([spectral_features, semantic_features], dim=1)
-
-            # Final prediction from fusion head
-            output = self.fusion_head(combined_features)
-
-            # Clear CUDA cache if gradients are not needed (validation mode)
-            if not torch.is_grad_enabled():
-                torch.cuda.empty_cache()
-
-            return output
 
     def unfreeze_backbone(self) -> None:
         """
