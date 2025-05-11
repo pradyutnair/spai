@@ -2,8 +2,8 @@
 #SBATCH --partition=gpu_h100
 #SBATCH --gpus=1
 #SBATCH --cpus-per-task=16
-#SBATCH --job-name=train
-#SBATCH --output=/home/pnair/spai/job_outputs/train.out
+#SBATCH --job-name=test
+#SBATCH --output=/home/pnair/spai/job_outputs/test.out
 #SBATCH --time=14:00:00
 #SBATCH --mem=180G
 #SBATCH --hint=nomultithread
@@ -36,16 +36,28 @@ export CUDA_LAUNCH_BLOCKING=0
 #   -o ./datasets/ldm_val_augm.csv \
 #   -d ./datasets/latent_diffusion_trainingset_augm
 
-python -m spai train \
+# python -m spai train \
+#   --cfg "/home/pnair/spai/configs/spai.yaml" \
+#   --batch-size 192 \
+#   --pretrained "/home/pnair/spai/weights/spai.pth" \
+#   --output "/home/pnair/spai/output/train" \
+#   --data-path "/home/pnair/spai/datasets/ldm_train_val_subset.csv" \
+#   --tag "spai" \
+#   --amp-opt-level "O2" \
+#   --data-workers 16 \
+#   --save-all \
+#   --opt "DATA.VAL_BATCH_SIZE" "256" \
+#   --opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
+#   --opt "DATA.TEST_PREFETCH_FACTOR" "4"
+
+python -m spai test \
   --cfg "/home/pnair/spai/configs/spai.yaml" \
-  --batch-size 192 \
-  --pretrained "/home/pnair/spai/weights/spai.pth" \
-  --output "/home/pnair/spai/output/train" \
-  --data-path "/home/pnair/spai/datasets/ldm_train_val_subset.csv" \
+  --batch-size 8 \
+  --model "/home/pnair/spai/output_prad_trained_spai/train/finetune/spai/ckpt_epoch_34.pth" \
+  --output "/home/pnair/spai/output_prad_trained_spai/test" \
   --tag "spai" \
-  --amp-opt-level "O2" \
-  --data-workers 16 \
-  --save-all \
-  --opt "DATA.VAL_BATCH_SIZE" "256" \
+  --opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
+  --opt "DATA.NUM_WORKERS" "8" \
   --opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
-  --opt "DATA.TEST_PREFETCH_FACTOR" "4"
+  --opt "DATA.TEST_PREFETCH_FACTOR" "1" \
+  --test-csv "/home/pnair/spai/datasets/test_set_flux.csv"
