@@ -3,9 +3,11 @@
 #SBATCH --gpus=1
 #SBATCH --job-name=eval_ff
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8
-#SBATCH --time=02:00:00
-#SBATCH --output=/home/scur2605/spai/jobs/outputs/semantic/eval_flux%A.out
+#SBATCH --cpus-per-task=16
+#SBATCH --time=1:00:00
+#SBATCH --mem=180G
+#SBATCH --hint=nomultithread
+#SBATCH --output=/home/scur2605/spai/jobs/outputs/semantic/eval_sd3%A.out
 
 cd /home/scur2605/spai
 export PYTHONPATH=/home/scur2605:$PYTHONPATH
@@ -17,15 +19,17 @@ module load Anaconda3/2023.07-2
 
 source activate spai_2
 
-  python -m spai test \
-  --cfg "./configs/spai.yaml" \
-  --batch-size 512 \
-  --model "/home/scur2605/spai/output/semantic_spai/finetune/first_run/ckpt_epoch_4.pth" \
-  --output "./output/semantic_test" \
-  --tag "spai" \
-  --opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
-  --opt "DATA.NUM_WORKERS" "8" \
-  --opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
-  --opt "DATA.TEST_PREFETCH_FACTOR" "1" \
-  --test-csv "./data/combined_real_fake_flux.csv" \
-  --opt "PRINT_FREQ" "2"
+
+
+python -m spai test \
+--cfg "./configs/spai.yaml" \
+--batch-size 8 \
+--model "/home/scur2605/spai/output/simple/finetune/first_run/ckpt_epoch_0.pth" \
+--output "./output/semantic_test" \
+--tag "spai" \
+--opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
+--opt "DATA.NUM_WORKERS" "8" \
+--opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
+--opt "DATA.TEST_PREFETCH_FACTOR" "1" \
+--test-csv "/home/scur2605/spai/data/test_set_sd3.csv" \
+--opt "PRINT_FREQ" "2"
