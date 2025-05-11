@@ -60,4 +60,4 @@ python -m spai test \
   --opt "DATA.NUM_WORKERS" "8" \
   --opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
   --opt "DATA.TEST_PREFETCH_FACTOR" "1" \
-  --test-csv "/home/pnair/spai/datasets/test_set_flux.csv"
+  --test-csv "/home/pnair/spai/datasets/test_set_flux_no_imagenet.csv"
