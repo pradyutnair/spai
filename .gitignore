@@ -4,6 +4,9 @@
 */ldm_train_val.csv
 spai-env/*
 output_*/
+*.csv
+*.out
+*.job
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
