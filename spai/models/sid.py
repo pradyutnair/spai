@@ -1276,39 +1276,35 @@ def _init_weights(m: nn.Module) -> None:
 
 class SemanticContextModel(nn.Module):
     """
-    A model that combines the SPAI approach pre-classification with a semantic context model.
-    Uses SPAI to extract spectral features (without classification head) and a ConvNeXt backbone for semantic features.
+    Combines SPAI's spectral features with ConvNeXt semantic features using late fusion.
+    Adds modality-specific projection heads and learnable scaling for dynamic balancing.
     """
     def __init__(
         self,
         spai_model_path: str,
-        semantic_output_dim=1096,
-        projection_dim=512,
-        hidden_dims: list[int] = [512, 256],
+        semantic_output_dim: int = 1096,
+        projection_dim: int = 512,
+        hidden_dims: List[int] = [512, 256],
         dropout: float = 0.5,
     ):
         super().__init__()
 
-        # 1. Load and freeze the SPAI model
-        from spai.models.build import build_cls_model
+        # === Load and freeze SPAI model ===
+        from spai.models.build import build_mf_vit
         from spai.config import get_config
 
         cfg = get_config({"cfg": "configs/spai.yaml"})
         self.spai_model = build_mf_vit(cfg)
-        checkpoint = torch.load(spai_model_path, map_location='cpu', weights_only=False)
-        if "model" in checkpoint:
-            checkpoint = checkpoint["model"]
-        else:
-            raise RuntimeError("Checkpoint does not contain 'model' or 'state_dict' key.")
-        self.spai_model.load_state_dict(checkpoint)
+
+        checkpoint = torch.load(spai_model_path, map_location="cpu", weights_only=False)
+        self.spai_model.load_state_dict(checkpoint.get("model", checkpoint))
         for param in self.spai_model.parameters():
             param.requires_grad = False
         self.spai_model.eval()
 
-        # Determine SPAI embedding dimension (extract programmatically or set manually)
-        spectral_features_dim = 1096  # This is a hardcoded known value for SPAI
+        spectral_features_dim = 1096  # known output dim from SPAI feature extractor
 
-        # 2. Load and freeze semantic ConvNeXt model
+        # === Load and freeze ConvNeXt-XXL from OpenCLIP ===
         import open_clip
         convnext_model, _, _ = open_clip.create_model_and_transforms(
             "convnext_xxlarge", pretrained="laion2b_s34b_b82k_augreg"
@@ -1317,20 +1313,18 @@ class SemanticContextModel(nn.Module):
         self.semantic_backbone.head.global_pool = nn.Identity()
         self.semantic_backbone.head.flatten = nn.Identity()
         self.global_pool = nn.AdaptiveAvgPool2d((1, 1))
+
         for param in self.semantic_backbone.parameters():
             param.requires_grad = False
         self.semantic_backbone.eval()
 
-        # 3. Projection head from ConvNeXt to output dimension
+        # === Projections (raw -> aligned dimensions) ===
         self.semantic_projection = nn.Sequential(
             nn.LayerNorm(3072),
             nn.Linear(3072, projection_dim),
             nn.GELU(),
             nn.Dropout(dropout)
         )
-
-        # === IMPROVEMENTS START HERE ===
-        # 4. Small projection heads before fusion
         self.spectral_proj = nn.Sequential(
             nn.LayerNorm(spectral_features_dim),
             nn.Linear(spectral_features_dim, projection_dim),
@@ -1338,7 +1332,11 @@ class SemanticContextModel(nn.Module):
             nn.Dropout(dropout)
         )
 
-        # 5. Improved fusion MLP head
+        # === Added: learnable scalar weights for semantic/spectral emphasis ===
+        self.semantic_scale = nn.Parameter(torch.tensor(1.0))
+        self.spectral_scale = nn.Parameter(torch.tensor(1.0))
+
+        # === Fusion MLP Head ===
         fusion_input_dim = 2 * projection_dim
         fusion_layers = []
         for hidden_dim in hidden_dims:
@@ -1350,72 +1348,78 @@ class SemanticContextModel(nn.Module):
             fusion_input_dim = hidden_dim
         fusion_layers.append(nn.Linear(fusion_input_dim, 1))
         self.fusion_head = nn.Sequential(*fusion_layers)
+
+        self.feature_gate = nn.Sequential(
+            nn.Linear(2 * projection_dim, 2 * projection_dim),
+            nn.Sigmoid()
+        )
+
+        # === Initialization ===
         self.fusion_head.apply(_init_weights)
-        # === IMPROVEMENTS END HERE ===
+        self.semantic_projection.apply(_init_weights)
+        self.spectral_proj.apply(_init_weights)
 
-    def forward(self, x: Union[torch.Tensor, List[torch.Tensor]], feature_extraction_batch_size: Optional[int] = None) -> torch.Tensor:
+
+    def forward(self, x: Union[torch.Tensor, List[torch.Tensor]], feature_extraction_batch_size: Optional[int] = None
+    ) -> torch.Tensor:
         """
-        Forward pass handling both tensor (training) and list inputs (validation/inference).
-
-        - SPAI expects unnormalized [0, 1] inputs.
+        Forward pass for training and validation:
+        - SPAI expects unnormalized [0, 1] images.
         - ConvNeXt expects ImageNet-normalized inputs.
         """
-
         device = next(self.parameters()).device
-
-        # Normalize function for ConvNeXt
         normalize = transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD)
-        resize_transform = transforms.Resize((224, 224), antialias=True)
+        resize = transforms.Resize((224, 224), antialias=True)
 
-        # === 1. Handle list input (validation / inference) ===
+        # === Validation/inference mode: list of images ===
         if isinstance(x, list):
             spai_input, convnext_input = [], []
-
             for img in x:
                 if img.dim() == 4 and img.size(0) == 1:
                     img = img.squeeze(0)
                 elif img.dim() != 3:
                     raise ValueError(f"Expected C×H×W or 1×C×H×W, got {img.shape}")
-
-                # Scale if in [0, 255]
                 if img.max() > 1.0:
                     img = img / 255.0
+                img_resized = resize(img)  # <-- resize for both
+                spai_input.append(img_resized)
+                convnext_input.append(normalize(img_resized))
+            x_spai = torch.stack(spai_input).to(device).float()
+            x_convnext = torch.stack(convnext_input).to(device).float()
 
-                spai_input.append(img)
-                convnext_input.append(normalize(resize_transform(img)))
-
-            x_spai = torch.stack(spai_input).to(device).float()  # for SPAI
-            x_convnext = torch.stack(convnext_input).to(device).float()  # for ConvNeXt
-
-        # === 2. Handle batched tensor input (training) ===
+        # === Training mode: batched tensor ===
         else:
             if x.dim() != 4:
                 raise ValueError(f"Expected batched input (B×C×H×W), got {x.shape}")
-
             if x.max() > 1.0:
                 x = x / 255.0
-
             x_spai = x.to(device).float()
             x_convnext = normalize(x).to(device).float()
 
-        # === 3. Extract Features ===
+        # === Extract features ===
         with torch.no_grad():
+            # SPAI: remove classification head temporarily
             original_cls_head = self.spai_model.cls_head
             self.spai_model.cls_head = nn.Identity()
             spectral_features = self.spai_model(x_spai)
             self.spai_model.cls_head = original_cls_head
 
             semantic_features = self.semantic_backbone(x_convnext)
-            semantic_features = self.global_pool(semantic_features)
-            semantic_features = semantic_features.flatten(1)
+            semantic_features = self.global_pool(semantic_features).flatten(1)
 
-        # === 4. Project & Normalize ===
-        spectral_proj = F.normalize(self.spectral_proj(spectral_features), dim=1)
-        semantic_proj = F.normalize(self.semantic_projection(semantic_features), dim=1)
+        # === Project, scale, and process each modality ===
+        spectral_proj = self.spectral_proj(spectral_features) * self.spectral_scale
+        semantic_proj = self.semantic_projection(semantic_features) * self.semantic_scale
 
-        # === 5. Fuse & Predict ===
-        combined_features = torch.cat([spectral_proj, semantic_proj], dim=1)
-        output = self.fusion_head(combined_features)
+        # Optional non-linear processing
+        spectral_proj = F.normalize(spectral_proj, dim=1)
+        semantic_proj = F.normalize(semantic_proj, dim=1)
+
+        # === Concatenate and fuse ===
+        combined = torch.cat([spectral_proj, semantic_proj], dim=1)
+        feature_weights = self.feature_gate(combined)
+        combined = combined * feature_weights
+        output = self.fusion_head(combined)
 
         if not self.training:
             torch.cuda.empty_cache()
