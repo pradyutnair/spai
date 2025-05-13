@@ -50,6 +50,8 @@ export CUDA_LAUNCH_BLOCKING=0
 #   --opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
 #   --opt "DATA.TEST_PREFETCH_FACTOR" "4"
 
+
+# FLUX
 python -m spai test \
   --cfg "/home/pnair/spai/configs/spai.yaml" \
   --batch-size 8 \
@@ -61,3 +63,44 @@ python -m spai test \
   --opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
   --opt "DATA.TEST_PREFETCH_FACTOR" "1" \
   --test-csv "/home/pnair/spai/datasets/test_set_flux_no_imagenet.csv"
+
+# GIGAGAN
+python -m spai test \
+  --cfg "/home/pnair/spai/configs/spai.yaml" \
+  --batch-size 8 \
+  --model "/home/pnair/spai/output_prad_trained_spai/train/finetune/spai/ckpt_epoch_34.pth" \
+  --output "/home/pnair/spai/output_prad_trained_spai/test" \
+  --tag "spai" \
+  --opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
+  --opt "DATA.NUM_WORKERS" "8" \
+  --opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
+  --opt "DATA.TEST_PREFETCH_FACTOR" "1" \
+  --test-csv "/home/pnair/spai/datasets/test_set_gigagan_no_imagenet.csv"
+
+# MIDJOURNEY-V6.1
+python -m spai test \
+  --cfg "/home/pnair/spai/configs/spai.yaml" \
+  --batch-size 8 \
+  --model "/home/pnair/spai/output_prad_trained_spai/train/finetune/spai/ckpt_epoch_34.pth" \
+  --output "/home/pnair/spai/output_prad_trained_spai/test" \
+  --tag "spai" \
+  --opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
+  --opt "DATA.NUM_WORKERS" "8" \
+  --opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
+  --opt "DATA.TEST_PREFETCH_FACTOR" "1" \
+  --test-csv "/home/pnair/spai/datasets/test_set_midjourney-v6.1_no_imagenet.csv"
+
+# SD3
+python -m spai test \
+  --cfg "/home/pnair/spai/configs/spai.yaml" \
+  --batch-size 8 \
+  --model "/home/pnair/spai/output_prad_trained_spai/train/finetune/spai/ckpt_epoch_34.pth" \
+  --output "/home/pnair/spai/output_prad_trained_spai/test" \
+  --tag "spai" \
+  --opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
+  --opt "DATA.NUM_WORKERS" "8" \
+  --opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
+  --opt "DATA.TEST_PREFETCH_FACTOR" "1" \
+  --test-csv "/home/pnair/spai/datasets/test_set_sd3_fixed_no_imagenet.csv"
+
+# SD3-5
