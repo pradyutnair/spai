@@ -28,11 +28,11 @@ MODEL:
     ORIGINAL_IMAGE_FEATURES_BRANCH: True
   SEMANTIC:
     CROSS_ATTN_SCA: before # None/before/after
-    DUAL_CROSS_ATTN_SCA: True # True/False
+    DUAL_CROSS_ATTN_SCA: False # True/False
     EMBED_DIM: 512
     NUM_HEADS: 8
     FREEZE_BACKBONE: True
-    SEMANTIC_ENCODER: "clip"
+    SEMANTIC_ENCODER: "convnext"
   CLS_HEAD:
     MLP_RATIO: 3
   PATCH_VIT:
