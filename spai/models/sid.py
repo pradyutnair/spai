@@ -29,6 +29,7 @@ from torchvision import transforms
 from torchvision.transforms.functional import five_crop
 
 from spai.utils import save_image_with_attention_overlay
+from semantic_pipeline.semantic import SemanticPipeline
 
 from . import backbones, filters, utils, vision_transformer
 
@@ -57,6 +58,7 @@ class PatchBasedMFViT(nn.Module):
         use_dual_cross_attn_sca: bool = False,
         semantic_embed_dim: Optional[int] = None,
         semantic_heads: Optional[int] = None,
+        semantic_encoder: str = "clip",  # "clip" or "convnext"
     ) -> None:
         super().__init__()
 
@@ -100,14 +102,12 @@ class PatchBasedMFViT(nn.Module):
             semantic_heads if semantic_heads is not None else num_heads
         )
 
+        self.semantic_encoder_type = semantic_encoder
+
         if self.use_semantic_cross_attn_sca in ["before", "after"]:
             print(f"Using semantic cross-attention: {self.use_semantic_cross_attn_sca}")
             self.semantic_mha = nn.MultiheadAttention(
                 embed_dim=cls_vector_dim, num_heads=self.semantic_heads, dropout=dropout
-            )
-            # add projection from semantic embed_dim to cls_vector_dim
-            self.semantic_projection = nn.Linear(
-                self.semantic_embed_dim, cls_vector_dim
             )
             self.semantic_layer_norm = nn.LayerNorm(cls_vector_dim)
 
@@ -118,8 +118,33 @@ class PatchBasedMFViT(nn.Module):
                 )
 
             self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-            self.clip_backbone = backbones.CLIPBackbone(device=self.device)
-            self.clip_backbone = self.clip_backbone.float()
+            if self.semantic_encoder_type == "clip":
+                print("Using CLIP backbone for semantic encoding")
+                # NOTE: using projection layer only in the case of CLIP backbone as SemanticPipeline contains the projection
+                self.semantic_projection = nn.Linear(
+                    self.semantic_embed_dim, cls_vector_dim
+                )
+                self.semantic_encoder = backbones.CLIPBackbone(device=self.device)
+                self.semantic_encoder = self.semantic_encoder.float()
+            elif self.semantic_encoder_type == "convnext":
+                print("Using ConvNeXt backbone for semantic encoding")
+                self.semantic_encoder = SemanticPipeline(output_dim=cls_vector_dim).to(self.device)
+            else:
+                raise ValueError(f"Unknown semantic_encoder: {self.semantic_encoder_type}")
+
+            # freeze everything in the semantic encoder except for convnext_proj parameters
+            if self.semantic_encoder_type == "convnext":
+                self.semantic_encoder.backbone.eval()
+                for param in self.semantic_encoder.backbone.parameters():
+                    param.requires_grad = False
+                for param in self.semantic_encoder.convnext_proj.parameters():
+                    param.requires_grad = True
+            else:
+                self.semantic_encoder.eval()
+                for param in self.semantic_encoder.parameters():
+                    param.requires_grad = False
+                for param in self.semantic_projection.parameters():
+                    param.requires_grad = True
 
         if initialization_scope == "all":
             self.apply(_init_weights)
@@ -201,16 +226,19 @@ class PatchBasedMFViT(nn.Module):
             # Get the global image encoding from the CLIP backbone
             # Resize the image to 224x224 for CLIP
             x_resized = F.interpolate(x, size=(224, 224), mode="bilinear", align_corners=False)
-            global_image_encoding = self.clip_backbone.get_image_embedding(x_resized.float())
-            # print(
-            #     "Using CLIP backbone for global image encoding!",
-            #     global_image_encoding.shape,
-            # )
 
-            # Project global image encoding to match the cross-attention query dimension
-            global_image_encoding = self.semantic_projection(
-                global_image_encoding.to(self.semantic_projection.weight.dtype)
-            )  # B x D
+            # CLIP
+            if self.semantic_encoder_type == "clip":
+                # Get the global image encoding from the CLIP backbone
+                global_image_encoding = self.semantic_encoder.get_image_embedding(x_resized.float())
+                # Project global image encoding to match the cross-attention query dimension
+                global_image_encoding = self.semantic_projection(
+                    global_image_encoding.to(self.semantic_projection.weight.dtype)
+                )  # B x D
+            # ConvNeXt
+            else:
+                # Get the global image encoding from the ConvNeXt backbone
+                global_image_encoding = self.semantic_encoder(x_resized.float())
 
         # Patchify the input image
         x = utils.patchify_image(
@@ -1497,6 +1525,7 @@ def build_mf_vit(config) -> MFViT:
             semantic_embed_dim=config.MODEL.SEMANTIC.EMBED_DIM,
             semantic_heads=config.MODEL.SEMANTIC.NUM_HEADS,
             use_dual_cross_attn_sca=config.MODEL.SEMANTIC.DUAL_CROSS_ATTN_SCA,
+            semantic_encoder=config.MODEL.SEMANTIC.SEMANTIC_ENCODER,
         )
     else:
         raise RuntimeError(

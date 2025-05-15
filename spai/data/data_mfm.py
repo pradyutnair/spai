@@ -5,10 +5,22 @@ import torchvision.transforms as T
 from torch.utils.data import DataLoader, DistributedSampler
 from torch.utils.data._utils.collate import default_collate
 from torchvision.datasets import ImageFolder
-from timm.data.transforms import _pil_interp
+try:
+    from timm.data.transforms import _pil_interp
+except ImportError:
+    # Define the _pil_interp constant for newer timm versions
+    # This matches what was in timm 0.4.12
+    from PIL import Image
+    _pil_interp = {
+        'nearest': Image.NEAREST,
+        'bilinear': Image.BILINEAR,
+        'bicubic': Image.BICUBIC,
+        'box': Image.BOX,
+        'hamming': Image.HAMMING,
+        'lanczos': Image.LANCZOS,
+    }
 
 from .random_degradations import RandomBlur, RandomNoise
-
 
 class FreqMaskGenerator:
     def __init__(self,

@@ -228,6 +228,7 @@ _C.MODEL.SEMANTIC.DUAL_CROSS_ATTN_SCA = False
 _C.MODEL.SEMANTIC.EMBED_DIM = 768
 _C.MODEL.SEMANTIC.NUM_HEADS = None
 _C.MODEL.SEMANTIC.FREEZE_BACKBONE = True
+_C.MODEL.SEMANTIC.SEMANTIC_ENCODER = "clip"
 
 # -----------------------------------------------------------------------------
 # Training settings

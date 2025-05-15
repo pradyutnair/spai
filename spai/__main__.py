@@ -249,10 +249,16 @@ def train(
         n_params_before = sum(p.numel() for p in model.parameters() if p.requires_grad)
         logger.info(f"Number of trainable params before: {n_params_before}")
         for name, param in model.named_parameters():
-            if "semantic" in name or "cls_head" in name:
-                param.requires_grad = True
+            if "semantic" in name or "cls_head" in name or "convnext_proj" in name:
+                if not "semantic_encoder" in name:
+                    param.requires_grad = True
             else:
                 param.requires_grad = False
+
+    # Freeze ALL of convnext_model (CLIP) if present
+    if hasattr(model.semantic_encoder, "convnext_model"):
+        for param in model.semantic_encoder.convnext_model.parameters():
+            param.requires_grad = False
 
     n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
     # Show the parameters that are trainable and the number of parameters
