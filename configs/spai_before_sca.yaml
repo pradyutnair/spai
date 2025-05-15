@@ -27,7 +27,7 @@ MODEL:
     PROJECTOR_LAST_LAYER_ACTIVATION_TYPE: None
     ORIGINAL_IMAGE_FEATURES_BRANCH: True
   SEMANTIC:
-    CROSS_ATTN_SCA: None # None/before/after
+    CROSS_ATTN_SCA: before # None/before/after
     DUAL_CROSS_ATTN_SCA: False # True/False
     EMBED_DIM: 512
     NUM_HEADS: 8

@@ -234,7 +234,7 @@ class PatchBasedMFViT(nn.Module):
             )  # B x L x D
 
             # NOTE: normalize the query, key and value - double check if needed
-            # semantic_enc = F.normalize(semantic_enc, dim=-1)  # B x L x D
+            semantic_enc = F.normalize(semantic_enc, dim=-1)  # B x L x D
             # x = F.normalize(x, dim=-1)  # B x L x D
 
             # Cross-attention with semantic features as query and spectral features as key/value
@@ -271,7 +271,7 @@ class PatchBasedMFViT(nn.Module):
             semantic_enc = global_image_encoding  # B x D
 
             # NOTE: normalize the query, key and value - double check if needed
-            # query = F.normalize(query, dim=-1)  # B x D
+            semantic_enc = F.normalize(semantic_enc, dim=-1)  # B x D
             # x = F.normalize(x, dim=-1)
 
             # Cross-attention
