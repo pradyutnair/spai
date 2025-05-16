@@ -36,6 +36,15 @@ except ImportError:
     amp = None
 
 
+def filter_state_patchbasedmfvit(state):
+    # Remove all keys related to the semantic encoder
+    filtered_state = {k: v for k, v in state.items() if not "semantic_encoder" not in k}
+    # print the number of keys removed
+    num_removed_keys = len(state) - len(filtered_state)
+    print(f"Removed {num_removed_keys} keys related to the semantic encoder.")
+    return filtered_state
+
+
 def load_checkpoint(config, model, optimizer, lr_scheduler, logger):
     logger.info(f">>>>>>>>>> Resuming from {config.MODEL.RESUME} ..........")
     if config.MODEL.RESUME.startswith('https'):
@@ -64,7 +73,10 @@ def load_checkpoint(config, model, optimizer, lr_scheduler, logger):
 
 
 def save_checkpoint(config, epoch, model, max_accuracy, optimizer, lr_scheduler, logger):
-    save_state = {'model': model.state_dict(),
+    model_state_dict = model.state_dict()
+    # if isinstance(model, PatchBasedMFViT): # NOTE: for now do regardless
+    model_state_dict = filter_state_patchbasedmfvit(model_state_dict)
+    save_state = {'model': model_state_dict,
                   'optimizer': optimizer.state_dict(),
                   'lr_scheduler': lr_scheduler.state_dict(),
                   'max_accuracy': max_accuracy,
@@ -73,7 +85,12 @@ def save_checkpoint(config, epoch, model, max_accuracy, optimizer, lr_scheduler,
     if config.AMP_OPT_LEVEL != "O0":
         save_state['amp'] = amp.state_dict()
 
-    save_path = os.path.join(config.OUTPUT, f'ckpt_epoch_{epoch}.pth')
+    # save_path = os.path.join(config.OUTPUT, f'ckpt_epoch_{epoch}.pth')
+    # save only yhe best checkpoint
+    save_path = os.path.join(config.OUTPUT, f'ckpt_best.pth')
+    # save to a txt file which contains the epoch number
+    with open(os.path.join(config.OUTPUT, 'best_epoch.txt'), 'w') as f:
+        f.write(f"Best epoch: {epoch}\n")
     logger.info(f"{save_path} saving......")
     torch.save(save_state, save_path)
     logger.info(f"{save_path} saved !!!")
