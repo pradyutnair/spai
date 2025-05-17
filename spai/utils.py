@@ -86,9 +86,9 @@ def load_checkpoint(config, model, optimizer, lr_scheduler, logger):
 
 def save_checkpoint(config, epoch, model, max_accuracy, optimizer, lr_scheduler, logger):
     model_state_dict = model.state_dict()
-    # if isinstance(model, PatchBasedMFViT): # NOTE: dont do it as it breaks the loading of the model
-    model_state_dict = filter_state_patchbasedmfvit(model_state_dict)
-    save_state = {'model': model.state_dict(),
+    # if isinstance(model, PatchBasedMFViT):
+    # model_state_dict = filter_state_patchbasedmfvit(model_state_dict)
+    save_state = {'model': model_state_dict,
                   'optimizer': optimizer.state_dict(),
                   'lr_scheduler': lr_scheduler.state_dict(),
                   'max_accuracy': max_accuracy,

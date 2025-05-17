@@ -2,26 +2,26 @@
 
 ROOT_DIR="/home/azywot/DL2/spai"
 PRETRAINED="/home/azywot/DL2/spai/weights/spai.pth"
-
-# Models -> paths (model checkpoint to fine-tune from)
-declare -A PRETRAINED_MODELS=(
-  ["clip_cross_attn_after_sca"]="/home/azywot/DL2/spai/weights/spai.pth"
-  # add others if needed
-)
+OUTPUT_DIR="/scratch-shared/dl2_spai_models"
 
 # Models -> config files
 declare -A CONFIGS=(
-  ["clip_cross_attn_after_sca"]="/home/azywot/DL2/spai/configs/TEST_spai_after_sca.yaml"
-)
-
-# Models -> output dirs
-declare -A OUTPUT_DIRS=(
-  ["clip_cross_attn_after_sca"]="/home/azywot/DL2/spai/output/17_05_2025/TEST_clip"
+#   ["clip_cross_attn_after_sca"]="/home/azywot/DL2/spai/configs/clip_spai_after_sca.yaml"
+#   ["clip_cross_attn_before_sca"]="/home/azywot/DL2/spai/configs/clip_spai_before_sca.yaml"
+#   ["clip_dual_cross_attn_after_sca"]="/home/azywot/DL2/spai/configs/clip_spai_dual_after_sca.yaml"
+#   ["clip_dual_cross_attn_before_sca"]="/home/azywot/DL2/spai/configs/clip_spai_dual_before_sca.yaml"
+  ["convnext_cross_attn_after_sca"]="/home/azywot/DL2/spai/configs/convnext_spai_after_sca.yaml"
+#   ["convnext_cross_attn_before_sca"]="/home/azywot/DL2/spai/configs/convnext_spai_before_sca.yaml"
+#   ["convnext_dual_cross_attn_after_sca"]="/home/azywot/DL2/spai/configs/convnext_spai_dual_after_sca.yaml"
+#   ["convnext_dual_cross_attn_before_sca"]="/home/azywot/DL2/spai/configs/convnext_spai_dual_before_sca.yaml"
 )
 
 # Dataset splits or CSVs (can add more)
 declare -A DATASETS=(
   ["ldm"]="/home/azywot/DL2/spai/datasets/ldm_train_val_subset.csv"
+  ["lsun"]="/home/azywot/DL2/spai/datasets/lsun_train_val.csv"
+  ["ldm_lsun"]="/home/azywot/DL2/spai/datasets/ldm_lsun_train_val_subset.csv"
+  ["chameleon"]="/home/azywot/DL2/spai/datasets/chameleon_dataset_split.csv"
 )
 
 sanitize() {
@@ -30,7 +30,6 @@ sanitize() {
 
 for model_name in "${!CONFIGS[@]}"; do
   CONFIG_PATH="${CONFIGS[$model_name]}"
-  OUTPUT_DIR="${OUTPUT_DIRS[$model_name]}"
 
   for ds_name in "${!DATASETS[@]}"; do
     DATA_PATH="${DATASETS[$ds_name]}"

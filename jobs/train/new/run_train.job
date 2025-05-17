@@ -1,14 +1,4 @@
 #!/bin/bash
-#SBATCH --partition=gpu_h100
-#SBATCH --gpus=1
-#SBATCH --cpus-per-task=16
-#SBATCH --time=14:00:00
-#SBATCH --mem=180G
-#SBATCH --hint=nomultithread
-
-# Use generic job-name and output; overridden on submission if needed
-#SBATCH --job-name=train_job
-#SBATCH --output=/home/azywot/DL2/spai/jobs/out_files_train/train_job_%A.out
 
 echo "✅ Job started at: $(date)"
 
