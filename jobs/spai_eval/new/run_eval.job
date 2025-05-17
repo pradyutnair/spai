@@ -18,7 +18,7 @@ export CUDA_LAUNCH_BLOCKING=0
 COMMON_OPTS=(
   --cfg "$CONFIG_PATH"
   --batch-size 8
-  --tag "spai_ldm_cross_attn_after_sca"
+  --tag "clip_spai_ldm_cross_attn_after_sca"
   --opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4"
   --opt "DATA.NUM_WORKERS" "8"
   --opt "MODEL.FEATURE_EXTRACTION_BATCH" "400"
