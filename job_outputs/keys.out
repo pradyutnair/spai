@@ -1,0 +1,31 @@
+✅ Job started at: Fri May  9 14:38:56 CEST 2025
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+slurmstepd: error: *** JOB 11693058 ON srv5 CANCELLED AT 2025-05-09T16:39:08 DUE TO TIME LIMIT ***
+
+JOB STATISTICS
+==============
+Job ID: 11693058
+Cluster: snellius
+User/Group: pnair/pnair
+State: TIMEOUT (exit code 0)
+Nodes: 1
+Cores per node: 32
+CPU Utilized: 00:00:01
+CPU Efficiency: 0.00% of 2-16:11:44 core-walltime
+Job Wall-clock time: 02:00:22
+Memory Utilized: 8.35 MB
+Memory Efficiency: 0.00% of 224.00 GB (7.00 GB/core)

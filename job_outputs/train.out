@@ -1,0 +1,1556 @@
+✅ Job started at: Fri May  9 12:02:25 CEST 2025
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+2025-05-09 12:02:37.402543: I tensorflow/core/util/port.cc:113] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2025-05-09 12:02:37.547065: E external/local_xla/xla/stream_executor/cuda/cuda_dnn.cc:9261] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+2025-05-09 12:02:37.547185: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:607] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2025-05-09 12:02:37.557806: E external/local_xla/xla/stream_executor/cuda/cuda_blas.cc:1515] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+2025-05-09 12:02:37.591183: I tensorflow/core/platform/cpu_feature_guard.cc:182] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI AVX512_BF16 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+/home/pnair/.local/lib/python3.11/site-packages/onnxscript/converter.py:816: FutureWarning: 'onnxscript.values.Op.param_schemas' is deprecated in version 0.1 and will be removed in the future. Please use '.op_signature' instead.
+  param_schemas = callee.param_schemas()
+/home/pnair/.local/lib/python3.11/site-packages/onnxscript/converter.py:816: FutureWarning: 'onnxscript.values.OnnxFunction.param_schemas' is deprecated in version 0.1 and will be removed in the future. Please use '.op_signature' instead.
+  param_schemas = callee.param_schemas()
+/home/pnair/.local/lib/python3.11/site-packages/albumentations/__init__.py:13: UserWarning: A new version of Albumentations is available: 2.0.6 (you have 1.4.14). Upgrade using: pip install -U albumentations. To disable automatic update checks, set the environment variable NO_ALBUMENTATIONS_UPDATE to 1.
+  check_for_updates()
+=> merge config from /home/pnair/spai/configs/spai.yaml
+[2025-05-09 12:02:49 finetune](__main__.py 218): INFO Full config saved to /home/pnair/spai/output/train/finetune/spai/config.json
+[2025-05-09 12:02:49 finetune](__main__.py 221): INFO AMP_OPT_LEVEL: O2
+AUG:
+  AUTO_AUGMENT: rand-m9-mstd0.5-inc1
+  BLUR_PROB: 0.25
+  COLOR_JITTER: 0.0
+  COLOR_JITTER_BRIGHTNESS_RANGE: &id001
+  - 0.8
+  - 1.2
+  COLOR_JITTER_CONTRAST_RANGE: *id001
+  COLOR_JITTER_HUE_RANGE:
+  - -0.1
+  - 0.1
+  COLOR_JITTER_SATURATION_RANGE: *id001
+  CUTMIX: 1.0
+  CUTMIX_MINMAX: null
+  GAUSSIAN_BLUR_LIMIT:
+  - 3
+  - 9
+  GAUSSIAN_BLUR_PROB: 0.5
+  GAUSSIAN_BLUR_SIGMA:
+  - 0.01
+  - 0.5
+  GAUSSIAN_NOISE_PROB: 0.5
+  HORIZONTAL_FLIP_PROB: 0.5
+  JPEG_COMPRESSION_PROB: 0.5
+  JPEG_MAX_QUALITY: 100
+  JPEG_MIN_QUALITY: 50
+  MAX_CROP_AREA: 1.0
+  MIN_CROP_AREA: 0.2
+  MIXUP: 0.8
+  MIXUP_MODE: batch
+  MIXUP_PROB: 1.0
+  MIXUP_SWITCH_PROB: 0.5
+  RECOUNT: 1
+  REMODE: pixel
+  REPROB: 0.25
+  ROTATION_DEGREES: 90
+  ROTATION_PROB: 0.5
+  SHARPEN_ALPHA_RANGE:
+  - 0.01
+  - 0.4
+  SHARPEN_LIGHTNESS_RANGE:
+  - 0.95
+  - 1
+  SHARPEN_PROB: 0.0
+  VERTICAL_FLIP_PROB: 0.5
+  WEBP_COMPRESSION_PROB: 0.0
+  WEBP_MAX_QUALITY: 100
+  WEBP_MIN_QUALITY: 50
+BASE:
+- ''
+DATA:
+  AUGMENTED_VIEWS: 4
+  BATCH_SIZE: 192
+  BLUR:
+    BETA_GAUSSIAN:
+    - 0.5
+    - 4
+    BETA_PLATEAU:
+    - 1
+    - 2
+    KERNEL_LIST:
+    - iso
+    - aniso
+    - generalized_iso
+    - generalized_aniso
+    - plateau_iso
+    - plateau_aniso
+    - sinc
+    KERNEL_PROB:
+    - 0.405
+    - 0.225
+    - 0.108
+    - 0.027
+    - 0.108
+    - 0.027
+    - 0.1
+    KERNEL_SIZE:
+    - 7
+    - 9
+    - 11
+    - 13
+    - 15
+    - 17
+    - 19
+    - 21
+    ROTATE_ANGLE:
+    - -3.1416
+    - 3.1416
+    SIGMA_X:
+    - 0.2
+    - 3
+    SIGMA_Y:
+    - 0.2
+    - 3
+  CSV_ROOT: /home/pnair/spai/datasets
+  DATASET: csv_sid
+  DATA_PATH: /home/pnair/spai/datasets/ldm_train_val_subset.csv
+  FILTER_TYPE: mfm
+  IMG_SIZE: 224
+  INTERPOLATION: bicubic
+  LMDB_PATH: None
+  MASK_RADIUS1: 16
+  MASK_RADIUS2: 999
+  MIN_CROP_SCALE: 0.2
+  NOISE:
+    GAUSSIAN_GRAY_NOISE_PROB: 0.4
+    GAUSSIAN_SIGMA:
+    - 1
+    - 30
+    POISSON_GRAY_NOISE_PROB: 0.4
+    POISSON_SCALE:
+    - 0.05
+    - 3
+    PROB:
+    - 0.5
+    - 0.5
+    TYPE:
+    - gaussian
+    - poisson
+  NUM_WORKERS: 16
+  PIN_MEMORY: true
+  PREFETCH_FACTOR: 2
+  SAMPLE_RATIO: 0.5
+  SR_FACTOR: 8
+  TEST_BATCH_SIZE: null
+  TEST_DATA_CSV_ROOT: []
+  TEST_DATA_PATH: []
+  TEST_PREFETCH_FACTOR: 4
+  VAL_BATCH_SIZE: 256
+  VAL_PREFETCH_FACTOR: null
+EVAL_MODE: false
+LOCAL_RANK: 0
+MODEL:
+  CLS_HEAD:
+    MLP_RATIO: 3
+  DROP_PATH_RATE: 0.1
+  DROP_RATE: 0.0
+  FEATURE_EXTRACTION_BATCH: 400
+  FRE:
+    DISABLE_RECONSTRUCTION_SIMILARITY: false
+    MASKING_RADIUS: 16
+    ORIGINAL_IMAGE_FEATURES_BRANCH: true
+    PROJECTOR_LAST_LAYER_ACTIVATION_TYPE: null
+  FREQ_LOSS:
+    AVE_SPECTRUM: false
+    BATCH_MATRIX: false
+    LOG_MATRIX: false
+    LOSS_GAMMA: 1.0
+    MATRIX_GAMMA: 1.0
+    PATCH_FACTOR: 1
+    WITH_MATRIX: false
+  LABEL_SMOOTHING: 0.1
+  NAME: finetune
+  NUM_CLASSES: 2
+  PATCH_VIT:
+    ATTN_EMBED_DIM: 1536
+    MINIMUM_PATCHES: 4
+    NUM_HEADS: 12
+    PATCH_STRIDE: 224
+  RECOVER_TARGET_TYPE: normal
+  REQUIRED_NORMALIZATION: positive_0_1
+  RESNET:
+    IN_CHANS: 3
+    LAYERS:
+    - 3
+    - 4
+    - 6
+    - 3
+  RESOLUTION_MODE: arbitrary
+  RESUME: ''
+  SID_APPROACH: freq_restoration
+  SID_DROPOUT: 0.5
+  SWIN:
+    APE: false
+    DEPTHS:
+    - 2
+    - 2
+    - 6
+    - 2
+    EMBED_DIM: 96
+    IN_CHANS: 3
+    MLP_RATIO: 4.0
+    NUM_HEADS:
+    - 3
+    - 6
+    - 12
+    - 24
+    PATCH_NORM: true
+    PATCH_SIZE: 4
+    QKV_BIAS: true
+    QK_SCALE: null
+    WINDOW_SIZE: 7
+  TYPE: vit
+  VIT:
+    DECODER:
+      DEPTH: 0
+      EMBED_DIM: 512
+      NUM_HEADS: 16
+    DEPTH: 12
+    EMBED_DIM: 768
+    FEATURES_PROCESSOR: rine
+    INIT_VALUES: null
+    INTERMEDIATE_LAYERS:
+    - 0
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    IN_CHANS: 3
+    MLP_RATIO: 4
+    NUM_HEADS: 12
+    PATCH_POOLING: mean
+    PATCH_PROJECTION: true
+    PATCH_PROJECTION_PER_FEATURE: true
+    PATCH_SIZE: 16
+    PROJECTION_DIM: 1024
+    PROJECTION_LAYERS: 2
+    QKV_BIAS: true
+    USE_APE: true
+    USE_FPE: false
+    USE_INTERMEDIATE_LAYERS: true
+    USE_MEAN_POOLING: true
+    USE_RPB: false
+    USE_SHARED_RPB: false
+MODEL_WEIGHTS: mfm
+OUTPUT: /home/pnair/spai/output/train/finetune/spai
+PRETRAINED: /home/pnair/spai/weights/spai.pth
+PRINT_FREQ: 100
+SAVE_FREQ: 10
+SEED: 0
+TAG: spai
+TEST:
+  CROP: true
+  EXPORT_IMAGE_PATCHES: false
+  GAUSSIAN_BLUR: false
+  GAUSSIAN_BLUR_KERNEL_SIZE: 3
+  GAUSSIAN_NOISE: false
+  GAUSSIAN_NOISE_SIGMA: 1.0
+  JPEG_COMPRESSION: false
+  JPEG_QUALITY: 100
+  MAX_SIZE: null
+  ORIGINAL_RESOLUTION: true
+  SCALE: false
+  SCALE_FACTOR: 1.0
+  VIEWS_GENERATION_APPROACH: null
+  VIEWS_REDUCTION_APPROACH: mean
+  WEBP_COMPRESSION: false
+  WEBP_QUALITY: 100
+THROUGHPUT_MODE: false
+TRAIN:
+  ACCUMULATION_STEPS: 1
+  AUTO_RESUME: true
+  BASE_LR: 0.0005
+  CLIP_GRAD: null
+  EPOCHS: 35
+  LAYER_DECAY: 0.8
+  LOSS: bce
+  LR_SCHEDULER:
+    DECAY_EPOCHS: 30
+    DECAY_RATE: 0.1
+    GAMMA: 0.1
+    MULTISTEPS: []
+    NAME: cosine
+  MIN_LR: 2.5e-07
+  MODE: supervised
+  OPTIMIZER:
+    BETAS:
+    - 0.9
+    - 0.999
+    EPS: 1.0e-08
+    MOMENTUM: 0.9
+    NAME: adamw
+  SCALE_LR: false
+  START_EPOCH: 0
+  TRIPLET_LOSS_MARGIN: 0.5
+  USE_CHECKPOINT: false
+  WARMUP_EPOCHS: 5
+  WARMUP_LR: 2.5e-07
+  WEIGHT_DECAY: 0.05
+
+[2025-05-09 12:02:49 finetune](data_finetune.py 482): INFO Data transform | mode: supervised | split: train:
+Compose([
+  RandomResizedCrop(p=1.0, size=(224, 224), scale=(0.2, 1.0), ratio=(0.75, 1.3333333333333333), interpolation=1),
+  HorizontalFlip(p=0.5),
+  VerticalFlip(p=0.5),
+  Rotate(p=0.5, limit=(-90, 90), interpolation=1, border_mode=4, value=None, mask_value=None, rotate_method='largest_box', crop_border=True),
+  Resize(p=1.0, height=224, width=224, interpolation=1),
+  GaussianBlur(p=0.5, blur_limit=(3, 9), sigma_limit=(0.01, 0.5)),
+  GaussNoise(p=0.5, var_limit=(10.0, 50.0), per_channel=True, mean=0.0, noise_scale_factor=1.0),
+  ColorJitter(p=0.0, brightness=(0.8, 1.2), contrast=(0.8, 1.2), saturation=(0.8, 1.2), hue=(-0.1, 0.1)),
+  Sharpen(p=0.0, alpha=(0.01, 0.4), lightness=(0.95, 1.0)),
+  ImageCompression(p=0.5, quality_range=(50, 100), compression_type=0),
+  ImageCompression(p=0.0, quality_range=(50, 100), compression_type=1),
+  Normalize(p=1.0, mean=0.0, std=1.0, max_pixel_value=255.0, normalization='standard'),
+  ToTensorV2(p=1.0, transpose_mask=False),
+], p=1.0, bbox_params=None, keypoint_params=None, additional_targets={}, is_check_shapes=True)
+[2025-05-09 12:02:49 finetune](data_finetune.py 482): INFO Data transform | mode: supervised | split: val:
+Compose([
+  ImageCompression(p=0.0, quality_range=(100, 100), compression_type=0),
+  ImageCompression(p=0.0, quality_range=(100, 100), compression_type=1),
+  GaussianBlur(p=0.0, blur_limit=(3, 3), sigma_limit=(0, 0)),
+  GaussNoise(p=0.0, var_limit=(1.0, 1.0), per_channel=True, mean=0.0, noise_scale_factor=1.0),
+  RandomScale(p=0.0, interpolation=1, scale_limit=(0.0, 0.0)),
+  PadIfNeeded(p=1.0, min_height=224, min_width=224, pad_height_divisor=None, pad_width_divisor=None, position=PositionType.CENTER, border_mode=4, value=None, mask_value=None),
+  Normalize(p=1.0, mean=0.0, std=1.0, max_pixel_value=255.0, normalization='standard'),
+  ToTensorV2(p=1.0, transpose_mask=False),
+], p=1.0, bbox_params=None, keypoint_params=None, additional_targets={}, is_check_shapes=True)
+[2025-05-09 12:02:49 finetune](data_finetune.py 343): INFO Train images: 27000 | Validation images: 3000
+[2025-05-09 12:02:49 finetune](data_finetune.py 344): INFO Train Images Source: /home/pnair/spai/datasets
+[2025-05-09 12:02:49 finetune](data_finetune.py 345): INFO Validation Images Source: /home/pnair/spai/datasets
+[neptune] [info   ] Neptune initialized. Open in the app: https://app.neptune.ai/spai/beast-mode/e/BEAS-31
+[2025-05-09 12:02:51 finetune](__main__.py 232): INFO Creating model:vit/finetune
+[2025-05-09 12:02:54 finetune](__main__.py 235): INFO PatchBasedMFViT(
+  (mfvit): MFViT(
+    (vit): VisionTransformer(
+      (patch_embed): PatchEmbed(
+        (proj): Conv2d(3, 768, kernel_size=(16, 16), stride=(16, 16))
+      )
+      (pos_drop): Dropout(p=0.0, inplace=False)
+      (blocks): ModuleList(
+        (0): Block(
+          (norm1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+          (attn): Attention(
+            (qkv): Linear(in_features=768, out_features=2304, bias=False)
+            (attn_drop): Dropout(p=0.0, inplace=False)
+            (proj): Linear(in_features=768, out_features=768, bias=True)
+            (proj_drop): Dropout(p=0.0, inplace=False)
+          )
+          (drop_path): Identity()
+          (norm2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+          (mlp): Mlp(
+            (fc1): Linear(in_features=768, out_features=3072, bias=True)
+            (act): GELU(approximate='none')
+            (fc2): Linear(in_features=3072, out_features=768, bias=True)
+            (drop): Dropout(p=0.0, inplace=False)
+          )
+        )
+        (1-11): 11 x Block(
+          (norm1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+          (attn): Attention(
+            (qkv): Linear(in_features=768, out_features=2304, bias=False)
+            (attn_drop): Dropout(p=0.0, inplace=False)
+            (proj): Linear(in_features=768, out_features=768, bias=True)
+            (proj_drop): Dropout(p=0.0, inplace=False)
+          )
+          (drop_path): DropPath()
+          (norm2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+          (mlp): Mlp(
+            (fc1): Linear(in_features=768, out_features=3072, bias=True)
+            (act): GELU(approximate='none')
+            (fc2): Linear(in_features=3072, out_features=768, bias=True)
+            (drop): Dropout(p=0.0, inplace=False)
+          )
+        )
+      )
+      (norm): Identity()
+      (fc_norm): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+      (cls_blocks): ModuleList(
+        (0): Block(
+          (norm1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+          (attn): Attention(
+            (qkv): Linear(in_features=768, out_features=2304, bias=False)
+            (attn_drop): Dropout(p=0.0, inplace=False)
+            (proj): Linear(in_features=768, out_features=768, bias=True)
+            (proj_drop): Dropout(p=0.0, inplace=False)
+          )
+          (drop_path): Identity()
+          (norm2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+          (mlp): Mlp(
+            (fc1): Linear(in_features=768, out_features=3072, bias=True)
+            (act): GELU(approximate='none')
+            (fc2): Linear(in_features=3072, out_features=768, bias=True)
+            (drop): Dropout(p=0.0, inplace=False)
+          )
+        )
+      )
+      (cls_norm): Identity()
+      (intermediate_fc_norm): ModuleList(
+        (0-11): 12 x LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+      )
+      (head): Linear(in_features=9216, out_features=2, bias=True)
+    )
+    (features_processor): FrequencyRestorationEstimator(
+      (semantic_fusion): SemanticFusionModule(
+        (attn): MultiheadAttention(
+          (out_proj): NonDynamicallyQuantizableLinear(in_features=1024, out_features=1024, bias=True)
+        )
+      )
+      (patch_projector): FeatureSpecificProjector(
+        (projectors): ModuleList(
+          (0-11): 12 x Projector(
+            (norm1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (projector): Sequential(
+              (0): Dropout(p=0.5, inplace=False)
+              (1): Linear(in_features=768, out_features=1024, bias=True)
+              (2): GELU(approximate='none')
+              (3): Dropout(p=0.5, inplace=False)
+              (4): Linear(in_features=1024, out_features=1024, bias=True)
+              (5): Identity()
+              (6): Dropout(p=0.5, inplace=False)
+            )
+            (norm2): LayerNorm((1024,), eps=1e-05, elementwise_affine=True)
+          )
+        )
+      )
+      (original_features_processor): FeatureImportanceProjector(
+        (proj1): Projector(
+          (norm1): Identity()
+          (projector): Sequential(
+            (0): Dropout(p=0.5, inplace=False)
+            (1): Linear(in_features=2048, out_features=1024, bias=True)
+            (2): GELU(approximate='none')
+            (3): Dropout(p=0.5, inplace=False)
+            (4): Linear(in_features=1024, out_features=1024, bias=True)
+            (5): GELU(approximate='none')
+            (6): Dropout(p=0.5, inplace=False)
+          )
+          (norm2): LayerNorm((1024,), eps=1e-05, elementwise_affine=True)
+        )
+        (proj2): Projector(
+          (norm1): Identity()
+          (projector): Sequential(
+            (0): Dropout(p=0.5, inplace=False)
+            (1): Linear(in_features=1024, out_features=1024, bias=True)
+            (2): GELU(approximate='none')
+            (3): Dropout(p=0.5, inplace=False)
+            (4): Linear(in_features=1024, out_features=1024, bias=True)
+            (5): GELU(approximate='none')
+            (6): Dropout(p=0.5, inplace=False)
+          )
+          (norm2): LayerNorm((1024,), eps=1e-05, elementwise_affine=True)
+        )
+      )
+    )
+    (backbone_norm): Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
+  )
+  (attend): Softmax(dim=-1)
+  (dropout): Dropout(p=0.5, inplace=False)
+  (to_kv): Linear(in_features=1096, out_features=3072, bias=False)
+  (to_out): Sequential(
+    (0): Linear(in_features=1536, out_features=1096, bias=False)
+    (1): Dropout(p=0.5, inplace=False)
+  )
+  (norm): LayerNorm((1096,), eps=1e-05, elementwise_affine=True)
+  (cls_head): ClassificationHead(
+    (head): Sequential(
+      (0): Linear(in_features=1096, out_features=3288, bias=True)
+      (1): ReLU()
+      (2): Dropout(p=0.5, inplace=False)
+      (3): Linear(in_features=3288, out_features=3288, bias=True)
+      (4): ReLU()
+      (5): Dropout(p=0.5, inplace=False)
+      (6): Linear(in_features=3288, out_features=1, bias=True)
+    )
+  )
+)
+[2025-05-09 12:02:54 finetune](__main__.py 238): INFO 🚨 Freezing all parameters from pretrained model
+[2025-05-09 12:02:54 finetune](__main__.py 246): INFO 🚨 Modules in the model: <generator object Module.named_modules at 0x14fd058c9580>
+🚨 Unfreezing semantic fusion: Param: Parameter containing:
+tensor([[ 0.0012,  0.0271,  0.0360,  ..., -0.0030,  0.0271, -0.0276],
+        [ 0.0028,  0.0257, -0.0010,  ..., -0.0143, -0.0355,  0.0109],
+        [ 0.0239,  0.0072, -0.0185,  ...,  0.0149,  0.0324, -0.0080],
+        ...,
+        [ 0.0009, -0.0215, -0.0089,  ...,  0.0077, -0.0180,  0.0027],
+        [-0.0197, -0.0163, -0.0339,  ..., -0.0086,  0.0124,  0.0057],
+        [ 0.0045,  0.0343,  0.0373,  ...,  0.0258,  0.0324,  0.0068]],
+       device='cuda:0', requires_grad=True), Requires grad: True
+🚨 Unfreezing semantic fusion: Param: Parameter containing:
+tensor([0., 0., 0.,  ..., 0., 0., 0.], device='cuda:0', requires_grad=True), Requires grad: True
+🚨 Unfreezing semantic fusion: Param: Parameter containing:
+tensor([[ 0.0122, -0.0012,  0.0100,  ...,  0.0295,  0.0319,  0.0236],
+        [-0.0016,  0.0250,  0.0277,  ..., -0.0048, -0.0110,  0.0129],
+        [ 0.0368,  0.0143, -0.0011,  ...,  0.0004,  0.0411, -0.0473],
+        ...,
+        [-0.0361, -0.0071, -0.0061,  ...,  0.0149, -0.0189, -0.0177],
+        [-0.0104,  0.0163, -0.0318,  ...,  0.0158, -0.0057,  0.0012],
+        [-0.0312,  0.0041,  0.0024,  ..., -0.0073, -0.0479,  0.0152]],
+       device='cuda:0', requires_grad=True), Requires grad: True
+🚨 Unfreezing semantic fusion: Param: Parameter containing:
+tensor([0., 0., 0.,  ..., 0., 0., 0.], device='cuda:0', requires_grad=True), Requires grad: True
+🚨 Unfreezing classification head: Param: Parameter containing:
+tensor([[ 0.0014,  0.0093,  0.0062,  ...,  0.0288, -0.0011, -0.0107],
+        [ 0.0131,  0.0010,  0.0364,  ..., -0.0247,  0.0163, -0.0163],
+        [-0.0101, -0.0001,  0.0471,  ...,  0.0197, -0.0057,  0.0153],
+        ...,
+        [ 0.0026, -0.0037, -0.0101,  ..., -0.0025,  0.0113, -0.0177],
+        [-0.0076,  0.0056, -0.0090,  ..., -0.0199, -0.0330,  0.0037],
+        [ 0.0010, -0.0107,  0.0010,  ...,  0.0178, -0.0374, -0.0010]],
+       device='cuda:0', requires_grad=True), Requires grad: True
+🚨 Unfreezing classification head: Param: Parameter containing:
+tensor([0., 0., 0.,  ..., 0., 0., 0.], device='cuda:0', requires_grad=True), Requires grad: True
+🚨 Unfreezing classification head: Param: Parameter containing:
+tensor([[-4.0875e-02,  2.7552e-02,  3.5736e-03,  ...,  2.6077e-03,
+         -3.2988e-02,  7.9619e-03],
+        [-2.0716e-02, -3.3592e-02, -1.3668e-02,  ..., -1.2912e-02,
+         -1.3335e-02, -9.0591e-03],
+        [ 1.3500e-02, -1.8868e-02, -1.7729e-02,  ..., -1.2945e-02,
+         -7.0831e-03,  1.0450e-02],
+        ...,
+        [-8.6736e-04,  3.8768e-03,  1.3497e-02,  ..., -1.5488e-02,
+          1.4050e-02, -7.6632e-03],
+        [-1.0160e-02,  2.8136e-03,  2.4976e-02,  ...,  2.9582e-03,
+          2.5370e-02,  9.5010e-03],
+        [ 2.2291e-02, -3.4852e-02, -2.1039e-02,  ..., -8.0807e-03,
+         -1.5360e-02,  6.5437e-05]], device='cuda:0', requires_grad=True), Requires grad: True
+🚨 Unfreezing classification head: Param: Parameter containing:
+tensor([0., 0., 0.,  ..., 0., 0., 0.], device='cuda:0', requires_grad=True), Requires grad: True
+🚨 Unfreezing classification head: Param: Parameter containing:
+tensor([[-0.0099, -0.0138,  0.0280,  ...,  0.0133,  0.0281, -0.0036]],
+       device='cuda:0', requires_grad=True), Requires grad: True
+🚨 Unfreezing classification head: Param: Parameter containing:
+tensor([0.], device='cuda:0', requires_grad=True), Requires grad: True
+[2025-05-09 12:02:54 finetune](__main__.py 257): INFO 🚨 Backbone frozen, semantic fusion and classification head unfrozen.
+[2025-05-09 12:02:54 finetune](__main__.py 260): INFO 🚨 Trainable parameters:
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: patch_aggregator, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.frequencies_mask, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.cls_token, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.pos_embed, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.cls_pos_embed, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.actual_cls_token, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.patch_embed.proj.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.patch_embed.proj.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.0.norm1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.0.norm1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.0.attn.q_bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.0.attn.v_bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.0.attn.qkv.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.0.attn.proj.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.0.attn.proj.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.0.norm2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.0.norm2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.0.mlp.fc1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.0.mlp.fc1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.0.mlp.fc2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.0.mlp.fc2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.1.norm1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.1.norm1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.1.attn.q_bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.1.attn.v_bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.1.attn.qkv.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.1.attn.proj.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.1.attn.proj.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.1.norm2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.1.norm2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.1.mlp.fc1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.1.mlp.fc1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.1.mlp.fc2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.1.mlp.fc2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.2.norm1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.2.norm1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.2.attn.q_bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.2.attn.v_bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.2.attn.qkv.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.2.attn.proj.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.2.attn.proj.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.2.norm2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.2.norm2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.2.mlp.fc1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.2.mlp.fc1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.2.mlp.fc2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.2.mlp.fc2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.3.norm1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.3.norm1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.3.attn.q_bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.3.attn.v_bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.3.attn.qkv.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.3.attn.proj.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.3.attn.proj.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.3.norm2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.3.norm2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.3.mlp.fc1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.3.mlp.fc1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.3.mlp.fc2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.3.mlp.fc2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.4.norm1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.4.norm1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.4.attn.q_bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.4.attn.v_bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.4.attn.qkv.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.4.attn.proj.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.4.attn.proj.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.4.norm2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.4.norm2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.4.mlp.fc1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.4.mlp.fc1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.4.mlp.fc2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.4.mlp.fc2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.5.norm1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.5.norm1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.5.attn.q_bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.5.attn.v_bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.5.attn.qkv.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.5.attn.proj.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.5.attn.proj.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.5.norm2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.5.norm2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.5.mlp.fc1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.5.mlp.fc1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.5.mlp.fc2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.5.mlp.fc2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.6.norm1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.6.norm1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.6.attn.q_bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.6.attn.v_bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.6.attn.qkv.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.6.attn.proj.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.6.attn.proj.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.6.norm2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.6.norm2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.6.mlp.fc1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.6.mlp.fc1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.6.mlp.fc2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.6.mlp.fc2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.7.norm1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.7.norm1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.7.attn.q_bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.7.attn.v_bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.7.attn.qkv.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.7.attn.proj.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.7.attn.proj.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.7.norm2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.7.norm2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.7.mlp.fc1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.7.mlp.fc1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.7.mlp.fc2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.7.mlp.fc2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.8.norm1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.8.norm1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.8.attn.q_bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.8.attn.v_bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.8.attn.qkv.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.8.attn.proj.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.8.attn.proj.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.8.norm2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.8.norm2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.8.mlp.fc1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.8.mlp.fc1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.8.mlp.fc2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.8.mlp.fc2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.9.norm1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.9.norm1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.9.attn.q_bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.9.attn.v_bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.9.attn.qkv.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.9.attn.proj.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.9.attn.proj.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.9.norm2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.9.norm2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.9.mlp.fc1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.9.mlp.fc1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.9.mlp.fc2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.9.mlp.fc2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.10.norm1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.10.norm1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.10.attn.q_bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.10.attn.v_bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.10.attn.qkv.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.10.attn.proj.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.10.attn.proj.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.10.norm2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.10.norm2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.10.mlp.fc1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.10.mlp.fc1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.10.mlp.fc2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.10.mlp.fc2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.11.norm1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.11.norm1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.11.attn.q_bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.11.attn.v_bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.11.attn.qkv.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.11.attn.proj.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.11.attn.proj.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.11.norm2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.11.norm2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.11.mlp.fc1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.11.mlp.fc1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.11.mlp.fc2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.blocks.11.mlp.fc2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.fc_norm.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.fc_norm.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.cls_blocks.0.norm1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.cls_blocks.0.norm1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.cls_blocks.0.attn.q_bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.cls_blocks.0.attn.v_bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.cls_blocks.0.attn.qkv.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.cls_blocks.0.attn.proj.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.cls_blocks.0.attn.proj.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.cls_blocks.0.norm2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.cls_blocks.0.norm2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.cls_blocks.0.mlp.fc1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.cls_blocks.0.mlp.fc1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.cls_blocks.0.mlp.fc2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.cls_blocks.0.mlp.fc2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.0.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.0.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.3.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.3.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.4.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.4.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.5.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.5.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.6.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.6.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.7.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.7.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.8.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.8.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.9.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.9.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.10.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.10.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.11.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.11.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.head.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.vit.head.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.semantic_fusion.attn.in_proj_weight, ⛭ Trainable: True
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.semantic_fusion.attn.in_proj_bias, ⛭ Trainable: True
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.semantic_fusion.attn.out_proj.weight, ⛭ Trainable: True
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.semantic_fusion.attn.out_proj.bias, ⛭ Trainable: True
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.0.norm1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.0.norm1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.0.projector.1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.0.projector.1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.0.projector.4.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.0.projector.4.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.0.norm2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.0.norm2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.1.norm1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.1.norm1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.1.projector.1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.1.projector.1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.1.projector.4.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.1.projector.4.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.1.norm2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.1.norm2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.2.norm1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.2.norm1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.2.projector.1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.2.projector.1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.2.projector.4.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.2.projector.4.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.2.norm2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.2.norm2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.3.norm1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.3.norm1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.3.projector.1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.3.projector.1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.3.projector.4.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.3.projector.4.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.3.norm2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.3.norm2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.4.norm1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.4.norm1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.4.projector.1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.4.projector.1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.4.projector.4.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.4.projector.4.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.4.norm2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.4.norm2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.5.norm1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.5.norm1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.5.projector.1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.5.projector.1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.5.projector.4.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.5.projector.4.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.5.norm2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.5.norm2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.6.norm1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.6.norm1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.6.projector.1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.6.projector.1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.6.projector.4.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.6.projector.4.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.6.norm2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.6.norm2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.7.norm1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.7.norm1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.7.projector.1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.7.projector.1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.7.projector.4.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.7.projector.4.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.7.norm2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.7.norm2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.8.norm1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.8.norm1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.8.projector.1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.8.projector.1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.8.projector.4.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.8.projector.4.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.8.norm2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.8.norm2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.9.norm1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.9.norm1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.9.projector.1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.9.projector.1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.9.projector.4.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.9.projector.4.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.9.norm2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.9.norm2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.10.norm1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.10.norm1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.10.projector.1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.10.projector.1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.10.projector.4.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.10.projector.4.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.10.norm2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.10.norm2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.11.norm1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.11.norm1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.11.projector.1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.11.projector.1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.11.projector.4.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.11.projector.4.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.11.norm2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.11.norm2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.original_features_processor.alpha, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.original_features_processor.proj1.projector.1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.original_features_processor.proj1.projector.1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.original_features_processor.proj1.projector.4.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.original_features_processor.proj1.projector.4.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.original_features_processor.proj1.norm2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.original_features_processor.proj1.norm2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.original_features_processor.proj2.projector.1.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.original_features_processor.proj2.projector.1.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.original_features_processor.proj2.projector.4.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.original_features_processor.proj2.projector.4.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.original_features_processor.proj2.norm2.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: mfvit.features_processor.original_features_processor.proj2.norm2.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: to_kv.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: to_out.0.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: norm.weight, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: norm.bias, ⛭ Trainable: False
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: cls_head.head.0.weight, ⛭ Trainable: True
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: cls_head.head.0.bias, ⛭ Trainable: True
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: cls_head.head.3.weight, ⛭ Trainable: True
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: cls_head.head.3.bias, ⛭ Trainable: True
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: cls_head.head.6.weight, ⛭ Trainable: True
+[2025-05-09 12:02:54 finetune](__main__.py 262): INFO   ⍟ Parameter: cls_head.head.6.bias, ⛭ Trainable: True
+[2025-05-09 12:02:54 finetune](__main__.py 268): INFO ⛭ Trainable params in semantic_fusion: 4198400
+[2025-05-09 12:02:54 finetune](__main__.py 269): INFO ⛭ Trainable params in cls_head: 14424457
+[2025-05-09 12:02:54 finetune](__main__.py 270): INFO ⛭ Total trainable params: 18622857
+[2025-05-09 12:02:54 finetune](optimizer.py 80): INFO >>>>>>>>>> Build Optimizer for Fine-tuning Stage
+[2025-05-09 12:02:54 finetune](optimizer.py 192): INFO Param groups = {
+  "layer_13_decay": {
+    "group_name": "layer_13_decay",
+    "weight_decay": 0.05,
+    "params": [
+      "mfvit.features_processor.semantic_fusion.attn.in_proj_weight",
+      "mfvit.features_processor.semantic_fusion.attn.out_proj.weight",
+      "cls_head.head.0.weight",
+      "cls_head.head.3.weight",
+      "cls_head.head.6.weight"
+    ],
+    "lr": 0.0005,
+    "lr_scale": 1.0
+  },
+  "layer_13_no_decay": {
+    "group_name": "layer_13_no_decay",
+    "weight_decay": 0.0,
+    "params": [
+      "mfvit.features_processor.semantic_fusion.attn.in_proj_bias",
+      "mfvit.features_processor.semantic_fusion.attn.out_proj.bias",
+      "cls_head.head.0.bias",
+      "cls_head.head.3.bias",
+      "cls_head.head.6.bias"
+    ],
+    "lr": 0.0005,
+    "lr_scale": 1.0
+  }
+}
+[2025-05-09 12:02:54 finetune](optimizer.py 115): INFO AdamW (
+Parameter Group 0
+    amsgrad: False
+    betas: (0.9, 0.999)
+    capturable: False
+    differentiable: False
+    eps: 1e-08
+    foreach: None
+    fused: None
+    group_name: layer_13_decay
+    lr: 0.0005
+    lr_scale: 1.0
+    maximize: False
+    weight_decay: 0.05
+
+Parameter Group 1
+    amsgrad: False
+    betas: (0.9, 0.999)
+    capturable: False
+    differentiable: False
+    eps: 1e-08
+    foreach: None
+    fused: None
+    group_name: layer_13_no_decay
+    lr: 0.0005
+    lr_scale: 1.0
+    maximize: False
+    weight_decay: 0.0
+)
+/home/pnair/.conda/envs/spai/lib/python3.11/site-packages/apex/__init__.py:68: DeprecatedFeatureWarning: apex.amp is deprecated and will be removed by the end of February 2023. Use [PyTorch AMP](https://pytorch.org/docs/stable/amp.html)
+  warnings.warn(msg, DeprecatedFeatureWarning)
+/home/pnair/.conda/envs/spai/lib/python3.11/site-packages/apex/amp/scaler.py:56: UserWarning: The torch.cuda.*DtypeTensor constructors are no longer recommended. It's best to use methods such as torch.tensor(data, dtype=*, device='cuda') to create tensors. (Triggered internally at ../torch/csrc/tensor/python_tensor.cpp:83.)
+  self._overflow_buf = torch.cuda.IntTensor([0])
+Selected optimization level O2:  FP16 training with FP32 batchnorm and FP32 master weights.
+
+Defaults for this optimization level are:
+enabled                : True
+opt_level              : O2
+cast_model_type        : torch.float16
+patch_torch_functions  : False
+keep_batchnorm_fp32    : True
+master_weights         : True
+loss_scale             : dynamic
+Processing user overrides (additional kwargs that are not None)...
+After processing overrides, optimization options are:
+enabled                : True
+opt_level              : O2
+cast_model_type        : torch.float16
+patch_torch_functions  : False
+keep_batchnorm_fp32    : True
+master_weights         : True
+loss_scale             : dynamic
+Warning:  multi_tensor_applier fused unscale kernel is unavailable, possibly because apex was installed without --cuda_ext --cpp_ext. Using Python fallback.  Original ImportError was: ModuleNotFoundError("No module named 'amp_C'")
+[2025-05-09 12:02:54 finetune](__main__.py 278): INFO number of params: 18622857
+[2025-05-09 12:02:54 finetune](__main__.py 285): INFO Loss: 
+BCEWithLogitsLoss()
+[2025-05-09 12:02:54 finetune](utils.py 146): INFO >>>>>>>>>> Fine-tuned from /home/pnair/spai/weights/spai.pth ..........
+[2025-05-09 12:02:54 finetune](utils.py 160): INFO Detect non-pre-trained model, pass without doing anything.
+[2025-05-09 12:02:54 finetune](utils.py 166): INFO >>>>>>>>>> Remapping pre-trained keys for VIT ..........
+[2025-05-09 12:02:55 finetune](utils.py 173): INFO _IncompatibleKeys(missing_keys=['mfvit.features_processor.semantic_fusion.attn.in_proj_weight', 'mfvit.features_processor.semantic_fusion.attn.in_proj_bias', 'mfvit.features_processor.semantic_fusion.attn.out_proj.weight', 'mfvit.features_processor.semantic_fusion.attn.out_proj.bias'], unexpected_keys=[])
+[2025-05-09 12:02:55 finetune](utils.py 178): INFO >>>>>>>>>> loaded successfully '/home/pnair/spai/weights/spai.pth'
+[2025-05-09 12:02:55 finetune](__main__.py 904): INFO Start training
+[2025-05-09 12:02:55 finetune](__main__.py 1012): INFO Current learning rate for different parameter groups: [2.5e-07, 2.5e-07]
+[2025-05-09 12:04:16 finetune](__main__.py 1130): INFO Train: [0/35][0/140]	eta 3:09:03 lr 0.000000	time 81.0220 (81.0220)	loss 0.0253 (0.0253)	grad_norm 0.1886 (0.1886)	mem 8565MB
+[2025-05-09 12:11:18 finetune](__main__.py 1130): INFO Train: [0/35][100/140]	eta 0:03:19 lr 0.000072	time 0.6956 (4.9803)	loss 0.0279 (0.0429)	grad_norm 0.1607 (0.2035)	mem 8734MB
+[2025-05-09 12:14:03 finetune](__main__.py 1139): INFO EPOCH 0 training takes 0:11:08
+[2025-05-09 12:15:36 finetune](__main__.py 1225): INFO Test: [0/12] | Time 93.261 (93.261) | Loss 0.1678 (0.1678) | Mem 16700MB
+[2025-05-09 12:15:47 finetune](__main__.py 935): INFO Val | Epoch 0 | Images: 3000 | loss: 0.0972
+[2025-05-09 12:15:47 finetune](__main__.py 936): INFO Val | Epoch 0 | Images: 3000 | ACC: 0.985
+[2025-05-09 12:15:47 finetune](__main__.py 937): INFO Val | Epoch 0 | Images: 3000 | AP: 0.998
+[2025-05-09 12:15:47 finetune](__main__.py 938): INFO Val | Epoch 0 | Images: 3000 | AUC: 0.998
+[2025-05-09 12:15:47 finetune](__main__.py 949): INFO Val | Min loss: 0.0972 | Epoch: 0
+[2025-05-09 12:15:47 finetune](__main__.py 951): INFO Val | Max ACC: 0.985 | Epoch: 0
+[2025-05-09 12:15:47 finetune](__main__.py 953): INFO Val | Max AP: 0.998 | Epoch: 0
+[2025-05-09 12:15:47 finetune](__main__.py 955): INFO Val | Max AUC: 0.998 | Epoch: 0
+[2025-05-09 12:15:47 finetune](utils.py 77): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_0.pth saving......
+[2025-05-09 12:15:48 finetune](utils.py 79): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_0.pth saved !!!
+[2025-05-09 12:15:48 finetune](__main__.py 984): INFO Epoch training time: 773.154s
+[2025-05-09 12:15:48 finetune](__main__.py 1012): INFO Current learning rate for different parameter groups: [9.948607142857143e-05, 9.948607142857143e-05]
+[2025-05-09 12:16:10 finetune](__main__.py 1130): INFO Train: [1/35][0/140]	eta 0:51:16 lr 0.000100	time 21.9722 (21.9722)	loss 0.0374 (0.0374)	grad_norm 0.1574 (0.1574)	mem 16723MB
+[2025-05-09 12:18:05 finetune](__main__.py 1130): INFO Train: [1/35][100/140]	eta 0:00:54 lr 0.000172	time 0.6960 (1.3626)	loss 0.0099 (0.0246)	grad_norm 0.0559 (0.1093)	mem 16723MB
+[2025-05-09 12:18:42 finetune](__main__.py 1139): INFO EPOCH 1 training takes 0:02:53
+[2025-05-09 12:18:56 finetune](__main__.py 1225): INFO Test: [0/12] | Time 14.053 (14.053) | Loss 0.2100 (0.2100) | Mem 16723MB
+[2025-05-09 12:19:11 finetune](__main__.py 935): INFO Val | Epoch 1 | Images: 3000 | loss: 0.1237
+[2025-05-09 12:19:11 finetune](__main__.py 936): INFO Val | Epoch 1 | Images: 3000 | ACC: 0.985
+[2025-05-09 12:19:11 finetune](__main__.py 937): INFO Val | Epoch 1 | Images: 3000 | AP: 0.997
+[2025-05-09 12:19:11 finetune](__main__.py 938): INFO Val | Epoch 1 | Images: 3000 | AUC: 0.997
+[2025-05-09 12:19:11 finetune](__main__.py 949): INFO Val | Min loss: 0.0972 | Epoch: 0
+[2025-05-09 12:19:11 finetune](__main__.py 951): INFO Val | Max ACC: 0.985 | Epoch: 0
+[2025-05-09 12:19:11 finetune](__main__.py 953): INFO Val | Max AP: 0.998 | Epoch: 0
+[2025-05-09 12:19:11 finetune](__main__.py 955): INFO Val | Max AUC: 0.998 | Epoch: 0
+[2025-05-09 12:19:11 finetune](utils.py 77): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_1.pth saving......
+[2025-05-09 12:19:11 finetune](utils.py 79): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_1.pth saved !!!
+[2025-05-09 12:19:11 finetune](__main__.py 984): INFO Epoch training time: 203.348s
+[2025-05-09 12:19:11 finetune](__main__.py 1012): INFO Current learning rate for different parameter groups: [0.00019943607142857144, 0.00019943607142857144]
+[2025-05-09 12:19:32 finetune](__main__.py 1130): INFO Train: [2/35][0/140]	eta 0:48:46 lr 0.000200	time 20.9031 (20.9031)	loss 0.0662 (0.0662)	grad_norm 0.3077 (0.3077)	mem 16723MB
+[2025-05-09 12:21:17 finetune](__main__.py 1130): INFO Train: [2/35][100/140]	eta 0:00:49 lr 0.000272	time 0.6956 (1.2466)	loss 0.0460 (0.0283)	grad_norm 0.1381 (0.1325)	mem 16723MB
+[2025-05-09 12:22:16 finetune](__main__.py 1139): INFO EPOCH 2 training takes 0:03:04
+[2025-05-09 12:22:35 finetune](__main__.py 1225): INFO Test: [0/12] | Time 19.516 (19.516) | Loss 0.2063 (0.2063) | Mem 16723MB
+[2025-05-09 12:22:46 finetune](__main__.py 935): INFO Val | Epoch 2 | Images: 3000 | loss: 0.1209
+[2025-05-09 12:22:46 finetune](__main__.py 936): INFO Val | Epoch 2 | Images: 3000 | ACC: 0.985
+[2025-05-09 12:22:46 finetune](__main__.py 937): INFO Val | Epoch 2 | Images: 3000 | AP: 0.997
+[2025-05-09 12:22:46 finetune](__main__.py 938): INFO Val | Epoch 2 | Images: 3000 | AUC: 0.997
+[2025-05-09 12:22:46 finetune](__main__.py 949): INFO Val | Min loss: 0.0972 | Epoch: 0
+[2025-05-09 12:22:46 finetune](__main__.py 951): INFO Val | Max ACC: 0.985 | Epoch: 0
+[2025-05-09 12:22:46 finetune](__main__.py 953): INFO Val | Max AP: 0.998 | Epoch: 0
+[2025-05-09 12:22:46 finetune](__main__.py 955): INFO Val | Max AUC: 0.998 | Epoch: 0
+[2025-05-09 12:22:46 finetune](utils.py 77): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_2.pth saving......
+[2025-05-09 12:22:47 finetune](utils.py 79): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_2.pth saved !!!
+[2025-05-09 12:22:47 finetune](__main__.py 984): INFO Epoch training time: 215.243s
+[2025-05-09 12:22:47 finetune](__main__.py 1012): INFO Current learning rate for different parameter groups: [0.0002993860714285714, 0.0002993860714285714]
+[2025-05-09 12:23:11 finetune](__main__.py 1130): INFO Train: [3/35][0/140]	eta 0:56:25 lr 0.000300	time 24.1840 (24.1840)	loss 0.0179 (0.0179)	grad_norm 0.0659 (0.0659)	mem 16723MB
+[2025-05-09 12:25:05 finetune](__main__.py 1130): INFO Train: [3/35][100/140]	eta 0:00:54 lr 0.000371	time 0.6955 (1.3675)	loss 0.1268 (0.0289)	grad_norm 0.6924 (0.1369)	mem 16723MB
+[2025-05-09 12:25:50 finetune](__main__.py 1139): INFO EPOCH 3 training takes 0:03:03
+[2025-05-09 12:26:12 finetune](__main__.py 1225): INFO Test: [0/12] | Time 21.631 (21.631) | Loss 0.1718 (0.1718) | Mem 16723MB
+[2025-05-09 12:26:23 finetune](__main__.py 935): INFO Val | Epoch 3 | Images: 3000 | loss: 0.1005
+[2025-05-09 12:26:23 finetune](__main__.py 936): INFO Val | Epoch 3 | Images: 3000 | ACC: 0.985
+[2025-05-09 12:26:23 finetune](__main__.py 937): INFO Val | Epoch 3 | Images: 3000 | AP: 0.998
+[2025-05-09 12:26:23 finetune](__main__.py 938): INFO Val | Epoch 3 | Images: 3000 | AUC: 0.998
+[2025-05-09 12:26:23 finetune](__main__.py 949): INFO Val | Min loss: 0.0972 | Epoch: 0
+[2025-05-09 12:26:23 finetune](__main__.py 951): INFO Val | Max ACC: 0.985 | Epoch: 0
+[2025-05-09 12:26:23 finetune](__main__.py 953): INFO Val | Max AP: 0.998 | Epoch: 3
+[2025-05-09 12:26:23 finetune](__main__.py 955): INFO Val | Max AUC: 0.998 | Epoch: 3
+[2025-05-09 12:26:23 finetune](utils.py 77): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_3.pth saving......
+[2025-05-09 12:26:23 finetune](utils.py 79): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_3.pth saved !!!
+[2025-05-09 12:26:23 finetune](__main__.py 984): INFO Epoch training time: 216.584s
+[2025-05-09 12:26:23 finetune](__main__.py 1012): INFO Current learning rate for different parameter groups: [0.0003993360714285714, 0.0003993360714285714]
+[2025-05-09 12:26:48 finetune](__main__.py 1130): INFO Train: [4/35][0/140]	eta 0:56:51 lr 0.000400	time 24.3695 (24.3695)	loss 0.0234 (0.0234)	grad_norm 0.1074 (0.1074)	mem 16723MB
+[2025-05-09 12:28:37 finetune](__main__.py 1130): INFO Train: [4/35][100/140]	eta 0:00:53 lr 0.000471	time 0.6953 (1.3258)	loss 0.0253 (0.0272)	grad_norm 0.1140 (0.1293)	mem 16723MB
+[2025-05-09 12:29:17 finetune](__main__.py 1139): INFO EPOCH 4 training takes 0:02:53
+[2025-05-09 12:29:34 finetune](__main__.py 1225): INFO Test: [0/12] | Time 17.613 (17.613) | Loss 0.1963 (0.1963) | Mem 16723MB
+[2025-05-09 12:29:53 finetune](__main__.py 935): INFO Val | Epoch 4 | Images: 3000 | loss: 0.1156
+[2025-05-09 12:29:53 finetune](__main__.py 936): INFO Val | Epoch 4 | Images: 3000 | ACC: 0.985
+[2025-05-09 12:29:53 finetune](__main__.py 937): INFO Val | Epoch 4 | Images: 3000 | AP: 0.997
+[2025-05-09 12:29:53 finetune](__main__.py 938): INFO Val | Epoch 4 | Images: 3000 | AUC: 0.997
+[2025-05-09 12:29:53 finetune](__main__.py 949): INFO Val | Min loss: 0.0972 | Epoch: 0
+[2025-05-09 12:29:53 finetune](__main__.py 951): INFO Val | Max ACC: 0.985 | Epoch: 0
+[2025-05-09 12:29:53 finetune](__main__.py 953): INFO Val | Max AP: 0.998 | Epoch: 3
+[2025-05-09 12:29:53 finetune](__main__.py 955): INFO Val | Max AUC: 0.998 | Epoch: 3
+[2025-05-09 12:29:53 finetune](utils.py 77): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_4.pth saving......
+[2025-05-09 12:29:54 finetune](utils.py 79): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_4.pth saved !!!
+[2025-05-09 12:29:54 finetune](__main__.py 984): INFO Epoch training time: 210.532s
+[2025-05-09 12:29:54 finetune](__main__.py 1012): INFO Current learning rate for different parameter groups: [0.0004992860714285714, 0.0004992860714285714]
+[2025-05-09 12:30:27 finetune](__main__.py 1130): INFO Train: [5/35][0/140]	eta 1:16:52 lr 0.000475	time 32.9450 (32.9450)	loss 0.0093 (0.0093)	grad_norm 0.0611 (0.0611)	mem 16723MB
+[2025-05-09 12:32:40 finetune](__main__.py 1130): INFO Train: [5/35][100/140]	eta 0:01:05 lr 0.000468	time 0.6961 (1.6452)	loss 0.0849 (0.0276)	grad_norm 0.3798 (0.1356)	mem 16723MB
+[2025-05-09 12:33:26 finetune](__main__.py 1139): INFO EPOCH 5 training takes 0:03:32
+[2025-05-09 12:33:58 finetune](__main__.py 1225): INFO Test: [0/12] | Time 31.756 (31.756) | Loss 0.2387 (0.2387) | Mem 16723MB
+[2025-05-09 12:34:11 finetune](__main__.py 935): INFO Val | Epoch 5 | Images: 3000 | loss: 0.1393
+[2025-05-09 12:34:11 finetune](__main__.py 936): INFO Val | Epoch 5 | Images: 3000 | ACC: 0.984
+[2025-05-09 12:34:11 finetune](__main__.py 937): INFO Val | Epoch 5 | Images: 3000 | AP: 0.997
+[2025-05-09 12:34:11 finetune](__main__.py 938): INFO Val | Epoch 5 | Images: 3000 | AUC: 0.997
+[2025-05-09 12:34:11 finetune](__main__.py 949): INFO Val | Min loss: 0.0972 | Epoch: 0
+[2025-05-09 12:34:11 finetune](__main__.py 951): INFO Val | Max ACC: 0.985 | Epoch: 0
+[2025-05-09 12:34:11 finetune](__main__.py 953): INFO Val | Max AP: 0.998 | Epoch: 3
+[2025-05-09 12:34:11 finetune](__main__.py 955): INFO Val | Max AUC: 0.998 | Epoch: 3
+[2025-05-09 12:34:11 finetune](utils.py 77): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_5.pth saving......
+[2025-05-09 12:34:11 finetune](utils.py 79): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_5.pth saved !!!
+[2025-05-09 12:34:11 finetune](__main__.py 984): INFO Epoch training time: 257.230s
+[2025-05-09 12:34:11 finetune](__main__.py 1012): INFO Current learning rate for different parameter groups: [0.0004647120173378825, 0.0004647120173378825]
+[2025-05-09 12:34:33 finetune](__main__.py 1130): INFO Train: [6/35][0/140]	eta 0:49:24 lr 0.000465	time 21.1739 (21.1739)	loss 0.0340 (0.0340)	grad_norm 0.1203 (0.1203)	mem 16723MB
+[2025-05-09 12:36:30 finetune](__main__.py 1130): INFO Train: [6/35][100/140]	eta 0:00:54 lr 0.000456	time 0.6960 (1.3694)	loss 0.0194 (0.0234)	grad_norm 0.0983 (0.1085)	mem 16723MB
+[2025-05-09 12:37:17 finetune](__main__.py 1139): INFO EPOCH 6 training takes 0:03:05
+[2025-05-09 12:37:36 finetune](__main__.py 1225): INFO Test: [0/12] | Time 18.522 (18.522) | Loss 0.1792 (0.1792) | Mem 16723MB
+[2025-05-09 12:37:47 finetune](__main__.py 935): INFO Val | Epoch 6 | Images: 3000 | loss: 0.1041
+[2025-05-09 12:37:47 finetune](__main__.py 936): INFO Val | Epoch 6 | Images: 3000 | ACC: 0.985
+[2025-05-09 12:37:47 finetune](__main__.py 937): INFO Val | Epoch 6 | Images: 3000 | AP: 0.997
+[2025-05-09 12:37:47 finetune](__main__.py 938): INFO Val | Epoch 6 | Images: 3000 | AUC: 0.997
+[2025-05-09 12:37:47 finetune](__main__.py 949): INFO Val | Min loss: 0.0972 | Epoch: 0
+[2025-05-09 12:37:47 finetune](__main__.py 951): INFO Val | Max ACC: 0.985 | Epoch: 0
+[2025-05-09 12:37:47 finetune](__main__.py 953): INFO Val | Max AP: 0.998 | Epoch: 3
+[2025-05-09 12:37:47 finetune](__main__.py 955): INFO Val | Max AUC: 0.998 | Epoch: 3
+[2025-05-09 12:37:47 finetune](utils.py 77): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_6.pth saving......
+[2025-05-09 12:37:47 finetune](utils.py 79): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_6.pth saved !!!
+[2025-05-09 12:37:47 finetune](__main__.py 984): INFO Epoch training time: 215.702s
+[2025-05-09 12:37:47 finetune](__main__.py 1012): INFO Current learning rate for different parameter groups: [0.0004523722461662516, 0.0004523722461662516]
+[2025-05-09 12:38:17 finetune](__main__.py 1130): INFO Train: [7/35][0/140]	eta 1:09:40 lr 0.000452	time 29.8639 (29.8639)	loss 0.0493 (0.0493)	grad_norm 0.1038 (0.1038)	mem 16723MB
+[2025-05-09 12:40:09 finetune](__main__.py 1130): INFO Train: [7/35][100/140]	eta 0:00:56 lr 0.000442	time 0.6955 (1.4090)	loss 0.0343 (0.0241)	grad_norm 0.1650 (0.1014)	mem 16723MB
+[2025-05-09 12:40:59 finetune](__main__.py 1139): INFO EPOCH 7 training takes 0:03:12
+[2025-05-09 12:41:18 finetune](__main__.py 1225): INFO Test: [0/12] | Time 18.902 (18.902) | Loss 0.1546 (0.1546) | Mem 16723MB
+[2025-05-09 12:41:36 finetune](__main__.py 935): INFO Val | Epoch 7 | Images: 3000 | loss: 0.0906
+[2025-05-09 12:41:36 finetune](__main__.py 936): INFO Val | Epoch 7 | Images: 3000 | ACC: 0.984
+[2025-05-09 12:41:36 finetune](__main__.py 937): INFO Val | Epoch 7 | Images: 3000 | AP: 0.999
+[2025-05-09 12:41:36 finetune](__main__.py 938): INFO Val | Epoch 7 | Images: 3000 | AUC: 0.999
+[2025-05-09 12:41:36 finetune](__main__.py 949): INFO Val | Min loss: 0.0906 | Epoch: 7
+[2025-05-09 12:41:36 finetune](__main__.py 951): INFO Val | Max ACC: 0.985 | Epoch: 0
+[2025-05-09 12:41:36 finetune](__main__.py 953): INFO Val | Max AP: 0.999 | Epoch: 7
+[2025-05-09 12:41:36 finetune](__main__.py 955): INFO Val | Max AUC: 0.999 | Epoch: 7
+[2025-05-09 12:41:36 finetune](utils.py 77): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_7.pth saving......
+[2025-05-09 12:41:37 finetune](utils.py 79): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_7.pth saved !!!
+[2025-05-09 12:41:37 finetune](__main__.py 984): INFO Epoch training time: 229.620s
+[2025-05-09 12:41:37 finetune](__main__.py 1012): INFO Current learning rate for different parameter groups: [0.0004384040990879451, 0.0004384040990879451]
+[2025-05-09 12:41:49 finetune](__main__.py 1130): INFO Train: [8/35][0/140]	eta 0:28:18 lr 0.000438	time 12.1330 (12.1330)	loss 0.0337 (0.0337)	grad_norm 0.0838 (0.0838)	mem 16723MB
+[2025-05-09 12:43:52 finetune](__main__.py 1130): INFO Train: [8/35][100/140]	eta 0:00:53 lr 0.000427	time 1.3936 (1.3417)	loss 0.0301 (0.0268)	grad_norm 0.0965 (0.1111)	mem 16723MB
+[2025-05-09 12:44:29 finetune](__main__.py 1139): INFO EPOCH 8 training takes 0:02:52
+[2025-05-09 12:44:48 finetune](__main__.py 1225): INFO Test: [0/12] | Time 19.025 (19.025) | Loss 0.2359 (0.2359) | Mem 16723MB
+[2025-05-09 12:45:00 finetune](__main__.py 935): INFO Val | Epoch 8 | Images: 3000 | loss: 0.1377
+[2025-05-09 12:45:00 finetune](__main__.py 936): INFO Val | Epoch 8 | Images: 3000 | ACC: 0.985
+[2025-05-09 12:45:00 finetune](__main__.py 937): INFO Val | Epoch 8 | Images: 3000 | AP: 0.997
+[2025-05-09 12:45:00 finetune](__main__.py 938): INFO Val | Epoch 8 | Images: 3000 | AUC: 0.997
+[2025-05-09 12:45:00 finetune](__main__.py 949): INFO Val | Min loss: 0.0906 | Epoch: 7
+[2025-05-09 12:45:00 finetune](__main__.py 951): INFO Val | Max ACC: 0.985 | Epoch: 0
+[2025-05-09 12:45:00 finetune](__main__.py 953): INFO Val | Max AP: 0.999 | Epoch: 7
+[2025-05-09 12:45:00 finetune](__main__.py 955): INFO Val | Max AUC: 0.999 | Epoch: 7
+[2025-05-09 12:45:00 finetune](utils.py 77): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_8.pth saving......
+[2025-05-09 12:45:00 finetune](utils.py 79): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_8.pth saved !!!
+[2025-05-09 12:45:00 finetune](__main__.py 984): INFO Epoch training time: 203.079s
+[2025-05-09 12:45:00 finetune](__main__.py 1012): INFO Current learning rate for different parameter groups: [0.0004229200394100999, 0.0004229200394100999]
+[2025-05-09 12:45:20 finetune](__main__.py 1130): INFO Train: [9/35][0/140]	eta 0:46:56 lr 0.000423	time 20.1181 (20.1181)	loss 0.0671 (0.0671)	grad_norm 0.2202 (0.2202)	mem 16723MB
+[2025-05-09 12:47:17 finetune](__main__.py 1130): INFO Train: [9/35][100/140]	eta 0:00:54 lr 0.000411	time 0.6955 (1.3592)	loss 0.0348 (0.0246)	grad_norm 0.1427 (0.0944)	mem 16723MB
+[2025-05-09 12:48:02 finetune](__main__.py 1139): INFO EPOCH 9 training takes 0:03:02
+[2025-05-09 12:48:25 finetune](__main__.py 1225): INFO Test: [0/12] | Time 22.907 (22.907) | Loss 0.2201 (0.2201) | Mem 16723MB
+[2025-05-09 12:48:40 finetune](__main__.py 935): INFO Val | Epoch 9 | Images: 3000 | loss: 0.1282
+[2025-05-09 12:48:40 finetune](__main__.py 936): INFO Val | Epoch 9 | Images: 3000 | ACC: 0.984
+[2025-05-09 12:48:40 finetune](__main__.py 937): INFO Val | Epoch 9 | Images: 3000 | AP: 0.997
+[2025-05-09 12:48:40 finetune](__main__.py 938): INFO Val | Epoch 9 | Images: 3000 | AUC: 0.997
+[2025-05-09 12:48:40 finetune](__main__.py 949): INFO Val | Min loss: 0.0906 | Epoch: 7
+[2025-05-09 12:48:40 finetune](__main__.py 951): INFO Val | Max ACC: 0.985 | Epoch: 0
+[2025-05-09 12:48:40 finetune](__main__.py 953): INFO Val | Max AP: 0.999 | Epoch: 7
+[2025-05-09 12:48:40 finetune](__main__.py 955): INFO Val | Max AUC: 0.999 | Epoch: 7
+[2025-05-09 12:48:40 finetune](utils.py 77): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_9.pth saving......
+[2025-05-09 12:48:40 finetune](utils.py 79): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_9.pth saved !!!
+[2025-05-09 12:48:40 finetune](__main__.py 984): INFO Epoch training time: 220.045s
+[2025-05-09 12:48:40 finetune](__main__.py 1012): INFO Current learning rate for different parameter groups: [0.00040604473567676245, 0.00040604473567676245]
+[2025-05-09 12:49:10 finetune](__main__.py 1130): INFO Train: [10/35][0/140]	eta 1:10:20 lr 0.000406	time 30.1477 (30.1477)	loss 0.0113 (0.0113)	grad_norm 0.0651 (0.0651)	mem 16723MB
+[2025-05-09 12:50:57 finetune](__main__.py 1130): INFO Train: [10/35][100/140]	eta 0:00:54 lr 0.000393	time 0.6956 (1.3568)	loss 0.0062 (0.0275)	grad_norm 0.0437 (0.1033)	mem 16723MB
+[2025-05-09 12:51:57 finetune](__main__.py 1139): INFO EPOCH 10 training takes 0:03:17
+[2025-05-09 12:52:28 finetune](__main__.py 1225): INFO Test: [0/12] | Time 30.547 (30.547) | Loss 0.2464 (0.2464) | Mem 16723MB
+[2025-05-09 12:52:42 finetune](__main__.py 935): INFO Val | Epoch 10 | Images: 3000 | loss: 0.1430
+[2025-05-09 12:52:42 finetune](__main__.py 936): INFO Val | Epoch 10 | Images: 3000 | ACC: 0.985
+[2025-05-09 12:52:42 finetune](__main__.py 937): INFO Val | Epoch 10 | Images: 3000 | AP: 0.997
+[2025-05-09 12:52:42 finetune](__main__.py 938): INFO Val | Epoch 10 | Images: 3000 | AUC: 0.997
+[2025-05-09 12:52:42 finetune](__main__.py 949): INFO Val | Min loss: 0.0906 | Epoch: 7
+[2025-05-09 12:52:42 finetune](__main__.py 951): INFO Val | Max ACC: 0.985 | Epoch: 0
+[2025-05-09 12:52:42 finetune](__main__.py 953): INFO Val | Max AP: 0.999 | Epoch: 7
+[2025-05-09 12:52:42 finetune](__main__.py 955): INFO Val | Max AUC: 0.999 | Epoch: 7
+[2025-05-09 12:52:42 finetune](utils.py 77): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_10.pth saving......
+[2025-05-09 12:52:42 finetune](utils.py 79): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_10.pth saved !!!
+[2025-05-09 12:52:42 finetune](__main__.py 984): INFO Epoch training time: 242.041s
+[2025-05-09 12:52:42 finetune](__main__.py 1012): INFO Current learning rate for different parameter groups: [0.00038791405791107557, 0.00038791405791107557]
+[2025-05-09 12:53:01 finetune](__main__.py 1130): INFO Train: [11/35][0/140]	eta 0:42:37 lr 0.000388	time 18.2698 (18.2698)	loss 0.0363 (0.0363)	grad_norm 0.1088 (0.1088)	mem 16723MB
+[2025-05-09 12:55:02 finetune](__main__.py 1130): INFO Train: [11/35][100/140]	eta 0:00:55 lr 0.000374	time 0.6957 (1.3804)	loss 0.0265 (0.0253)	grad_norm 0.1075 (0.0919)	mem 16723MB
+[2025-05-09 12:55:43 finetune](__main__.py 1139): INFO EPOCH 11 training takes 0:03:00
+[2025-05-09 12:56:05 finetune](__main__.py 1225): INFO Test: [0/12] | Time 21.354 (21.354) | Loss 0.1928 (0.1928) | Mem 16723MB
+[2025-05-09 12:56:16 finetune](__main__.py 935): INFO Val | Epoch 11 | Images: 3000 | loss: 0.1134
+[2025-05-09 12:56:16 finetune](__main__.py 936): INFO Val | Epoch 11 | Images: 3000 | ACC: 0.984
+[2025-05-09 12:56:16 finetune](__main__.py 937): INFO Val | Epoch 11 | Images: 3000 | AP: 0.997
+[2025-05-09 12:56:16 finetune](__main__.py 938): INFO Val | Epoch 11 | Images: 3000 | AUC: 0.997
+[2025-05-09 12:56:16 finetune](__main__.py 949): INFO Val | Min loss: 0.0906 | Epoch: 7
+[2025-05-09 12:56:16 finetune](__main__.py 951): INFO Val | Max ACC: 0.985 | Epoch: 0
+[2025-05-09 12:56:16 finetune](__main__.py 953): INFO Val | Max AP: 0.999 | Epoch: 7
+[2025-05-09 12:56:16 finetune](__main__.py 955): INFO Val | Max AUC: 0.999 | Epoch: 7
+[2025-05-09 12:56:17 finetune](utils.py 77): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_11.pth saving......
+[2025-05-09 12:56:17 finetune](utils.py 79): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_11.pth saved !!!
+[2025-05-09 12:56:17 finetune](__main__.py 984): INFO Epoch training time: 214.484s
+[2025-05-09 12:56:17 finetune](__main__.py 1012): INFO Current learning rate for different parameter groups: [0.0003686739836697428, 0.0003686739836697428]
+[2025-05-09 12:56:37 finetune](__main__.py 1130): INFO Train: [12/35][0/140]	eta 0:47:15 lr 0.000369	time 20.2541 (20.2541)	loss 0.0230 (0.0230)	grad_norm 0.0706 (0.0706)	mem 16723MB
+[2025-05-09 12:58:54 finetune](__main__.py 1130): INFO Train: [12/35][100/140]	eta 0:01:02 lr 0.000354	time 0.6951 (1.5558)	loss 0.0116 (0.0278)	grad_norm 0.0667 (0.1094)	mem 16723MB
+[2025-05-09 12:59:55 finetune](__main__.py 1139): INFO EPOCH 12 training takes 0:03:37
+[2025-05-09 13:00:13 finetune](__main__.py 1225): INFO Test: [0/12] | Time 17.977 (17.977) | Loss 0.2138 (0.2138) | Mem 16723MB
+[2025-05-09 13:00:24 finetune](__main__.py 935): INFO Val | Epoch 12 | Images: 3000 | loss: 0.1261
+[2025-05-09 13:00:24 finetune](__main__.py 936): INFO Val | Epoch 12 | Images: 3000 | ACC: 0.984
+[2025-05-09 13:00:24 finetune](__main__.py 937): INFO Val | Epoch 12 | Images: 3000 | AP: 0.997
+[2025-05-09 13:00:24 finetune](__main__.py 938): INFO Val | Epoch 12 | Images: 3000 | AUC: 0.997
+[2025-05-09 13:00:24 finetune](__main__.py 949): INFO Val | Min loss: 0.0906 | Epoch: 7
+[2025-05-09 13:00:24 finetune](__main__.py 951): INFO Val | Max ACC: 0.985 | Epoch: 0
+[2025-05-09 13:00:24 finetune](__main__.py 953): INFO Val | Max AP: 0.999 | Epoch: 7
+[2025-05-09 13:00:24 finetune](__main__.py 955): INFO Val | Max AUC: 0.999 | Epoch: 7
+[2025-05-09 13:00:24 finetune](utils.py 77): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_12.pth saving......
+[2025-05-09 13:00:25 finetune](utils.py 79): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_12.pth saved !!!
+[2025-05-09 13:00:25 finetune](__main__.py 984): INFO Epoch training time: 247.583s
+[2025-05-09 13:00:25 finetune](__main__.py 1012): INFO Current learning rate for different parameter groups: [0.0003484794227175748, 0.0003484794227175748]
+[2025-05-09 13:00:40 finetune](__main__.py 1130): INFO Train: [13/35][0/140]	eta 0:36:41 lr 0.000348	time 15.7251 (15.7251)	loss 0.0090 (0.0090)	grad_norm 0.0473 (0.0473)	mem 16723MB
+[2025-05-09 13:02:32 finetune](__main__.py 1130): INFO Train: [13/35][100/140]	eta 0:00:50 lr 0.000333	time 0.6953 (1.2569)	loss 0.0466 (0.0241)	grad_norm 0.1231 (0.0890)	mem 16723MB
+[2025-05-09 13:03:24 finetune](__main__.py 1139): INFO EPOCH 13 training takes 0:02:58
+[2025-05-09 13:03:47 finetune](__main__.py 1225): INFO Test: [0/12] | Time 23.701 (23.701) | Loss 0.2188 (0.2188) | Mem 16723MB
+[2025-05-09 13:04:03 finetune](__main__.py 935): INFO Val | Epoch 13 | Images: 3000 | loss: 0.1282
+[2025-05-09 13:04:03 finetune](__main__.py 936): INFO Val | Epoch 13 | Images: 3000 | ACC: 0.985
+[2025-05-09 13:04:03 finetune](__main__.py 937): INFO Val | Epoch 13 | Images: 3000 | AP: 0.997
+[2025-05-09 13:04:03 finetune](__main__.py 938): INFO Val | Epoch 13 | Images: 3000 | AUC: 0.997
+[2025-05-09 13:04:03 finetune](__main__.py 949): INFO Val | Min loss: 0.0906 | Epoch: 7
+[2025-05-09 13:04:03 finetune](__main__.py 951): INFO Val | Max ACC: 0.985 | Epoch: 0
+[2025-05-09 13:04:03 finetune](__main__.py 953): INFO Val | Max AP: 0.999 | Epoch: 7
+[2025-05-09 13:04:03 finetune](__main__.py 955): INFO Val | Max AUC: 0.999 | Epoch: 7
+[2025-05-09 13:04:03 finetune](utils.py 77): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_13.pth saving......
+[2025-05-09 13:04:04 finetune](utils.py 79): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_13.pth saved !!!
+[2025-05-09 13:04:04 finetune](__main__.py 984): INFO Epoch training time: 218.947s
+[2025-05-09 13:04:04 finetune](__main__.py 1012): INFO Current learning rate for different parameter groups: [0.00032749296978514897, 0.00032749296978514897]
+[2025-05-09 13:04:25 finetune](__main__.py 1130): INFO Train: [14/35][0/140]	eta 0:49:32 lr 0.000327	time 21.2301 (21.2301)	loss 0.0382 (0.0382)	grad_norm 0.1821 (0.1821)	mem 16723MB
+[2025-05-09 13:06:38 finetune](__main__.py 1130): INFO Train: [14/35][100/140]	eta 0:01:00 lr 0.000312	time 0.6952 (1.5243)	loss 0.0401 (0.0246)	grad_norm 0.0897 (0.0971)	mem 16723MB
+[2025-05-09 13:07:17 finetune](__main__.py 1139): INFO EPOCH 14 training takes 0:03:13
+[2025-05-09 13:07:34 finetune](__main__.py 1225): INFO Test: [0/12] | Time 16.829 (16.829) | Loss 0.2132 (0.2132) | Mem 16723MB
+[2025-05-09 13:07:48 finetune](__main__.py 935): INFO Val | Epoch 14 | Images: 3000 | loss: 0.1255
+[2025-05-09 13:07:48 finetune](__main__.py 936): INFO Val | Epoch 14 | Images: 3000 | ACC: 0.984
+[2025-05-09 13:07:48 finetune](__main__.py 937): INFO Val | Epoch 14 | Images: 3000 | AP: 0.997
+[2025-05-09 13:07:48 finetune](__main__.py 938): INFO Val | Epoch 14 | Images: 3000 | AUC: 0.997
+[2025-05-09 13:07:48 finetune](__main__.py 949): INFO Val | Min loss: 0.0906 | Epoch: 7
+[2025-05-09 13:07:48 finetune](__main__.py 951): INFO Val | Max ACC: 0.985 | Epoch: 0
+[2025-05-09 13:07:48 finetune](__main__.py 953): INFO Val | Max AP: 0.999 | Epoch: 7
+[2025-05-09 13:07:48 finetune](__main__.py 955): INFO Val | Max AUC: 0.999 | Epoch: 7
+[2025-05-09 13:07:48 finetune](utils.py 77): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_14.pth saving......
+[2025-05-09 13:07:48 finetune](utils.py 79): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_14.pth saved !!!
+[2025-05-09 13:07:48 finetune](__main__.py 984): INFO Epoch training time: 224.600s
+[2025-05-09 13:07:48 finetune](__main__.py 1012): INFO Current learning rate for different parameter groups: [0.00030588359545164265, 0.00030588359545164265]
+[2025-05-09 13:08:25 finetune](__main__.py 1130): INFO Train: [15/35][0/140]	eta 1:24:42 lr 0.000306	time 36.3034 (36.3034)	loss 0.0221 (0.0221)	grad_norm 0.0615 (0.0615)	mem 16723MB
+[2025-05-09 13:11:40 finetune](__main__.py 1130): INFO Train: [15/35][100/140]	eta 0:01:31 lr 0.000290	time 0.6958 (2.2962)	loss 0.0359 (0.0271)	grad_norm 0.1351 (0.1055)	mem 16723MB
+[2025-05-09 13:13:14 finetune](__main__.py 1139): INFO EPOCH 15 training takes 0:05:25
+[2025-05-09 13:13:37 finetune](__main__.py 1225): INFO Test: [0/12] | Time 22.373 (22.373) | Loss 0.1795 (0.1795) | Mem 16723MB
+[2025-05-09 13:13:49 finetune](__main__.py 935): INFO Val | Epoch 15 | Images: 3000 | loss: 0.1067
+[2025-05-09 13:13:49 finetune](__main__.py 936): INFO Val | Epoch 15 | Images: 3000 | ACC: 0.984
+[2025-05-09 13:13:49 finetune](__main__.py 937): INFO Val | Epoch 15 | Images: 3000 | AP: 0.998
+[2025-05-09 13:13:49 finetune](__main__.py 938): INFO Val | Epoch 15 | Images: 3000 | AUC: 0.998
+[2025-05-09 13:13:49 finetune](__main__.py 949): INFO Val | Min loss: 0.0906 | Epoch: 7
+[2025-05-09 13:13:49 finetune](__main__.py 951): INFO Val | Max ACC: 0.985 | Epoch: 0
+[2025-05-09 13:13:49 finetune](__main__.py 953): INFO Val | Max AP: 0.999 | Epoch: 7
+[2025-05-09 13:13:49 finetune](__main__.py 955): INFO Val | Max AUC: 0.999 | Epoch: 7
+[2025-05-09 13:13:49 finetune](utils.py 77): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_15.pth saving......
+[2025-05-09 13:13:49 finetune](utils.py 79): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_15.pth saved !!!
+[2025-05-09 13:13:49 finetune](__main__.py 984): INFO Epoch training time: 360.599s
+[2025-05-09 13:13:49 finetune](__main__.py 1012): INFO Current learning rate for different parameter groups: [0.00028382528569308277, 0.00028382528569308277]
+[2025-05-09 13:14:16 finetune](__main__.py 1130): INFO Train: [16/35][0/140]	eta 1:02:30 lr 0.000284	time 26.7925 (26.7925)	loss 0.0369 (0.0369)	grad_norm 0.1082 (0.1082)	mem 16723MB
+[2025-05-09 13:16:17 finetune](__main__.py 1130): INFO Train: [16/35][100/140]	eta 0:00:58 lr 0.000268	time 5.1028 (1.4649)	loss 0.0232 (0.0274)	grad_norm 0.0779 (0.1082)	mem 16723MB
+[2025-05-09 13:16:57 finetune](__main__.py 1139): INFO EPOCH 16 training takes 0:03:08
+[2025-05-09 13:17:18 finetune](__main__.py 1225): INFO Test: [0/12] | Time 20.622 (20.622) | Loss 0.1836 (0.1836) | Mem 16723MB
+[2025-05-09 13:17:33 finetune](__main__.py 935): INFO Val | Epoch 16 | Images: 3000 | loss: 0.1093
+[2025-05-09 13:17:33 finetune](__main__.py 936): INFO Val | Epoch 16 | Images: 3000 | ACC: 0.984
+[2025-05-09 13:17:33 finetune](__main__.py 937): INFO Val | Epoch 16 | Images: 3000 | AP: 0.998
+[2025-05-09 13:17:33 finetune](__main__.py 938): INFO Val | Epoch 16 | Images: 3000 | AUC: 0.998
+[2025-05-09 13:17:33 finetune](__main__.py 949): INFO Val | Min loss: 0.0906 | Epoch: 7
+[2025-05-09 13:17:33 finetune](__main__.py 951): INFO Val | Max ACC: 0.985 | Epoch: 0
+[2025-05-09 13:17:33 finetune](__main__.py 953): INFO Val | Max AP: 0.999 | Epoch: 7
+[2025-05-09 13:17:33 finetune](__main__.py 955): INFO Val | Max AUC: 0.999 | Epoch: 7
+[2025-05-09 13:17:33 finetune](utils.py 77): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_16.pth saving......
+[2025-05-09 13:17:34 finetune](utils.py 79): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_16.pth saved !!!
+[2025-05-09 13:17:34 finetune](__main__.py 984): INFO Epoch training time: 224.647s
+[2025-05-09 13:17:34 finetune](__main__.py 1012): INFO Current learning rate for different parameter groups: [0.0002614956410495695, 0.0002614956410495695]
+[2025-05-09 13:17:46 finetune](__main__.py 1130): INFO Train: [17/35][0/140]	eta 0:27:50 lr 0.000261	time 11.9289 (11.9289)	loss 0.0857 (0.0857)	grad_norm 0.4176 (0.4176)	mem 16723MB
+[2025-05-09 13:19:32 finetune](__main__.py 1130): INFO Train: [17/35][100/140]	eta 0:00:46 lr 0.000245	time 0.6953 (1.1731)	loss 0.0197 (0.0294)	grad_norm 0.0620 (0.1058)	mem 16723MB
+[2025-05-09 13:20:16 finetune](__main__.py 1139): INFO EPOCH 17 training takes 0:02:42
+[2025-05-09 13:20:36 finetune](__main__.py 1225): INFO Test: [0/12] | Time 19.549 (19.549) | Loss 0.2293 (0.2293) | Mem 16723MB
+[2025-05-09 13:20:55 finetune](__main__.py 935): INFO Val | Epoch 17 | Images: 3000 | loss: 0.1357
+[2025-05-09 13:20:55 finetune](__main__.py 936): INFO Val | Epoch 17 | Images: 3000 | ACC: 0.984
+[2025-05-09 13:20:55 finetune](__main__.py 937): INFO Val | Epoch 17 | Images: 3000 | AP: 0.997
+[2025-05-09 13:20:55 finetune](__main__.py 938): INFO Val | Epoch 17 | Images: 3000 | AUC: 0.997
+[2025-05-09 13:20:55 finetune](__main__.py 949): INFO Val | Min loss: 0.0906 | Epoch: 7
+[2025-05-09 13:20:55 finetune](__main__.py 951): INFO Val | Max ACC: 0.985 | Epoch: 0
+[2025-05-09 13:20:55 finetune](__main__.py 953): INFO Val | Max AP: 0.999 | Epoch: 7
+[2025-05-09 13:20:55 finetune](__main__.py 955): INFO Val | Max AUC: 0.999 | Epoch: 7
+[2025-05-09 13:20:56 finetune](utils.py 77): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_17.pth saving......
+[2025-05-09 13:20:56 finetune](utils.py 79): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_17.pth saved !!!
+[2025-05-09 13:20:56 finetune](__main__.py 984): INFO Epoch training time: 201.996s
+[2025-05-09 13:20:56 finetune](__main__.py 1012): INFO Current learning rate for different parameter groups: [0.00023907444669015365, 0.00023907444669015365]
+[2025-05-09 13:21:14 finetune](__main__.py 1130): INFO Train: [18/35][0/140]	eta 0:41:42 lr 0.000239	time 17.8716 (17.8716)	loss 0.0463 (0.0463)	grad_norm 0.1489 (0.1489)	mem 16723MB
+[2025-05-09 13:23:20 finetune](__main__.py 1130): INFO Train: [18/35][100/140]	eta 0:00:57 lr 0.000223	time 0.6953 (1.4291)	loss 0.0027 (0.0281)	grad_norm 0.0255 (0.0991)	mem 16723MB
+[2025-05-09 13:23:56 finetune](__main__.py 1139): INFO EPOCH 18 training takes 0:02:59
+[2025-05-09 13:24:15 finetune](__main__.py 1225): INFO Test: [0/12] | Time 19.483 (19.483) | Loss 0.1895 (0.1895) | Mem 16723MB
+[2025-05-09 13:24:28 finetune](__main__.py 935): INFO Val | Epoch 18 | Images: 3000 | loss: 0.1113
+[2025-05-09 13:24:28 finetune](__main__.py 936): INFO Val | Epoch 18 | Images: 3000 | ACC: 0.985
+[2025-05-09 13:24:28 finetune](__main__.py 937): INFO Val | Epoch 18 | Images: 3000 | AP: 0.997
+[2025-05-09 13:24:28 finetune](__main__.py 938): INFO Val | Epoch 18 | Images: 3000 | AUC: 0.997
+[2025-05-09 13:24:28 finetune](__main__.py 949): INFO Val | Min loss: 0.0906 | Epoch: 7
+[2025-05-09 13:24:28 finetune](__main__.py 951): INFO Val | Max ACC: 0.985 | Epoch: 0
+[2025-05-09 13:24:28 finetune](__main__.py 953): INFO Val | Max AP: 0.999 | Epoch: 7
+[2025-05-09 13:24:28 finetune](__main__.py 955): INFO Val | Max AUC: 0.999 | Epoch: 7
+[2025-05-09 13:24:28 finetune](utils.py 77): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_18.pth saving......
+[2025-05-09 13:24:28 finetune](utils.py 79): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_18.pth saved !!!
+[2025-05-09 13:24:28 finetune](__main__.py 984): INFO Epoch training time: 212.399s
+[2025-05-09 13:24:29 finetune](__main__.py 1012): INFO Current learning rate for different parameter groups: [0.00021674222488836858, 0.00021674222488836858]
+[2025-05-09 13:24:43 finetune](__main__.py 1130): INFO Train: [19/35][0/140]	eta 0:32:49 lr 0.000217	time 14.0688 (14.0688)	loss 0.0282 (0.0282)	grad_norm 0.0787 (0.0787)	mem 16723MB
+[2025-05-09 13:26:24 finetune](__main__.py 1130): INFO Train: [19/35][100/140]	eta 0:00:45 lr 0.000201	time 0.6954 (1.1461)	loss 0.0210 (0.0219)	grad_norm 0.0994 (0.0844)	mem 16723MB
+[2025-05-09 13:27:04 finetune](__main__.py 1139): INFO EPOCH 19 training takes 0:02:35
+[2025-05-09 13:27:21 finetune](__main__.py 1225): INFO Test: [0/12] | Time 16.389 (16.389) | Loss 0.1921 (0.1921) | Mem 16723MB
+[2025-05-09 13:27:32 finetune](__main__.py 935): INFO Val | Epoch 19 | Images: 3000 | loss: 0.1127
+[2025-05-09 13:27:32 finetune](__main__.py 936): INFO Val | Epoch 19 | Images: 3000 | ACC: 0.985
+[2025-05-09 13:27:32 finetune](__main__.py 937): INFO Val | Epoch 19 | Images: 3000 | AP: 0.997
+[2025-05-09 13:27:32 finetune](__main__.py 938): INFO Val | Epoch 19 | Images: 3000 | AUC: 0.997
+[2025-05-09 13:27:32 finetune](__main__.py 949): INFO Val | Min loss: 0.0906 | Epoch: 7
+[2025-05-09 13:27:32 finetune](__main__.py 951): INFO Val | Max ACC: 0.985 | Epoch: 0
+[2025-05-09 13:27:32 finetune](__main__.py 953): INFO Val | Max AP: 0.999 | Epoch: 7
+[2025-05-09 13:27:32 finetune](__main__.py 955): INFO Val | Max AUC: 0.999 | Epoch: 7
+[2025-05-09 13:27:32 finetune](utils.py 77): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_19.pth saving......
+[2025-05-09 13:27:32 finetune](utils.py 79): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_19.pth saved !!!
+[2025-05-09 13:27:32 finetune](__main__.py 984): INFO Epoch training time: 183.552s
+[2025-05-09 13:27:32 finetune](__main__.py 1012): INFO Current learning rate for different parameter groups: [0.00019467878156302838, 0.00019467878156302838]
+[2025-05-09 13:27:54 finetune](__main__.py 1130): INFO Train: [20/35][0/140]	eta 0:50:19 lr 0.000195	time 21.5660 (21.5660)	loss 0.0417 (0.0417)	grad_norm 0.1605 (0.1605)	mem 16723MB
+[2025-05-09 13:29:50 finetune](__main__.py 1130): INFO Train: [20/35][100/140]	eta 0:00:54 lr 0.000179	time 0.6957 (1.3624)	loss 0.0143 (0.0265)	grad_norm 0.0483 (0.0959)	mem 16723MB
+[2025-05-09 13:30:34 finetune](__main__.py 1139): INFO EPOCH 20 training takes 0:03:02
+[2025-05-09 13:30:50 finetune](__main__.py 1225): INFO Test: [0/12] | Time 15.379 (15.379) | Loss 0.1991 (0.1991) | Mem 16723MB
+[2025-05-09 13:31:03 finetune](__main__.py 935): INFO Val | Epoch 20 | Images: 3000 | loss: 0.1172
+[2025-05-09 13:31:03 finetune](__main__.py 936): INFO Val | Epoch 20 | Images: 3000 | ACC: 0.985
+[2025-05-09 13:31:03 finetune](__main__.py 937): INFO Val | Epoch 20 | Images: 3000 | AP: 0.997
+[2025-05-09 13:31:03 finetune](__main__.py 938): INFO Val | Epoch 20 | Images: 3000 | AUC: 0.997
+[2025-05-09 13:31:03 finetune](__main__.py 949): INFO Val | Min loss: 0.0906 | Epoch: 7
+[2025-05-09 13:31:03 finetune](__main__.py 951): INFO Val | Max ACC: 0.985 | Epoch: 0
+[2025-05-09 13:31:03 finetune](__main__.py 953): INFO Val | Max AP: 0.999 | Epoch: 7
+[2025-05-09 13:31:03 finetune](__main__.py 955): INFO Val | Max AUC: 0.999 | Epoch: 7
+[2025-05-09 13:31:03 finetune](utils.py 77): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_20.pth saving......
+[2025-05-09 13:31:03 finetune](utils.py 79): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_20.pth saved !!!
+[2025-05-09 13:31:03 finetune](__main__.py 984): INFO Epoch training time: 210.856s
+[2025-05-09 13:31:03 finetune](__main__.py 1012): INFO Current learning rate for different parameter groups: [0.00017306175858669432, 0.00017306175858669432]
+[2025-05-09 13:31:16 finetune](__main__.py 1130): INFO Train: [21/35][0/140]	eta 0:30:24 lr 0.000173	time 13.0321 (13.0321)	loss 0.0491 (0.0491)	grad_norm 0.1277 (0.1277)	mem 16723MB
+[2025-05-09 13:33:05 finetune](__main__.py 1130): INFO Train: [21/35][100/140]	eta 0:00:48 lr 0.000158	time 4.4792 (1.2071)	loss 0.0105 (0.0262)	grad_norm 0.0599 (0.0967)	mem 16723MB
+[2025-05-09 13:33:36 finetune](__main__.py 1139): INFO EPOCH 21 training takes 0:02:33
+[2025-05-09 13:33:56 finetune](__main__.py 1225): INFO Test: [0/12] | Time 19.913 (19.913) | Loss 0.2058 (0.2058) | Mem 16723MB
+[2025-05-09 13:34:14 finetune](__main__.py 935): INFO Val | Epoch 21 | Images: 3000 | loss: 0.1215
+[2025-05-09 13:34:14 finetune](__main__.py 936): INFO Val | Epoch 21 | Images: 3000 | ACC: 0.985
+[2025-05-09 13:34:14 finetune](__main__.py 937): INFO Val | Epoch 21 | Images: 3000 | AP: 0.997
+[2025-05-09 13:34:14 finetune](__main__.py 938): INFO Val | Epoch 21 | Images: 3000 | AUC: 0.997
+[2025-05-09 13:34:14 finetune](__main__.py 949): INFO Val | Min loss: 0.0906 | Epoch: 7
+[2025-05-09 13:34:14 finetune](__main__.py 951): INFO Val | Max ACC: 0.985 | Epoch: 0
+[2025-05-09 13:34:14 finetune](__main__.py 953): INFO Val | Max AP: 0.999 | Epoch: 7
+[2025-05-09 13:34:14 finetune](__main__.py 955): INFO Val | Max AUC: 0.999 | Epoch: 7
+[2025-05-09 13:34:14 finetune](utils.py 77): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_21.pth saving......
+[2025-05-09 13:34:14 finetune](utils.py 79): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_21.pth saved !!!
+[2025-05-09 13:34:14 finetune](__main__.py 984): INFO Epoch training time: 190.993s
+[2025-05-09 13:34:14 finetune](__main__.py 1012): INFO Current learning rate for different parameter groups: [0.00015206520351776793, 0.00015206520351776793]
+[2025-05-09 13:34:35 finetune](__main__.py 1130): INFO Train: [22/35][0/140]	eta 0:48:44 lr 0.000152	time 20.8899 (20.8899)	loss 0.0265 (0.0265)	grad_norm 0.0823 (0.0823)	mem 16723MB
+[2025-05-09 13:37:24 finetune](__main__.py 1130): INFO Train: [22/35][100/140]	eta 0:01:15 lr 0.000137	time 0.6958 (1.8776)	loss 0.0253 (0.0274)	grad_norm 0.0791 (0.1010)	mem 16723MB
+[2025-05-09 13:38:31 finetune](__main__.py 1139): INFO EPOCH 22 training takes 0:04:16
+[2025-05-09 13:38:49 finetune](__main__.py 1225): INFO Test: [0/12] | Time 18.649 (18.649) | Loss 0.1829 (0.1829) | Mem 16723MB
+[2025-05-09 13:39:00 finetune](__main__.py 935): INFO Val | Epoch 22 | Images: 3000 | loss: 0.1086
+[2025-05-09 13:39:00 finetune](__main__.py 936): INFO Val | Epoch 22 | Images: 3000 | ACC: 0.984
+[2025-05-09 13:39:00 finetune](__main__.py 937): INFO Val | Epoch 22 | Images: 3000 | AP: 0.998
+[2025-05-09 13:39:00 finetune](__main__.py 938): INFO Val | Epoch 22 | Images: 3000 | AUC: 0.998
+[2025-05-09 13:39:00 finetune](__main__.py 949): INFO Val | Min loss: 0.0906 | Epoch: 7
+[2025-05-09 13:39:00 finetune](__main__.py 951): INFO Val | Max ACC: 0.985 | Epoch: 0
+[2025-05-09 13:39:00 finetune](__main__.py 953): INFO Val | Max AP: 0.999 | Epoch: 7
+[2025-05-09 13:39:00 finetune](__main__.py 955): INFO Val | Max AUC: 0.999 | Epoch: 7
+[2025-05-09 13:39:00 finetune](utils.py 77): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_22.pth saving......
+[2025-05-09 13:39:01 finetune](utils.py 79): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_22.pth saved !!!
+[2025-05-09 13:39:01 finetune](__main__.py 984): INFO Epoch training time: 286.486s
+[2025-05-09 13:39:01 finetune](__main__.py 1012): INFO Current learning rate for different parameter groups: [0.00013185816827188996, 0.00013185816827188996]
+[2025-05-09 13:39:22 finetune](__main__.py 1130): INFO Train: [23/35][0/140]	eta 0:49:25 lr 0.000132	time 21.1810 (21.1810)	loss 0.0316 (0.0316)	grad_norm 0.1320 (0.1320)	mem 16723MB
+[2025-05-09 13:42:26 finetune](__main__.py 1130): INFO Train: [23/35][100/140]	eta 0:01:21 lr 0.000118	time 0.6980 (2.0307)	loss 0.0183 (0.0253)	grad_norm 0.0623 (0.0908)	mem 16723MB
+[2025-05-09 13:43:36 finetune](__main__.py 1139): INFO EPOCH 23 training takes 0:04:34
+[2025-05-09 13:44:01 finetune](__main__.py 1225): INFO Test: [0/12] | Time 25.398 (25.398) | Loss 0.1964 (0.1964) | Mem 16723MB
+[2025-05-09 13:44:16 finetune](__main__.py 935): INFO Val | Epoch 23 | Images: 3000 | loss: 0.1157
+[2025-05-09 13:44:16 finetune](__main__.py 936): INFO Val | Epoch 23 | Images: 3000 | ACC: 0.985
+[2025-05-09 13:44:16 finetune](__main__.py 937): INFO Val | Epoch 23 | Images: 3000 | AP: 0.997
+[2025-05-09 13:44:16 finetune](__main__.py 938): INFO Val | Epoch 23 | Images: 3000 | AUC: 0.997
+[2025-05-09 13:44:16 finetune](__main__.py 949): INFO Val | Min loss: 0.0906 | Epoch: 7
+[2025-05-09 13:44:16 finetune](__main__.py 951): INFO Val | Max ACC: 0.985 | Epoch: 0
+[2025-05-09 13:44:16 finetune](__main__.py 953): INFO Val | Max AP: 0.999 | Epoch: 7
+[2025-05-09 13:44:16 finetune](__main__.py 955): INFO Val | Max AUC: 0.999 | Epoch: 7
+[2025-05-09 13:44:16 finetune](utils.py 77): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_23.pth saving......
+[2025-05-09 13:44:16 finetune](utils.py 79): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_23.pth saved !!!
+[2025-05-09 13:44:16 finetune](__main__.py 984): INFO Epoch training time: 315.453s
+[2025-05-09 13:44:16 finetune](__main__.py 1012): INFO Current learning rate for different parameter groups: [0.00011260334801531575, 0.00011260334801531575]
+[2025-05-09 13:44:41 finetune](__main__.py 1130): INFO Train: [24/35][0/140]	eta 0:57:30 lr 0.000112	time 24.6445 (24.6445)	loss 0.0070 (0.0070)	grad_norm 0.0564 (0.0564)	mem 16723MB
+[2025-05-09 13:47:23 finetune](__main__.py 1130): INFO Train: [24/35][100/140]	eta 0:01:13 lr 0.000099	time 0.6953 (1.8492)	loss 0.0106 (0.0239)	grad_norm 0.0536 (0.0897)	mem 16723MB
+[2025-05-09 13:48:45 finetune](__main__.py 1139): INFO EPOCH 24 training takes 0:04:28
+[2025-05-09 13:49:29 finetune](__main__.py 1225): INFO Test: [0/12] | Time 43.389 (43.389) | Loss 0.2022 (0.2022) | Mem 16723MB
+[2025-05-09 13:49:40 finetune](__main__.py 935): INFO Val | Epoch 24 | Images: 3000 | loss: 0.1193
+[2025-05-09 13:49:40 finetune](__main__.py 936): INFO Val | Epoch 24 | Images: 3000 | ACC: 0.985
+[2025-05-09 13:49:40 finetune](__main__.py 937): INFO Val | Epoch 24 | Images: 3000 | AP: 0.997
+[2025-05-09 13:49:40 finetune](__main__.py 938): INFO Val | Epoch 24 | Images: 3000 | AUC: 0.997
+[2025-05-09 13:49:40 finetune](__main__.py 949): INFO Val | Min loss: 0.0906 | Epoch: 7
+[2025-05-09 13:49:40 finetune](__main__.py 951): INFO Val | Max ACC: 0.985 | Epoch: 0
+[2025-05-09 13:49:40 finetune](__main__.py 953): INFO Val | Max AP: 0.999 | Epoch: 7
+[2025-05-09 13:49:40 finetune](__main__.py 955): INFO Val | Max AUC: 0.999 | Epoch: 7
+[2025-05-09 13:49:40 finetune](utils.py 77): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_24.pth saving......
+[2025-05-09 13:49:41 finetune](utils.py 79): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_24.pth saved !!!
+[2025-05-09 13:49:41 finetune](__main__.py 984): INFO Epoch training time: 324.331s
+[2025-05-09 13:49:41 finetune](__main__.py 1012): INFO Current learning rate for different parameter groups: [9.445577123910035e-05, 9.445577123910035e-05]
+[2025-05-09 13:50:17 finetune](__main__.py 1130): INFO Train: [25/35][0/140]	eta 1:23:40 lr 0.000094	time 35.8576 (35.8576)	loss 0.0390 (0.0390)	grad_norm 0.1479 (0.1479)	mem 16723MB
+[2025-05-09 13:53:15 finetune](__main__.py 1130): INFO Train: [25/35][100/140]	eta 0:01:24 lr 0.000082	time 0.6953 (2.1159)	loss 0.0291 (0.0248)	grad_norm 0.1030 (0.0911)	mem 16723MB
+[2025-05-09 13:54:48 finetune](__main__.py 1139): INFO EPOCH 25 training takes 0:05:06
+[2025-05-09 13:55:21 finetune](__main__.py 1225): INFO Test: [0/12] | Time 33.868 (33.868) | Loss 0.1890 (0.1890) | Mem 16723MB
+[2025-05-09 13:55:39 finetune](__main__.py 935): INFO Val | Epoch 25 | Images: 3000 | loss: 0.1119
+[2025-05-09 13:55:39 finetune](__main__.py 936): INFO Val | Epoch 25 | Images: 3000 | ACC: 0.984
+[2025-05-09 13:55:39 finetune](__main__.py 937): INFO Val | Epoch 25 | Images: 3000 | AP: 0.997
+[2025-05-09 13:55:39 finetune](__main__.py 938): INFO Val | Epoch 25 | Images: 3000 | AUC: 0.997
+[2025-05-09 13:55:39 finetune](__main__.py 949): INFO Val | Min loss: 0.0906 | Epoch: 7
+[2025-05-09 13:55:39 finetune](__main__.py 951): INFO Val | Max ACC: 0.985 | Epoch: 0
+[2025-05-09 13:55:39 finetune](__main__.py 953): INFO Val | Max AP: 0.999 | Epoch: 7
+[2025-05-09 13:55:39 finetune](__main__.py 955): INFO Val | Max AUC: 0.999 | Epoch: 7
+[2025-05-09 13:55:39 finetune](utils.py 77): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_25.pth saving......
+[2025-05-09 13:55:39 finetune](utils.py 79): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_25.pth saved !!!
+[2025-05-09 13:55:39 finetune](__main__.py 984): INFO Epoch training time: 358.108s
+[2025-05-09 13:55:39 finetune](__main__.py 1012): INFO Current learning rate for different parameter groups: [7.756155156084345e-05, 7.756155156084345e-05]
+[2025-05-09 13:55:59 finetune](__main__.py 1130): INFO Train: [26/35][0/140]	eta 0:45:47 lr 0.000077	time 19.6273 (19.6273)	loss 0.0723 (0.0723)	grad_norm 0.2911 (0.2911)	mem 16723MB
+[2025-05-09 13:58:07 finetune](__main__.py 1130): INFO Train: [26/35][100/140]	eta 0:00:58 lr 0.000066	time 0.6954 (1.4680)	loss 0.0618 (0.0275)	grad_norm 0.2870 (0.1008)	mem 16723MB
+[2025-05-09 13:58:52 finetune](__main__.py 1139): INFO EPOCH 26 training takes 0:03:13
+[2025-05-09 13:59:09 finetune](__main__.py 1225): INFO Test: [0/12] | Time 17.054 (17.054) | Loss 0.1852 (0.1852) | Mem 16723MB
+[2025-05-09 13:59:26 finetune](__main__.py 935): INFO Val | Epoch 26 | Images: 3000 | loss: 0.1098
+[2025-05-09 13:59:26 finetune](__main__.py 936): INFO Val | Epoch 26 | Images: 3000 | ACC: 0.984
+[2025-05-09 13:59:26 finetune](__main__.py 937): INFO Val | Epoch 26 | Images: 3000 | AP: 0.997
+[2025-05-09 13:59:26 finetune](__main__.py 938): INFO Val | Epoch 26 | Images: 3000 | AUC: 0.997
+[2025-05-09 13:59:26 finetune](__main__.py 949): INFO Val | Min loss: 0.0906 | Epoch: 7
+[2025-05-09 13:59:26 finetune](__main__.py 951): INFO Val | Max ACC: 0.985 | Epoch: 0
+[2025-05-09 13:59:26 finetune](__main__.py 953): INFO Val | Max AP: 0.999 | Epoch: 7
+[2025-05-09 13:59:26 finetune](__main__.py 955): INFO Val | Max AUC: 0.999 | Epoch: 7
+[2025-05-09 13:59:26 finetune](utils.py 77): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_26.pth saving......
+[2025-05-09 13:59:26 finetune](utils.py 79): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_26.pth saved !!!
+[2025-05-09 13:59:26 finetune](__main__.py 984): INFO Epoch training time: 226.959s
+[2025-05-09 13:59:26 finetune](__main__.py 1012): INFO Current learning rate for different parameter groups: [6.205671130375409e-05, 6.205671130375409e-05]
+[2025-05-09 13:59:45 finetune](__main__.py 1130): INFO Train: [27/35][0/140]	eta 0:44:35 lr 0.000062	time 19.1135 (19.1135)	loss 0.0371 (0.0371)	grad_norm 0.1398 (0.1398)	mem 16723MB
+[2025-05-09 14:01:48 finetune](__main__.py 1130): INFO Train: [27/35][100/140]	eta 0:00:56 lr 0.000052	time 0.6956 (1.4082)	loss 0.0370 (0.0278)	grad_norm 0.1302 (0.0990)	mem 16723MB
+[2025-05-09 14:02:25 finetune](__main__.py 1139): INFO EPOCH 27 training takes 0:02:59
+[neptune] [warning] Experiencing connection interruptions. Will try to reestablish communication with Neptune. Internal exception was: RequestsFutureAdapterTimeout
+[neptune] [info   ] Communication with Neptune restored!
+[2025-05-09 14:13:34 finetune](__main__.py 1225): INFO Test: [0/12] | Time 668.255 (668.255) | Loss 0.1785 (0.1785) | Mem 16723MB
+[2025-05-09 14:13:49 finetune](__main__.py 935): INFO Val | Epoch 27 | Images: 3000 | loss: 0.1058
+[2025-05-09 14:13:49 finetune](__main__.py 936): INFO Val | Epoch 27 | Images: 3000 | ACC: 0.984
+[2025-05-09 14:13:49 finetune](__main__.py 937): INFO Val | Epoch 27 | Images: 3000 | AP: 0.998
+[2025-05-09 14:13:49 finetune](__main__.py 938): INFO Val | Epoch 27 | Images: 3000 | AUC: 0.998
+[2025-05-09 14:13:49 finetune](__main__.py 949): INFO Val | Min loss: 0.0906 | Epoch: 7
+[2025-05-09 14:13:49 finetune](__main__.py 951): INFO Val | Max ACC: 0.985 | Epoch: 0
+[2025-05-09 14:13:49 finetune](__main__.py 953): INFO Val | Max AP: 0.999 | Epoch: 7
+[2025-05-09 14:13:49 finetune](__main__.py 955): INFO Val | Max AUC: 0.999 | Epoch: 7
+[2025-05-09 14:13:49 finetune](utils.py 77): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_27.pth saving......
+[2025-05-09 14:13:50 finetune](utils.py 79): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_27.pth saved !!!
+[2025-05-09 14:13:50 finetune](__main__.py 984): INFO Epoch training time: 863.374s
+[2025-05-09 14:13:50 finetune](__main__.py 1012): INFO Current learning rate for different parameter groups: [4.8066086324883945e-05, 4.8066086324883945e-05]
+[2025-05-09 14:14:24 finetune](__main__.py 1130): INFO Train: [28/35][0/140]	eta 1:19:15 lr 0.000048	time 33.9644 (33.9644)	loss 0.0319 (0.0319)	grad_norm 0.1067 (0.1067)	mem 16723MB
+[2025-05-09 14:18:29 finetune](__main__.py 1130): INFO Train: [28/35][100/140]	eta 0:01:50 lr 0.000039	time 0.6957 (2.7644)	loss 0.0472 (0.0269)	grad_norm 0.2100 (0.1010)	mem 16723MB
+[2025-05-09 14:20:08 finetune](__main__.py 1139): INFO EPOCH 28 training takes 0:06:17
+[2025-05-09 14:20:33 finetune](__main__.py 1225): INFO Test: [0/12] | Time 25.097 (25.097) | Loss 0.1822 (0.1822) | Mem 16723MB
+[2025-05-09 14:20:45 finetune](__main__.py 935): INFO Val | Epoch 28 | Images: 3000 | loss: 0.1081
+[2025-05-09 14:20:45 finetune](__main__.py 936): INFO Val | Epoch 28 | Images: 3000 | ACC: 0.984
+[2025-05-09 14:20:45 finetune](__main__.py 937): INFO Val | Epoch 28 | Images: 3000 | AP: 0.998
+[2025-05-09 14:20:45 finetune](__main__.py 938): INFO Val | Epoch 28 | Images: 3000 | AUC: 0.998
+[2025-05-09 14:20:45 finetune](__main__.py 949): INFO Val | Min loss: 0.0906 | Epoch: 7
+[2025-05-09 14:20:45 finetune](__main__.py 951): INFO Val | Max ACC: 0.985 | Epoch: 0
+[2025-05-09 14:20:45 finetune](__main__.py 953): INFO Val | Max AP: 0.999 | Epoch: 7
+[2025-05-09 14:20:45 finetune](__main__.py 955): INFO Val | Max AUC: 0.999 | Epoch: 7
+[2025-05-09 14:20:45 finetune](utils.py 77): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_28.pth saving......
+[2025-05-09 14:20:45 finetune](utils.py 79): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_28.pth saved !!!
+[2025-05-09 14:20:45 finetune](__main__.py 984): INFO Epoch training time: 415.211s
+[2025-05-09 14:20:45 finetune](__main__.py 1012): INFO Current learning rate for different parameter groups: [3.5702320910208554e-05, 3.5702320910208554e-05]
+[2025-05-09 14:21:15 finetune](__main__.py 1130): INFO Train: [29/35][0/140]	eta 1:09:17 lr 0.000036	time 29.6963 (29.6963)	loss 0.0296 (0.0296)	grad_norm 0.0974 (0.0974)	mem 16723MB
+[2025-05-09 14:24:11 finetune](__main__.py 1130): INFO Train: [29/35][100/140]	eta 0:01:21 lr 0.000028	time 0.6963 (2.0387)	loss 0.0169 (0.0252)	grad_norm 0.0656 (0.0889)	mem 16723MB
+[2025-05-09 14:26:13 finetune](__main__.py 1139): INFO EPOCH 29 training takes 0:05:27
+[2025-05-09 14:27:10 finetune](__main__.py 1225): INFO Test: [0/12] | Time 57.302 (57.302) | Loss 0.1861 (0.1861) | Mem 16723MB
+[2025-05-09 14:27:25 finetune](__main__.py 935): INFO Val | Epoch 29 | Images: 3000 | loss: 0.1102
+[2025-05-09 14:27:25 finetune](__main__.py 936): INFO Val | Epoch 29 | Images: 3000 | ACC: 0.985
+[2025-05-09 14:27:25 finetune](__main__.py 937): INFO Val | Epoch 29 | Images: 3000 | AP: 0.997
+[2025-05-09 14:27:25 finetune](__main__.py 938): INFO Val | Epoch 29 | Images: 3000 | AUC: 0.997
+[2025-05-09 14:27:25 finetune](__main__.py 949): INFO Val | Min loss: 0.0906 | Epoch: 7
+[2025-05-09 14:27:25 finetune](__main__.py 951): INFO Val | Max ACC: 0.985 | Epoch: 0
+[2025-05-09 14:27:25 finetune](__main__.py 953): INFO Val | Max AP: 0.999 | Epoch: 7
+[2025-05-09 14:27:25 finetune](__main__.py 955): INFO Val | Max AUC: 0.999 | Epoch: 7
+[2025-05-09 14:27:25 finetune](utils.py 77): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_29.pth saving......
+[2025-05-09 14:27:26 finetune](utils.py 79): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_29.pth saved !!!
+[2025-05-09 14:27:26 finetune](__main__.py 984): INFO Epoch training time: 400.399s
+[2025-05-09 14:27:26 finetune](__main__.py 1012): INFO Current learning rate for different parameter groups: [2.5064960829070606e-05, 2.5064960829070606e-05]
+[2025-05-09 14:28:02 finetune](__main__.py 1130): INFO Train: [30/35][0/140]	eta 1:24:55 lr 0.000025	time 36.3955 (36.3955)	loss 0.0326 (0.0326)	grad_norm 0.1469 (0.1469)	mem 16723MB
+[2025-05-09 14:31:48 finetune](__main__.py 1130): INFO Train: [30/35][100/140]	eta 0:01:43 lr 0.000019	time 0.6957 (2.5999)	loss 0.0485 (0.0252)	grad_norm 0.1553 (0.0941)	mem 16723MB
+[2025-05-09 14:33:10 finetune](__main__.py 1139): INFO EPOCH 30 training takes 0:05:43
+[2025-05-09 14:33:44 finetune](__main__.py 1225): INFO Test: [0/12] | Time 34.307 (34.307) | Loss 0.1886 (0.1886) | Mem 16723MB
+[2025-05-09 14:33:57 finetune](__main__.py 935): INFO Val | Epoch 30 | Images: 3000 | loss: 0.1117
+[2025-05-09 14:33:57 finetune](__main__.py 936): INFO Val | Epoch 30 | Images: 3000 | ACC: 0.985
+[2025-05-09 14:33:57 finetune](__main__.py 937): INFO Val | Epoch 30 | Images: 3000 | AP: 0.997
+[2025-05-09 14:33:57 finetune](__main__.py 938): INFO Val | Epoch 30 | Images: 3000 | AUC: 0.997
+[2025-05-09 14:33:57 finetune](__main__.py 949): INFO Val | Min loss: 0.0906 | Epoch: 7
+[2025-05-09 14:33:57 finetune](__main__.py 951): INFO Val | Max ACC: 0.985 | Epoch: 0
+[2025-05-09 14:33:57 finetune](__main__.py 953): INFO Val | Max AP: 0.999 | Epoch: 7
+[2025-05-09 14:33:57 finetune](__main__.py 955): INFO Val | Max AUC: 0.999 | Epoch: 7
+[2025-05-09 14:33:57 finetune](utils.py 77): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_30.pth saving......
+[2025-05-09 14:33:58 finetune](utils.py 79): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_30.pth saved !!!
+[2025-05-09 14:33:58 finetune](__main__.py 984): INFO Epoch training time: 392.124s
+[2025-05-09 14:33:58 finetune](__main__.py 1012): INFO Current learning rate for different parameter groups: [1.6239651850176943e-05, 1.6239651850176943e-05]
+[2025-05-09 14:34:16 finetune](__main__.py 1130): INFO Train: [31/35][0/140]	eta 0:42:16 lr 0.000016	time 18.1194 (18.1194)	loss 0.0097 (0.0097)	grad_norm 0.0500 (0.0500)	mem 16723MB
+[2025-05-09 14:36:19 finetune](__main__.py 1130): INFO Train: [31/35][100/140]	eta 0:00:55 lr 0.000011	time 0.6963 (1.3939)	loss 0.0498 (0.0258)	grad_norm 0.1370 (0.0970)	mem 16723MB
+[2025-05-09 14:37:06 finetune](__main__.py 1139): INFO EPOCH 31 training takes 0:03:07
+[2025-05-09 14:37:28 finetune](__main__.py 1225): INFO Test: [0/12] | Time 22.191 (22.191) | Loss 0.1875 (0.1875) | Mem 16723MB
+[2025-05-09 14:38:10 finetune](__main__.py 935): INFO Val | Epoch 31 | Images: 3000 | loss: 0.1110
+[2025-05-09 14:38:10 finetune](__main__.py 936): INFO Val | Epoch 31 | Images: 3000 | ACC: 0.985
+[2025-05-09 14:38:10 finetune](__main__.py 937): INFO Val | Epoch 31 | Images: 3000 | AP: 0.997
+[2025-05-09 14:38:10 finetune](__main__.py 938): INFO Val | Epoch 31 | Images: 3000 | AUC: 0.997
+[2025-05-09 14:38:10 finetune](__main__.py 949): INFO Val | Min loss: 0.0906 | Epoch: 7
+[2025-05-09 14:38:10 finetune](__main__.py 951): INFO Val | Max ACC: 0.985 | Epoch: 0
+[2025-05-09 14:38:10 finetune](__main__.py 953): INFO Val | Max AP: 0.999 | Epoch: 7
+[2025-05-09 14:38:10 finetune](__main__.py 955): INFO Val | Max AUC: 0.999 | Epoch: 7
+[2025-05-09 14:38:10 finetune](utils.py 77): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_31.pth saving......
+[2025-05-09 14:38:11 finetune](utils.py 79): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_31.pth saved !!!
+[2025-05-09 14:38:11 finetune](__main__.py 984): INFO Epoch training time: 252.573s
+[2025-05-09 14:38:11 finetune](__main__.py 1012): INFO Current learning rate for different parameter groups: [9.297450172228017e-06, 9.297450172228017e-06]
+[2025-05-09 14:38:34 finetune](__main__.py 1130): INFO Train: [32/35][0/140]	eta 0:55:38 lr 0.000009	time 23.8469 (23.8469)	loss 0.0062 (0.0062)	grad_norm 0.0463 (0.0463)	mem 16723MB
+[2025-05-09 14:41:26 finetune](__main__.py 1130): INFO Train: [32/35][100/140]	eta 0:01:17 lr 0.000005	time 0.6960 (1.9350)	loss 0.0149 (0.0260)	grad_norm 0.0680 (0.1024)	mem 16723MB
+[2025-05-09 14:42:06 finetune](__main__.py 1139): INFO EPOCH 32 training takes 0:03:55
+[2025-05-09 14:42:43 finetune](__main__.py 1225): INFO Test: [0/12] | Time 36.802 (36.802) | Loss 0.1867 (0.1867) | Mem 16723MB
+[2025-05-09 14:42:56 finetune](__main__.py 935): INFO Val | Epoch 32 | Images: 3000 | loss: 0.1105
+[2025-05-09 14:42:56 finetune](__main__.py 936): INFO Val | Epoch 32 | Images: 3000 | ACC: 0.985
+[2025-05-09 14:42:56 finetune](__main__.py 937): INFO Val | Epoch 32 | Images: 3000 | AP: 0.997
+[2025-05-09 14:42:56 finetune](__main__.py 938): INFO Val | Epoch 32 | Images: 3000 | AUC: 0.997
+[2025-05-09 14:42:56 finetune](__main__.py 949): INFO Val | Min loss: 0.0906 | Epoch: 7
+[2025-05-09 14:42:56 finetune](__main__.py 951): INFO Val | Max ACC: 0.985 | Epoch: 0
+[2025-05-09 14:42:56 finetune](__main__.py 953): INFO Val | Max AP: 0.999 | Epoch: 7
+[2025-05-09 14:42:56 finetune](__main__.py 955): INFO Val | Max AUC: 0.999 | Epoch: 7
+[2025-05-09 14:42:56 finetune](utils.py 77): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_32.pth saving......
+[2025-05-09 14:42:57 finetune](utils.py 79): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_32.pth saved !!!
+[2025-05-09 14:42:57 finetune](__main__.py 984): INFO Epoch training time: 285.985s
+[2025-05-09 14:42:57 finetune](__main__.py 1012): INFO Current learning rate for different parameter groups: [4.294250321186126e-06, 4.294250321186126e-06]
+[2025-05-09 14:43:17 finetune](__main__.py 1130): INFO Train: [33/35][0/140]	eta 0:47:42 lr 0.000004	time 20.4460 (20.4460)	loss 0.0305 (0.0305)	grad_norm 0.0797 (0.0797)	mem 16723MB
+[2025-05-09 14:45:53 finetune](__main__.py 1130): INFO Train: [33/35][100/140]	eta 0:01:09 lr 0.000002	time 0.6962 (1.7427)	loss 0.0182 (0.0278)	grad_norm 0.0532 (0.1096)	mem 16723MB
+[2025-05-09 14:47:00 finetune](__main__.py 1139): INFO EPOCH 33 training takes 0:04:03
+[2025-05-09 14:47:42 finetune](__main__.py 1225): INFO Test: [0/12] | Time 41.517 (41.517) | Loss 0.1865 (0.1865) | Mem 16723MB
+[2025-05-09 14:47:58 finetune](__main__.py 935): INFO Val | Epoch 33 | Images: 3000 | loss: 0.1104
+[2025-05-09 14:47:58 finetune](__main__.py 936): INFO Val | Epoch 33 | Images: 3000 | ACC: 0.985
+[2025-05-09 14:47:58 finetune](__main__.py 937): INFO Val | Epoch 33 | Images: 3000 | AP: 0.997
+[2025-05-09 14:47:58 finetune](__main__.py 938): INFO Val | Epoch 33 | Images: 3000 | AUC: 0.997
+[2025-05-09 14:47:58 finetune](__main__.py 949): INFO Val | Min loss: 0.0906 | Epoch: 7
+[2025-05-09 14:47:58 finetune](__main__.py 951): INFO Val | Max ACC: 0.985 | Epoch: 0
+[2025-05-09 14:47:58 finetune](__main__.py 953): INFO Val | Max AP: 0.999 | Epoch: 7
+[2025-05-09 14:47:58 finetune](__main__.py 955): INFO Val | Max AUC: 0.999 | Epoch: 7
+[2025-05-09 14:47:58 finetune](utils.py 77): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_33.pth saving......
+[2025-05-09 14:47:59 finetune](utils.py 79): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_33.pth saved !!!
+[2025-05-09 14:47:59 finetune](__main__.py 984): INFO Epoch training time: 302.143s
+[2025-05-09 14:47:59 finetune](__main__.py 1012): INFO Current learning rate for different parameter groups: [1.2703351204180297e-06, 1.2703351204180297e-06]
+[2025-05-09 14:48:32 finetune](__main__.py 1130): INFO Train: [34/35][0/140]	eta 1:18:07 lr 0.000001	time 33.4788 (33.4788)	loss 0.0352 (0.0352)	grad_norm 0.1056 (0.1056)	mem 16723MB
+[2025-05-09 14:52:22 finetune](__main__.py 1130): INFO Train: [34/35][100/140]	eta 0:01:44 lr 0.000000	time 17.8652 (2.6017)	loss 0.0238 (0.0261)	grad_norm 0.0666 (0.0977)	mem 16723MB
+[2025-05-09 14:53:25 finetune](__main__.py 1139): INFO EPOCH 34 training takes 0:05:25
+[2025-05-09 14:53:52 finetune](__main__.py 1225): INFO Test: [0/12] | Time 27.502 (27.502) | Loss 0.1865 (0.1865) | Mem 16723MB
+[2025-05-09 14:54:11 finetune](__main__.py 935): INFO Val | Epoch 34 | Images: 3000 | loss: 0.1104
+[2025-05-09 14:54:11 finetune](__main__.py 936): INFO Val | Epoch 34 | Images: 3000 | ACC: 0.985
+[2025-05-09 14:54:11 finetune](__main__.py 937): INFO Val | Epoch 34 | Images: 3000 | AP: 0.997
+[2025-05-09 14:54:11 finetune](__main__.py 938): INFO Val | Epoch 34 | Images: 3000 | AUC: 0.997
+[2025-05-09 14:54:11 finetune](__main__.py 949): INFO Val | Min loss: 0.0906 | Epoch: 7
+[2025-05-09 14:54:11 finetune](__main__.py 951): INFO Val | Max ACC: 0.985 | Epoch: 0
+[2025-05-09 14:54:11 finetune](__main__.py 953): INFO Val | Max AP: 0.999 | Epoch: 7
+[2025-05-09 14:54:11 finetune](__main__.py 955): INFO Val | Max AUC: 0.999 | Epoch: 7
+[2025-05-09 14:54:11 finetune](utils.py 77): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_34.pth saving......
+[2025-05-09 14:54:12 finetune](utils.py 79): INFO /home/pnair/spai/output/train/finetune/spai/ckpt_epoch_34.pth saved !!!
+[2025-05-09 14:54:12 finetune](__main__.py 984): INFO Epoch training time: 372.615s
+[2025-05-09 14:54:12 finetune](__main__.py 993): INFO Overall training time: 2:51:17
+[neptune] [info   ] Shutting down background jobs, please wait a moment...
+[neptune] [info   ] Done!
+[neptune] [info   ] Waiting for the remaining 2 operations to synchronize with Neptune. Do not kill this process.
+[neptune] [info   ] All 2 operations synced, thanks for waiting!
+[neptune] [info   ] Explore the metadata in the Neptune app: https://app.neptune.ai/spai/beast-mode/e/BEAS-31/metadata
+
+JOB STATISTICS
+==============
+Job ID: 11677256
+Cluster: snellius
+User/Group: pnair/pnair
+State: COMPLETED (exit code 0)
+Nodes: 1
+Cores per node: 16
+CPU Utilized: 05:34:58
+CPU Efficiency: 12.17% of 1-21:52:32 core-walltime
+Job Wall-clock time: 02:52:02
+Memory Utilized: 29.45 GB
+Memory Efficiency: 16.36% of 180.00 GB (180.00 GB/node)

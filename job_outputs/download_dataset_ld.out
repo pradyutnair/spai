@@ -1,0 +1,18 @@
+✅ Job started: Thu May  8 16:51:02 CEST 2025
+✅ Job completed: Thu May  8 16:51:02 CEST 2025
+--2025-05-08 16:51:02--  https://drive.usercontent.google.com/download?id=1vvXmZqs6TVJdj8iF1oJ4L_fcgdQrp_YI
+
+JOB STATISTICS
+==============
+Job ID: 11652798
+Cluster: snellius
+User/Group: pnair/pnair
+State: RUNNING
+Nodes: 1
+Cores per node: 18
+CPU Utilized: 00:00:00
+CPU Efficiency: 0.00% of 00:08:42 core-walltime
+Job Wall-clock time: 00:00:29
+Memory Utilized: 0.00 MB
+Memory Efficiency: 0.00% of 120.00 GB (120.00 GB/node)
+WARNING: Efficiency statistics can only be obtained after the job has ended as seff tool is based on the accounting database data.

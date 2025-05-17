@@ -1,0 +1,53 @@
+#!/bin/bash
+#SBATCH --partition=gpu_h100
+#SBATCH --gpus=1
+#SBATCH --cpus-per-task=16
+#SBATCH --job-name=vis_data
+#SBATCH --output=/home/pnair/spai/job_outputs/vis.out
+#SBATCH --time=14:00:00
+#SBATCH --mem=180G
+#SBATCH --hint=nomultithread
+
+echo "✅ Job started at: $(date)"
+module purge
+module load 2023
+module load Anaconda3/2023.07-2
+module load CUDA/12.1.1
+
+source activate spai
+
+cd /home/pnair/spai
+#pip install -r requirements.txt
+#pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu121
+export NEPTUNE_API_TOKEN="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiJlZDBmOTg4MS04MTU0LTQ4YTItYTI1Mi1lNjdjZjhiMzJkMzAifQ==" 
+export NEPTUNE_PROJECT="spai/beast-mode"
+export PYTHONPATH=$PYTHONPATH:/home/pnair/spai
+export NCCL_DEBUG=INFO
+export CUDA_LAUNCH_BLOCKING=0
+# python /home/pnair/spai/spai/tools/create_dmid_ldm_train_val_csv.py \
+#   --train_dir "/scratch-shared/dl2_spai/datasets/latent_diffusion_trainingset/train" \
+#   --val_dir "/scratch-shared/dl2_spai/datasets/latent_diffusion_trainingset/valid" \
+#   --coco_dir "/scratch-shared/dl2_spai/datasets/coco/images" \
+#   -o "/home/pnair/spai/datasets/ldm_train_val.csv" 
+
+# python /home/pnair/spai/spai/tools/augment_dataset.py \
+#   --cfg ./configs/vit_base/vit_base__multipatch__100ep__intermediate__restore__patch_proj_per_feature__last_proj_layer_no_activ__fre_orig_branch__all_layers__bce_loss__light_augmentations.yaml \
+#   -c ./datasets/ldm_val.csv \
+#   -o ./datasets/ldm_val_augm.csv \
+#   -d ./datasets/latent_diffusion_trainingset_augm
+
+# python -m spai train \
+#   --cfg "/home/pnair/spai/configs/spai.yaml" \
+#   --batch-size 192 \
+#   --pretrained "/home/pnair/spai/weights/mfm_pretrain_vit_base.pth" \
+#   --output "/home/pnair/spai/output/train" \
+#   --data-path "/home/pnair/spai/datasets/ldm_train_val_subset.csv" \
+#   --tag "spai" \
+#   --amp-opt-level "O2" \
+#   --data-workers 16 \
+#   --save-all \
+#   --opt "DATA.VAL_BATCH_SIZE" "256" \
+#   --opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
+#   --opt "DATA.TEST_PREFETCH_FACTOR" "4"
+
+python /home/pnair/spai/spai/tools/visualize_dataset.py

@@ -1,0 +1,2533 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+Retrieving notices: ...working... DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): repo.anaconda.com:443
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): repo.anaconda.com:443
+DEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/r/notices.json HTTP/1.1" 404 None
+DEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/notices.json HTTP/1.1" 404 None
+done
+Collecting package metadata (current_repodata.json): ...working... DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): repo.anaconda.com:443
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): repo.anaconda.com:443
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): repo.anaconda.com:443
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): repo.anaconda.com:443
+DEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/noarch/current_repodata.json HTTP/1.1" 200 None
+DEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/r/noarch/current_repodata.json HTTP/1.1" 304 0
+DEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/r/linux-64/current_repodata.json HTTP/1.1" 200 None
+DEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/linux-64/current_repodata.json HTTP/1.1" 200 None
+done
+Solving environment: ...working... done
+
+
+==> WARNING: A newer version of conda exists. <==
+  current version: 23.7.2
+  latest version: 25.3.1
+
+Please update conda by running
+
+    $ conda update -n base -c defaults conda
+
+Or to minimize the number of packages updated during conda update use
+
+     conda install conda=25.3.1
+
+
+
+## Package Plan ##
+
+  environment location: /home/pnair/.conda/envs/spai
+
+  added / updated specs:
+    - python=3.11
+
+
+The following packages will be downloaded:
+
+    package                    |            build
+    ---------------------------|-----------------
+    pip-25.1                   |     pyhc872135_2         1.3 MB
+    python-3.11.11             |       he870216_0        32.9 MB
+    setuptools-78.1.1          |  py311h06a4308_0         2.3 MB
+    tzdata-2025b               |       h04d1e81_0         116 KB
+    wheel-0.45.1               |  py311h06a4308_0         151 KB
+    ------------------------------------------------------------
+                                           Total:        36.7 MB
+
+The following NEW packages will be INSTALLED:
+
+  _libgcc_mutex      pkgs/main/linux-64::_libgcc_mutex-0.1-main 
+  _openmp_mutex      pkgs/main/linux-64::_openmp_mutex-5.1-1_gnu 
+  bzip2              pkgs/main/linux-64::bzip2-1.0.8-h5eee18b_6 
+  ca-certificates    pkgs/main/linux-64::ca-certificates-2025.2.25-h06a4308_0 
+  ld_impl_linux-64   pkgs/main/linux-64::ld_impl_linux-64-2.40-h12ee557_0 
+  libffi             pkgs/main/linux-64::libffi-3.4.4-h6a678d5_1 
+  libgcc-ng          pkgs/main/linux-64::libgcc-ng-11.2.0-h1234567_1 
+  libgomp            pkgs/main/linux-64::libgomp-11.2.0-h1234567_1 
+  libstdcxx-ng       pkgs/main/linux-64::libstdcxx-ng-11.2.0-h1234567_1 
+  libuuid            pkgs/main/linux-64::libuuid-1.41.5-h5eee18b_0 
+  ncurses            pkgs/main/linux-64::ncurses-6.4-h6a678d5_0 
+  openssl            pkgs/main/linux-64::openssl-3.0.16-h5eee18b_0 
+  pip                pkgs/main/noarch::pip-25.1-pyhc872135_2 
+  python             pkgs/main/linux-64::python-3.11.11-he870216_0 
+  readline           pkgs/main/linux-64::readline-8.2-h5eee18b_0 
+  setuptools         pkgs/main/linux-64::setuptools-78.1.1-py311h06a4308_0 
+  sqlite             pkgs/main/linux-64::sqlite-3.45.3-h5eee18b_0 
+  tk                 pkgs/main/linux-64::tk-8.6.14-h39e8969_0 
+  tzdata             pkgs/main/noarch::tzdata-2025b-h04d1e81_0 
+  wheel              pkgs/main/linux-64::wheel-0.45.1-py311h06a4308_0 
+  xz                 pkgs/main/linux-64::xz-5.6.4-h5eee18b_1 
+  zlib               pkgs/main/linux-64::zlib-1.2.13-h5eee18b_1 
+
+
+Proceed ([y]/n)? 
+
+Downloading and Extracting Packages
+wheel-0.45.1         | 151 KB    |            |   0% 
+setuptools-78.1.1    | 2.3 MB    |            |   0% [A
+
+python-3.11.11       | 32.9 MB   |            |   0% [A[A
+
+
+tzdata-2025b         | 116 KB    |            |   0% [A[A[A
+
+
+
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): repo.anaconda.com:443
+pip-25.1             | 1.3 MB    |            |   0% DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): repo.anaconda.com:443
+[A[A[A[ADEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): repo.anaconda.com:443
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): repo.anaconda.com:443
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): repo.anaconda.com:443
+DEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/linux-64/setuptools-78.1.1-py311h06a4308_0.conda HTTP/1.1" 200 2363930
+DEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/linux-64/wheel-0.45.1-py311h06a4308_0.conda HTTP/1.1" 200 154981
+DEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/noarch/tzdata-2025b-h04d1e81_0.conda HTTP/1.1" 200 119222
+DEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/noarch/pip-25.1-pyhc872135_2.conda HTTP/1.1" 200 1332980
+DEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/linux-64/python-3.11.11-he870216_0.conda HTTP/1.1" 200 34481219
+
+
+python-3.11.11       | 32.9 MB   | #3         |  14% [A[Awheel-0.45.1         | 151 KB    | ########## | 100% wheel-0.45.1         | 151 KB    | ########## | 100% 
+
+python-3.11.11       | 32.9 MB   | ####8      |  49% [A[A
+
+
+tzdata-2025b         | 116 KB    | ########## | 100% [A[A[A
+
+
+tzdata-2025b         | 116 KB    | ########## | 100% [A[A[A
+
+
+
+pip-25.1             | 1.3 MB    | ########## | 100% [A[A[A[A
+
+
+
+pip-25.1             | 1.3 MB    | ########## | 100% [A[A[A[A
+setuptools-78.1.1    | 2.3 MB    | ########## | 100% [A
+setuptools-78.1.1    | 2.3 MB    | ########## | 100% [A
+
+python-3.11.11       | 32.9 MB   | ########## | 100% [A[A
+
+python-3.11.11       | 32.9 MB   | ########## | 100% [A[A                                                     
+                                                     [A
+
+                                                     [A[A
+
+
+                                                     [A[A[A
+
+
+
+                                                     [A[A[A[A
+Preparing transaction: ...working... done
+Verifying transaction: ...working... done
+Executing transaction: ...working... done
+#
+# To activate this environment, use
+#
+#     $ conda activate spai
+#
+# To deactivate an active environment, use
+#
+#     $ conda deactivate
+
+usage: conda [-h] [--no-plugins] [-V] COMMAND ...
+conda: error: argument COMMAND: invalid choice: 'activate' (choose from 'clean', 'compare', 'config', 'create', 'info', 'init', 'install', 'list', 'notices', 'package', 'remove', 'uninstall', 'rename', 'run', 'search', 'update', 'upgrade', 'build', 'convert', 'debug', 'develop', 'doctor', 'index', 'inspect', 'metapackage', 'render', 'skeleton', 'server', 'verify', 'env', 'token', 'pack', 'content-trust', 'repo')
+Defaulting to user installation because normal site-packages is not writeable
+Collecting filetype
+  Obtaining dependency information for filetype from https://files.pythonhosted.org/packages/18/79/1b8fa1bb3568781e84c9200f951c735f3f157429f44be0495da55894d620/filetype-1.2.0-py2.py3-none-any.whl.metadata
+  Downloading filetype-1.2.0-py2.py3-none-any.whl.metadata (6.5 kB)
+Downloading filetype-1.2.0-py2.py3-none-any.whl (19 kB)
+Installing collected packages: filetype
+Successfully installed filetype-1.2.0
+Collecting package metadata (current_repodata.json): ...working... DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): conda.anaconda.org:443
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): conda.anaconda.org:443
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): repo.anaconda.com:443
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): repo.anaconda.com:443
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): conda.anaconda.org:443
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): repo.anaconda.com:443
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): repo.anaconda.com:443
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): conda.anaconda.org:443
+DEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/noarch/current_repodata.json HTTP/1.1" 304 0
+DEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/r/linux-64/current_repodata.json HTTP/1.1" 304 0
+DEBUG:urllib3.connectionpool:https://conda.anaconda.org:443 "GET /nvidia/noarch/current_repodata.json HTTP/1.1" 200 None
+DEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/r/noarch/current_repodata.json HTTP/1.1" 304 0
+DEBUG:urllib3.connectionpool:https://conda.anaconda.org:443 "GET /pytorch/linux-64/current_repodata.json HTTP/1.1" 200 None
+DEBUG:urllib3.connectionpool:https://conda.anaconda.org:443 "GET /pytorch/noarch/current_repodata.json HTTP/1.1" 200 None
+DEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/linux-64/current_repodata.json HTTP/1.1" 304 0
+DEBUG:urllib3.connectionpool:https://conda.anaconda.org:443 "GET /nvidia/linux-64/current_repodata.json HTTP/1.1" 200 None
+done
+Solving environment: ...working... done
+
+
+==> WARNING: A newer version of conda exists. <==
+  current version: 23.7.2
+  latest version: 25.3.1
+
+Please update conda by running
+
+    $ conda update -n base -c defaults conda
+
+Or to minimize the number of packages updated during conda update use
+
+     conda install conda=25.3.1
+
+
+
+## Package Plan ##
+
+  environment location: /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2
+
+  added / updated specs:
+    - pytorch
+    - pytorch-cuda=12.4
+    - torchaudio
+    - torchvision
+
+
+The following packages will be downloaded:
+
+    package                    |            build
+    ---------------------------|-----------------
+    certifi-2025.4.26          |  py311h06a4308_0         156 KB
+    conda-content-trust-0.2.0  |  py311h06a4308_1          62 KB
+    cuda-cudart-12.4.127       |       h99ab3db_0          21 KB
+    cuda-cudart_linux-64-12.4.127|       hd681fbe_0         207 KB
+    cuda-cupti-12.4.127        |       h6a678d5_1         2.0 MB
+    cuda-libraries-12.4.1      |       h06a4308_1          19 KB
+    cuda-nvrtc-12.4.127        |       h99ab3db_1        19.8 MB
+    cuda-nvtx-12.4.127         |       h6a678d5_1          30 KB
+    cuda-opencl-12.4.127       |       h6a678d5_0          28 KB
+    cuda-runtime-12.4.1        |       hb982923_0          18 KB
+    cuda-version-12.4          |       hbda6634_3          19 KB
+    ffmpeg-4.3                 |       hf484d3e_0         9.9 MB  pytorch
+    gnutls-3.6.15              |       he1e5248_0         1.0 MB
+    lame-3.100                 |       h7b6447c_0         323 KB
+    libcublas-12.4.5.8         |       h99ab3db_1       247.6 MB
+    libcufft-11.2.1.3          |       h99ab3db_1       174.5 MB
+    libcufile-1.9.1.3          |       h99ab3db_1         995 KB
+    libcurand-10.3.5.147       |       h99ab3db_1        42.4 MB
+    libcusolver-11.6.1.9       |       h99ab3db_1        83.5 MB
+    libcusparse-12.3.1.170     |       h99ab3db_1       120.0 MB
+    libidn2-2.3.4              |       h5eee18b_0         146 KB
+    libjpeg-turbo-2.0.0        |       h9bf148f_0         950 KB  pytorch
+    libnpp-12.2.5.30           |       h99ab3db_1       100.5 MB
+    libnvfatbin-12.4.127       |       h7934f7d_2         857 KB
+    libnvjitlink-12.4.127      |       h99ab3db_1        17.4 MB
+    libnvjpeg-12.3.1.117       |       h6a678d5_1         2.6 MB
+    libtasn1-4.19.0            |       h5eee18b_0          63 KB
+    libunistring-0.9.10        |       h27cfd23_0         536 KB
+    llvm-openmp-14.0.6         |       h9e868ea_0         4.4 MB
+    nettle-3.7.3               |       hbbd107a_1         809 KB
+    ocl-icd-2.3.2              |       h5eee18b_1         136 KB
+    openh264-2.1.1             |       h4ff587b_0         711 KB
+    openssl-1.1.1w             |       h7f8727e_0         3.7 MB
+    pytorch-2.5.1              |py3.11_cuda12.4_cudnn9.1.0_0        1.46 GB  pytorch
+    pytorch-cuda-12.4          |       hc786d27_7           7 KB  pytorch
+    pytorch-mutex-1.0          |             cuda           3 KB  pytorch
+    torchaudio-2.5.1           |      py311_cu124         6.3 MB  pytorch
+    torchtriton-3.1.0          |            py311       233.8 MB  pytorch
+    torchvision-0.20.1         |      py311_cu124         8.5 MB  pytorch
+    ------------------------------------------------------------
+                                           Total:        2.52 GB
+
+The following NEW packages will be INSTALLED:
+
+  cuda-cudart        pkgs/main/linux-64::cuda-cudart-12.4.127-h99ab3db_0 
+  cuda-cudart_linux~ pkgs/main/noarch::cuda-cudart_linux-64-12.4.127-hd681fbe_0 
+  cuda-cupti         pkgs/main/linux-64::cuda-cupti-12.4.127-h6a678d5_1 
+  cuda-libraries     pkgs/main/linux-64::cuda-libraries-12.4.1-h06a4308_1 
+  cuda-nvrtc         pkgs/main/linux-64::cuda-nvrtc-12.4.127-h99ab3db_1 
+  cuda-nvtx          pkgs/main/linux-64::cuda-nvtx-12.4.127-h6a678d5_1 
+  cuda-opencl        pkgs/main/linux-64::cuda-opencl-12.4.127-h6a678d5_0 
+  cuda-runtime       pkgs/main/noarch::cuda-runtime-12.4.1-hb982923_0 
+  cuda-version       pkgs/main/noarch::cuda-version-12.4-hbda6634_3 
+  ffmpeg             pytorch/linux-64::ffmpeg-4.3-hf484d3e_0 
+  gnutls             pkgs/main/linux-64::gnutls-3.6.15-he1e5248_0 
+  lame               pkgs/main/linux-64::lame-3.100-h7b6447c_0 
+  libcublas          pkgs/main/linux-64::libcublas-12.4.5.8-h99ab3db_1 
+  libcufft           pkgs/main/linux-64::libcufft-11.2.1.3-h99ab3db_1 
+  libcufile          pkgs/main/linux-64::libcufile-1.9.1.3-h99ab3db_1 
+  libcurand          pkgs/main/linux-64::libcurand-10.3.5.147-h99ab3db_1 
+  libcusolver        pkgs/main/linux-64::libcusolver-11.6.1.9-h99ab3db_1 
+  libcusparse        pkgs/main/linux-64::libcusparse-12.3.1.170-h99ab3db_1 
+  libiconv           pkgs/main/linux-64::libiconv-1.16-h5eee18b_3 
+  libidn2            pkgs/main/linux-64::libidn2-2.3.4-h5eee18b_0 
+  libjpeg-turbo      pytorch/linux-64::libjpeg-turbo-2.0.0-h9bf148f_0 
+  libnpp             pkgs/main/linux-64::libnpp-12.2.5.30-h99ab3db_1 
+  libnvfatbin        pkgs/main/linux-64::libnvfatbin-12.4.127-h7934f7d_2 
+  libnvjitlink       pkgs/main/linux-64::libnvjitlink-12.4.127-h99ab3db_1 
+  libnvjpeg          pkgs/main/linux-64::libnvjpeg-12.3.1.117-h6a678d5_1 
+  libtasn1           pkgs/main/linux-64::libtasn1-4.19.0-h5eee18b_0 
+  libunistring       pkgs/main/linux-64::libunistring-0.9.10-h27cfd23_0 
+  llvm-openmp        pkgs/main/linux-64::llvm-openmp-14.0.6-h9e868ea_0 
+  nettle             pkgs/main/linux-64::nettle-3.7.3-hbbd107a_1 
+  ocl-icd            pkgs/main/linux-64::ocl-icd-2.3.2-h5eee18b_1 
+  openh264           pkgs/main/linux-64::openh264-2.1.1-h4ff587b_0 
+  pytorch-cuda       pytorch/linux-64::pytorch-cuda-12.4-hc786d27_7 
+  pytorch-mutex      pytorch/noarch::pytorch-mutex-1.0-cuda 
+  torchaudio         pytorch/linux-64::torchaudio-2.5.1-py311_cu124 
+  torchtriton        pytorch/linux-64::torchtriton-3.1.0-py311 
+  torchvision        pytorch/linux-64::torchvision-0.20.1-py311_cu124 
+
+The following packages will be UPDATED:
+
+  ca-certificates                     2023.05.30-h06a4308_0 --> 2025.2.25-h06a4308_0 
+  certifi                         2023.7.22-py311h06a4308_0 --> 2025.4.26-py311h06a4308_0 
+  conda-content-tru~ pkgs/main/noarch::conda-content-trust~ --> pkgs/main/linux-64::conda-content-trust-0.2.0-py311h06a4308_1 
+  openssl                                 1.1.1u-h7f8727e_0 --> 1.1.1w-h7f8727e_0 
+  pytorch            pkgs/main::pytorch-2.0.1-cpu_py311h6d~ --> pytorch::pytorch-2.5.1-py3.11_cuda12.4_cudnn9.1.0_0 
+
+
+Proceed ([y]/n)? 
+
+Downloading and Extracting Packages
+pytorch-2.5.1        | 1.46 GB   |            |   0% 
+libcublas-12.4.5.8   | 247.6 MB  |            |   0% [A
+
+pytorch-cuda-12.4    | 7 KB      |            |   0% [A[A
+
+
+libcufile-1.9.1.3    | 995 KB    |            |   0% [A[A[A
+
+
+
+libjpeg-turbo-2.0.0  | 950 KB    |            |   0% DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): conda.anaconda.org:443
+[A[A[A[A
+
+
+
+
+libnvfatbin-12.4.127 | 857 KB    |            |   0% DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): conda.anaconda.org:443
+[A[A[A[A[ADEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): repo.anaconda.com:443
+
+
+
+
+
+
+libtasn1-4.19.0      | 63 KB     |            |   0% [A[A[A[A[A[A
+
+
+
+
+
+
+libunistring-0.9.10  | 536 KB    |            |   0% [A[A[A[A[A[A[ADEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): repo.anaconda.com:443
+
+
+
+
+
+
+
+
+cuda-nvtx-12.4.127   | 30 KB     |            |   0% [A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+cuda-opencl-12.4.127 | 28 KB     |            |   0% DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): conda.anaconda.org:443
+[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+llvm-openmp-14.0.6   | 4.4 MB    |            |   0% [A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+libcufft-11.2.1.3    | 174.5 MB  |            |   0% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+conda-content-trust- | 62 KB     |            |   0% [A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+cuda-cudart_linux-64 | 207 KB    |            |   0% [A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+cuda-cupti-12.4.127  | 2.0 MB    |            |   0% [A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+openh264-2.1.1       | 711 KB    |            |   0% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+cuda-version-12.4    | 19 KB     |            |   0% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+pytorch-mutex-1.0    | 3 KB      |            |   0% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+certifi-2025.4.26    | 156 KB    |            |   0% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ ... (more hidden) ...[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[ADEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/linux-64/libcufile-1.9.1.3-h99ab3db_1.conda HTTP/1.1" 200 1018670
+DEBUG:urllib3.connectionpool:https://conda.anaconda.org:443 "GET /pytorch/linux-64/pytorch-2.5.1-py3.11_cuda12.4_cudnn9.1.0_0.tar.bz2 HTTP/1.1" 200 1572203154
+DEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/linux-64/libcublas-12.4.5.8-h99ab3db_1.conda HTTP/1.1" 200 259622733
+DEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/linux-64/libnvfatbin-12.4.127-h7934f7d_2.conda HTTP/1.1" 200 878034
+DEBUG:urllib3.connectionpool:https://conda.anaconda.org:443 "GET /pytorch/linux-64/pytorch-cuda-12.4-hc786d27_7.tar.bz2 HTTP/1.1" 200 7189
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): repo.anaconda.com:443
+DEBUG:urllib3.connectionpool:https://conda.anaconda.org:443 "GET /pytorch/linux-64/libjpeg-turbo-2.0.0-h9bf148f_0.tar.bz2 HTTP/1.1" 200 973037
+pytorch-2.5.1        | 1.46 GB   |            |   0% 
+libcublas-12.4.5.8   | 247.6 MB  |            |   1% [A
+
+
+
+libjpeg-turbo-2.0.0  | 950 KB    | ####3      |  44% [A[A[A[ADEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/linux-64/libtasn1-4.19.0-h5eee18b_0.conda HTTP/1.1" 200 64729
+
+
+
+libcufile-1.9.1.3    | 995 KB    | ########## | 100% [A[A[A
+
+pytorch-cuda-12.4    | 7 KB      | ########## | 100% [A[A
+
+
+libcufile-1.9.1.3    | 995 KB    | ########## | 100% [A[A[A
+
+
+
+
+
+libtasn1-4.19.0      | 63 KB     | ##5        |  25% [A[A[A[A[A[A
+
+pytorch-cuda-12.4    | 7 KB      | ########## | 100% [A[ADEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/linux-64/libunistring-0.9.10-h27cfd23_0.conda HTTP/1.1" 200 548433
+
+
+
+
+
+
+
+libunistring-0.9.10  | 536 KB    | 2          |   3% [A[A[A[A[A[A[ADEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): repo.anaconda.com:443
+DEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/linux-64/cuda-nvtx-12.4.127-h6a678d5_1.conda HTTP/1.1" 200 30402
+
+
+
+
+
+
+
+
+cuda-nvtx-12.4.127   | 30 KB     | #####3     |  54% [A[A[A[A[A[A[A[ADEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/linux-64/llvm-openmp-14.0.6-h9e868ea_0.conda HTTP/1.1" 200 4586926
+
+
+
+
+
+
+
+
+
+
+llvm-openmp-14.0.6   | 4.4 MB    |            |   0% [A[A[A[A[A[A[A[A[A[A
+
+
+
+
+libnvfatbin-12.4.127 | 857 KB    | ########## | 100% [A[A[A[A[ADEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/linux-64/cuda-opencl-12.4.127-h6a678d5_0.conda HTTP/1.1" 200 28964
+
+
+
+
+
+libnvfatbin-12.4.127 | 857 KB    | ########## | 100% [A[A[A[A[A
+
+
+
+
+
+
+
+
+cuda-opencl-12.4.127 | 28 KB     | #####6     |  57% [A[A[A[A[A[A[A[A[ADEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/linux-64/libcufft-11.2.1.3-h99ab3db_1.conda HTTP/1.1" 200 182957221
+
+
+
+
+
+
+
+
+
+
+
+libcufft-11.2.1.3    | 174.5 MB  |            |   0% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+libtasn1-4.19.0      | 63 KB     | ########## | 100% [A[A[A[A[A[ADEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/linux-64/conda-content-trust-0.2.0-py311h06a4308_1.conda HTTP/1.1" 200 63131
+
+
+
+
+
+
+
+
+
+
+
+
+conda-content-trust- | 62 KB     | ##5        |  26% [A[A[A[A[A[A[A[A[A[A[A[Apytorch-2.5.1        | 1.46 GB   |            |   0% 
+libcublas-12.4.5.8   | 247.6 MB  | 2          |   2% [ADEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/noarch/cuda-cudart_linux-64-12.4.127-hd681fbe_0.conda HTTP/1.1" 200 212383
+
+
+
+
+
+
+
+
+
+
+
+
+
+cuda-cudart_linux-64 | 207 KB    | 7          |   8% [A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+llvm-openmp-14.0.6   | 4.4 MB    | ########5  |  86% [A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+cuda-nvtx-12.4.127   | 30 KB     | ########## | 100% [A[A[A[A[A[A[A[ADEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/linux-64/cuda-cupti-12.4.127-h6a678d5_1.conda HTTP/1.1" 200 2146546
+
+
+
+
+
+
+
+
+cuda-nvtx-12.4.127   | 30 KB     | ########## | 100% [A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+cuda-cupti-12.4.127  | 2.0 MB    |            |   1% [A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+libcufft-11.2.1.3    | 174.5 MB  | 1          |   2% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+libunistring-0.9.10  | 536 KB    | ########## | 100% [A[A[A[A[A[A[Apytorch-2.5.1        | 1.46 GB   |            |   1% 
+
+
+
+
+
+
+libunistring-0.9.10  | 536 KB    | ########## | 100% [A[A[A[A[A[A[A
+libcublas-12.4.5.8   | 247.6 MB  | 3          |   4% [ADEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/linux-64/openh264-2.1.1-h4ff587b_0.conda HTTP/1.1" 200 727562
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+openh264-2.1.1       | 711 KB    | 2          |   2% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+cuda-opencl-12.4.127 | 28 KB     | ########## | 100% [A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+cuda-opencl-12.4.127 | 28 KB     | ########## | 100% [A[A[A[A[A[A[A[A[ADEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/noarch/cuda-version-12.4-hbda6634_3.conda HTTP/1.1" 200 19955
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+cuda-version-12.4    | 19 KB     | ########2  |  82% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[ADEBUG:urllib3.connectionpool:https://conda.anaconda.org:443 "GET /pytorch/noarch/pytorch-mutex-1.0-cuda.tar.bz2 HTTP/1.1" 200 2906
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+pytorch-mutex-1.0    | 3 KB      | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[ADEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/linux-64/certifi-2025.4.26-py311h06a4308_0.conda HTTP/1.1" 200 160222
+
+
+
+
+
+
+
+
+
+
+
+libcufft-11.2.1.3    | 174.5 MB  | 3          |   4% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+certifi-2025.4.26    | 156 KB    | #          |  10% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+cuda-cudart_linux-64 | 207 KB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+cuda-cudart_linux-64 | 207 KB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[ADEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/linux-64/libcusparse-12.3.1.170-h99ab3db_1.conda HTTP/1.1" 200 125880580
+pytorch-2.5.1        | 1.46 GB   |            |   1% 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ ... (more hidden) ...[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+libcublas-12.4.5.8   | 247.6 MB  | 5          |   5% [ADEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/linux-64/libnvjitlink-12.4.127-h99ab3db_1.conda HTTP/1.1" 200 18274781
+
+
+
+
+
+
+
+
+
+
+
+
+conda-content-trust- | 62 KB     | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+conda-content-trust- | 62 KB     | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+libcufft-11.2.1.3    | 174.5 MB  | 5          |   6% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ ... (more hidden) ...[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+libcublas-12.4.5.8   | 247.6 MB  | 6          |   6% [Apytorch-2.5.1        | 1.46 GB   | 1          |   1% 
+
+
+
+libjpeg-turbo-2.0.0  | 950 KB    | ########## | 100% [A[A[A[A
+
+
+
+libjpeg-turbo-2.0.0  | 950 KB    | ########## | 100% [A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+openh264-2.1.1       | 711 KB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+openh264-2.1.1       | 711 KB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+libcufft-11.2.1.3    | 174.5 MB  | 7          |   8% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ ... (more hidden) ...[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+libcublas-12.4.5.8   | 247.6 MB  | 7          |   8% [A
+
+
+
+
+
+
+
+
+
+llvm-openmp-14.0.6   | 4.4 MB    | ########## | 100% [A[A[A[A[A[A[A[A[A[Apytorch-2.5.1        | 1.46 GB   | 1          |   1% 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+cuda-version-12.4    | 19 KB     | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+cuda-cupti-12.4.127  | 2.0 MB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+cuda-cupti-12.4.127  | 2.0 MB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+libcufft-11.2.1.3    | 174.5 MB  | 9          |   9% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+pytorch-mutex-1.0    | 3 KB      | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ ... (more hidden) ...[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+libcublas-12.4.5.8   | 247.6 MB  | 9          |   9% [Apytorch-2.5.1        | 1.46 GB   | 1          |   2% 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+certifi-2025.4.26    | 156 KB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+certifi-2025.4.26    | 156 KB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+libcufft-11.2.1.3    | 174.5 MB  | #2         |  12% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ ... (more hidden) ...[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+libcublas-12.4.5.8   | 247.6 MB  | #1         |  11% [Apytorch-2.5.1        | 1.46 GB   | 1          |   2% DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): conda.anaconda.org:443
+
+
+
+
+
+
+
+
+
+
+
+libcufft-11.2.1.3    | 174.5 MB  | #5         |  15% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ ... (more hidden) ...[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+libcublas-12.4.5.8   | 247.6 MB  | #3         |  13% [Apytorch-2.5.1        | 1.46 GB   | 2          |   2% DEBUG:urllib3.connectionpool:https://conda.anaconda.org:443 "GET /pytorch/linux-64/torchtriton-3.1.0-py311.tar.bz2 HTTP/1.1" 200 245178453
+
+
+
+
+
+
+
+
+
+
+
+libcufft-11.2.1.3    | 174.5 MB  | #8         |  18% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ ... (more hidden) ...[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+libcublas-12.4.5.8   | 247.6 MB  | #4         |  15% [Apytorch-2.5.1        | 1.46 GB   | 2          |   3% 
+
+
+
+
+
+
+
+
+
+
+libcufft-11.2.1.3    | 174.5 MB  | ##         |  21% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ ... (more hidden) ...[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+libcublas-12.4.5.8   | 247.6 MB  | #6         |  17% [Apytorch-2.5.1        | 1.46 GB   | 2          |   3% 
+
+
+
+
+
+
+
+
+
+
+libcufft-11.2.1.3    | 174.5 MB  | ##3        |  23% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ ... (more hidden) ...[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+libcublas-12.4.5.8   | 247.6 MB  | #8         |  19% [Apytorch-2.5.1        | 1.46 GB   | 3          |   3% 
+
+
+
+
+
+
+
+
+
+
+libcufft-11.2.1.3    | 174.5 MB  | ##6        |  26% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ ... (more hidden) ...[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+libcublas-12.4.5.8   | 247.6 MB  | ##         |  21% [Apytorch-2.5.1        | 1.46 GB   | 3          |   4% 
+
+
+
+
+
+
+
+
+
+
+libcufft-11.2.1.3    | 174.5 MB  | ##9        |  29% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ ... (more hidden) ...[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+libcublas-12.4.5.8   | 247.6 MB  | ##2        |  23% [Apytorch-2.5.1        | 1.46 GB   | 3          |   4% 
+
+
+
+
+
+
+
+
+
+
+libcufft-11.2.1.3    | 174.5 MB  | ###2       |  32% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ ... (more hidden) ...[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+libcublas-12.4.5.8   | 247.6 MB  | ##4        |  25% [Apytorch-2.5.1        | 1.46 GB   | 4          |   4% 
+
+
+
+
+
+
+
+
+
+
+libcufft-11.2.1.3    | 174.5 MB  | ###5       |  35% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ ... (more hidden) ...[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+libcublas-12.4.5.8   | 247.6 MB  | ##6        |  27% [Apytorch-2.5.1        | 1.46 GB   | 4          |   5% 
+
+
+
+
+
+
+
+
+
+
+libcufft-11.2.1.3    | 174.5 MB  | ###7       |  38% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ ... (more hidden) ...[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+libcublas-12.4.5.8   | 247.6 MB  | ##8        |  29% [Apytorch-2.5.1        | 1.46 GB   | 4          |   5% 
+
+
+
+
+
+
+
+
+
+
+libcufft-11.2.1.3    | 174.5 MB  | ####1      |  41% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ ... (more hidden) ...[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+libcublas-12.4.5.8   | 247.6 MB  | ###1       |  31% [Apytorch-2.5.1        | 1.46 GB   | 5          |   5% 
+
+
+
+
+
+
+
+
+
+
+libcufft-11.2.1.3    | 174.5 MB  | ####5      |  45% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ ... (more hidden) ...[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+libcublas-12.4.5.8   | 247.6 MB  | ###3       |  34% [Apytorch-2.5.1        | 1.46 GB   | 5          |   6% 
+
+
+
+
+
+
+
+
+
+
+libcufft-11.2.1.3    | 174.5 MB  | ####9      |  49% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ ... (more hidden) ...[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+libcublas-12.4.5.8   | 247.6 MB  | ###6       |  37% [Apytorch-2.5.1        | 1.46 GB   | 6          |   6% 
+
+
+
+
+
+
+
+
+
+
+libcufft-11.2.1.3    | 174.5 MB  | #####2     |  53% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ ... (more hidden) ...[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+libcublas-12.4.5.8   | 247.6 MB  | ###9       |  40% [Apytorch-2.5.1        | 1.46 GB   | 6          |   7% 
+
+
+
+
+
+
+
+
+
+
+libcufft-11.2.1.3    | 174.5 MB  | #####6     |  57% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ ... (more hidden) ...[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+libcublas-12.4.5.8   | 247.6 MB  | ####2      |  42% [Apytorch-2.5.1        | 1.46 GB   | 6          |   7% 
+
+
+
+
+
+
+
+
+
+
+libcufft-11.2.1.3    | 174.5 MB  | ######     |  61% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ ... (more hidden) ...[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+libcublas-12.4.5.8   | 247.6 MB  | ####5      |  45% [Apytorch-2.5.1        | 1.46 GB   | 7          |   7% 
+
+
+
+
+
+
+
+
+
+
+libcufft-11.2.1.3    | 174.5 MB  | ######4    |  65% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ ... (more hidden) ...[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+libcublas-12.4.5.8   | 247.6 MB  | ####7      |  48% [Apytorch-2.5.1        | 1.46 GB   | 7          |   8% 
+
+
+
+
+
+
+
+
+
+
+libcufft-11.2.1.3    | 174.5 MB  | ######8    |  69% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ ... (more hidden) ...[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+libcublas-12.4.5.8   | 247.6 MB  | #####      |  51% [Apytorch-2.5.1        | 1.46 GB   | 8          |   8% 
+
+
+
+
+
+
+
+
+
+
+libcufft-11.2.1.3    | 174.5 MB  | #######2   |  73% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ ... (more hidden) ...[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[ADEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/linux-64/libcurand-10.3.5.147-h99ab3db_1.conda HTTP/1.1" 200 44495048
+
+libcublas-12.4.5.8   | 247.6 MB  | #####3     |  54% [Apytorch-2.5.1        | 1.46 GB   | 8          |   9% 
+
+
+
+
+
+
+
+
+
+
+libcufft-11.2.1.3    | 174.5 MB  | #######6   |  77% [A[A[A[A[A[A[A[A[A[A[A
+libcublas-12.4.5.8   | 247.6 MB  | #####6     |  56% [Apytorch-2.5.1        | 1.46 GB   | 9          |   9% 
+
+
+
+
+
+
+
+
+
+
+libcufft-11.2.1.3    | 174.5 MB  | ########   |  80% [A[A[A[A[A[A[A[A[A[A[A
+libcublas-12.4.5.8   | 247.6 MB  | #####8     |  59% [Apytorch-2.5.1        | 1.46 GB   | 9          |  10% 
+
+
+
+
+
+
+
+
+
+
+libcufft-11.2.1.3    | 174.5 MB  | ########4  |  84% [A[A[A[A[A[A[A[A[A[A[A
+libcublas-12.4.5.8   | 247.6 MB  | ######1    |  61% [Apytorch-2.5.1        | 1.46 GB   | 9          |  10% 
+
+
+
+
+
+
+
+
+
+
+libcufft-11.2.1.3    | 174.5 MB  | ########7  |  88% [A[A[A[A[A[A[A[A[A[A[A
+libcublas-12.4.5.8   | 247.6 MB  | ######3    |  64% [Apytorch-2.5.1        | 1.46 GB   | #          |  10% 
+
+
+
+
+
+
+
+
+
+
+libcufft-11.2.1.3    | 174.5 MB  | #########1 |  91% [A[A[A[A[A[A[A[A[A[A[A
+libcublas-12.4.5.8   | 247.6 MB  | ######6    |  66% [Apytorch-2.5.1        | 1.46 GB   | #          |  11% 
+
+
+
+
+
+
+
+
+
+
+libcufft-11.2.1.3    | 174.5 MB  | #########4 |  95% [A[A[A[A[A[A[A[A[A[A[A
+libcublas-12.4.5.8   | 247.6 MB  | ######8    |  69% [Apytorch-2.5.1        | 1.46 GB   | #          |  11% 
+
+
+
+
+
+
+
+
+
+
+libcufft-11.2.1.3    | 174.5 MB  | #########8 |  98% [A[A[A[A[A[A[A[A[A[A[A
+libcublas-12.4.5.8   | 247.6 MB  | #######    |  71% [ADEBUG:urllib3.connectionpool:https://conda.anaconda.org:443 "GET /pytorch/linux-64/torchvision-0.20.1-py311_cu124.tar.bz2 HTTP/1.1" 200 8913579
+DEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/linux-64/libnpp-12.2.5.30-h99ab3db_1.conda HTTP/1.1" 200 105377937
+pytorch-2.5.1        | 1.46 GB   | #1         |  11% 
+libcublas-12.4.5.8   | 247.6 MB  | #######3   |  73% [Apytorch-2.5.1        | 1.46 GB   | #1         |  12% 
+libcublas-12.4.5.8   | 247.6 MB  | #######5   |  75% [Apytorch-2.5.1        | 1.46 GB   | #1         |  12% DEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/linux-64/gnutls-3.6.15-he1e5248_0.conda HTTP/1.1" 200 1054747
+DEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/linux-64/cuda-nvrtc-12.4.127-h99ab3db_1.conda HTTP/1.1" 200 20807911
+pytorch-2.5.1        | 1.46 GB   | #2         |  12% 
+libcublas-12.4.5.8   | 247.6 MB  | #######7   |  77% [A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ ... (more hidden) ...[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[Apytorch-2.5.1        | 1.46 GB   | #2         |  12% 
+libcublas-12.4.5.8   | 247.6 MB  | #######8   |  79% [Apytorch-2.5.1        | 1.46 GB   | #2         |  13% 
+libcublas-12.4.5.8   | 247.6 MB  | ########   |  80% [Apytorch-2.5.1        | 1.46 GB   | #2         |  13% 
+libcublas-12.4.5.8   | 247.6 MB  | ########1  |  82% [Apytorch-2.5.1        | 1.46 GB   | #3         |  13% 
+libcublas-12.4.5.8   | 247.6 MB  | ########3  |  83% [ADEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/linux-64/lame-3.100-h7b6447c_0.conda HTTP/1.1" 200 331108
+DEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/linux-64/nettle-3.7.3-hbbd107a_1.conda HTTP/1.1" 200 828846
+pytorch-2.5.1        | 1.46 GB   | #3         |  14% 
+libcublas-12.4.5.8   | 247.6 MB  | ########5  |  85% [ADEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/linux-64/libnvjpeg-12.3.1.117-h6a678d5_1.conda HTTP/1.1" 200 2675698
+pytorch-2.5.1        | 1.46 GB   | #3         |  14% 
+libcublas-12.4.5.8   | 247.6 MB  | ########7  |  87% [ADEBUG:urllib3.connectionpool:https://conda.anaconda.org:443 "GET /pytorch/linux-64/torchaudio-2.5.1-py311_cu124.tar.bz2 HTTP/1.1" 200 6652691
+pytorch-2.5.1        | 1.46 GB   | #4         |  14% 
+libcublas-12.4.5.8   | 247.6 MB  | ########8  |  89% [Apytorch-2.5.1        | 1.46 GB   | #4         |  14% 
+libcublas-12.4.5.8   | 247.6 MB  | #########  |  90% [ADEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/linux-64/libcusolver-11.6.1.9-h99ab3db_1.conda HTTP/1.1" 200 87533391
+pytorch-2.5.1        | 1.46 GB   | #4         |  15% 
+libcublas-12.4.5.8   | 247.6 MB  | #########2 |  92% [Apytorch-2.5.1        | 1.46 GB   | #4         |  15% 
+libcublas-12.4.5.8   | 247.6 MB  | #########4 |  94% [Apytorch-2.5.1        | 1.46 GB   | #5         |  15% 
+libcublas-12.4.5.8   | 247.6 MB  | #########6 |  96% [Apytorch-2.5.1        | 1.46 GB   | #5         |  15% 
+libcublas-12.4.5.8   | 247.6 MB  | #########7 |  98% [A
+
+
+
+
+
+
+
+
+
+
+libcufft-11.2.1.3    | 174.5 MB  | ########## | 100% [A[A[A[A[A[A[A[A[A[A[Apytorch-2.5.1        | 1.46 GB   | #5         |  16% DEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/linux-64/cuda-libraries-12.4.1-h06a4308_1.conda HTTP/1.1" 200 18971
+DEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/linux-64/cuda-cudart-12.4.127-h99ab3db_0.conda HTTP/1.1" 200 21378
+DEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/linux-64/libidn2-2.3.4-h5eee18b_0.conda HTTP/1.1" 200 149044
+pytorch-2.5.1        | 1.46 GB   | #6         |  16% DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): conda.anaconda.org:443
+DEBUG:urllib3.connectionpool:https://conda.anaconda.org:443 "GET /pytorch/linux-64/ffmpeg-4.3-hf484d3e_0.tar.bz2 HTTP/1.1" 200 10426878
+pytorch-2.5.1        | 1.46 GB   | #6         |  16% DEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/linux-64/ocl-icd-2.3.2-h5eee18b_1.conda HTTP/1.1" 200 139269
+DEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/linux-64/openssl-1.1.1w-h7f8727e_0.conda HTTP/1.1" 200 3912883
+pytorch-2.5.1        | 1.46 GB   | #6         |  17% pytorch-2.5.1        | 1.46 GB   | #6         |  17% DEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/noarch/cuda-runtime-12.4.1-hb982923_0.conda HTTP/1.1" 200 18889
+pytorch-2.5.1        | 1.46 GB   | #7         |  17% pytorch-2.5.1        | 1.46 GB   | #7         |  18% pytorch-2.5.1        | 1.46 GB   | #8         |  19% pytorch-2.5.1        | 1.46 GB   | #9         |  19% pytorch-2.5.1        | 1.46 GB   | ##         |  20% pytorch-2.5.1        | 1.46 GB   | ##1        |  21% pytorch-2.5.1        | 1.46 GB   | ##2        |  23% pytorch-2.5.1        | 1.46 GB   | ##3        |  24% pytorch-2.5.1        | 1.46 GB   | ##4        |  25% pytorch-2.5.1        | 1.46 GB   | ##6        |  26% 
+libcublas-12.4.5.8   | 247.6 MB  | ########## | 100% [A
+libcublas-12.4.5.8   | 247.6 MB  | ########## | 100% [Apytorch-2.5.1        | 1.46 GB   | ##7        |  27% pytorch-2.5.1        | 1.46 GB   | ##8        |  29% pytorch-2.5.1        | 1.46 GB   | ###        |  30% pytorch-2.5.1        | 1.46 GB   | ###1       |  31% pytorch-2.5.1        | 1.46 GB   | ###2       |  33% pytorch-2.5.1        | 1.46 GB   | ###3       |  34% pytorch-2.5.1        | 1.46 GB   | ###5       |  35% pytorch-2.5.1        | 1.46 GB   | ###6       |  37% pytorch-2.5.1        | 1.46 GB   | ###7       |  38% pytorch-2.5.1        | 1.46 GB   | ###9       |  40% pytorch-2.5.1        | 1.46 GB   | ####1      |  41% pytorch-2.5.1        | 1.46 GB   | ####3      |  43% pytorch-2.5.1        | 1.46 GB   | ####4      |  45% pytorch-2.5.1        | 1.46 GB   | ####6      |  46% pytorch-2.5.1        | 1.46 GB   | ####8      |  49% pytorch-2.5.1        | 1.46 GB   | #####      |  50% pytorch-2.5.1        | 1.46 GB   | #####2     |  52% pytorch-2.5.1        | 1.46 GB   | #####4     |  54% pytorch-2.5.1        | 1.46 GB   | #####5     |  56% pytorch-2.5.1        | 1.46 GB   | #####7     |  58% pytorch-2.5.1        | 1.46 GB   | #####9     |  59% pytorch-2.5.1        | 1.46 GB   | ######     |  61% pytorch-2.5.1        | 1.46 GB   | ######2    |  62% pytorch-2.5.1        | 1.46 GB   | ######3    |  64% pytorch-2.5.1        | 1.46 GB   | ######5    |  66% pytorch-2.5.1        | 1.46 GB   | ######7    |  68% pytorch-2.5.1        | 1.46 GB   | ######9    |  69% pytorch-2.5.1        | 1.46 GB   | #######1   |  71% pytorch-2.5.1        | 1.46 GB   | #######2   |  73% pytorch-2.5.1        | 1.46 GB   | #######4   |  75% pytorch-2.5.1        | 1.46 GB   | #######6   |  77% pytorch-2.5.1        | 1.46 GB   | #######8   |  78% pytorch-2.5.1        | 1.46 GB   | ########   |  80% pytorch-2.5.1        | 1.46 GB   | ########2  |  82% pytorch-2.5.1        | 1.46 GB   | ########3  |  84% pytorch-2.5.1        | 1.46 GB   | ########5  |  86% pytorch-2.5.1        | 1.46 GB   | ########7  |  87% pytorch-2.5.1        | 1.46 GB   | ########8  |  89% pytorch-2.5.1        | 1.46 GB   | #########  |  90% pytorch-2.5.1        | 1.46 GB   | #########1 |  92% pytorch-2.5.1        | 1.46 GB   | #########3 |  94% pytorch-2.5.1        | 1.46 GB   | #########5 |  96% pytorch-2.5.1        | 1.46 GB   | #########7 |  97% pytorch-2.5.1        | 1.46 GB   | #########9 |  99% pytorch-2.5.1        | 1.46 GB   | ########## | 100% 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                      [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A                                                     
+                                                     [A
+
+                                                     [A[A
+
+
+                                                     [A[A[A
+
+
+
+                                                     [A[A[A[A
+
+
+
+
+                                                     [A[A[A[A[A
+
+
+
+
+
+                                                     [A[A[A[A[A[A
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+[A
+
+[A[A
+
+
+[A[A[A
+
+
+
+[A[A[A[A
+
+
+
+
+[A[A[A[A[A
+
+
+
+
+
+[A[A[A[A[A[A
+
+
+
+
+
+
+[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+Preparing transaction: ...working... done
+Verifying transaction: ...working... failed
+
+EnvironmentNotWritableError: The current user does not have write permissions to the target environment.
+  environment location: /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2
+  uid: 72177
+  gid: 71638
+
+
+Defaulting to user installation because normal site-packages is not writeable
+Collecting git+https://github.com/openai/CLIP.git (from -r /home/pnair/spai/requirements.txt (line 30))
+  Cloning https://github.com/openai/CLIP.git to /gpfs/scratch1/nodespecific/srv9/pnair.11560236/pip-req-build-dta_hko3
+  Running command git clone --filter=blob:none --quiet https://github.com/openai/CLIP.git /gpfs/scratch1/nodespecific/srv9/pnair.11560236/pip-req-build-dta_hko3
+  Resolved https://github.com/openai/CLIP.git to commit dcba3cb2e2827b402d2701e7e1c7d9fed8a20ef1
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'done'
+Collecting opencv-python~=4.10.0.84 (from -r /home/pnair/spai/requirements.txt (line 8))
+  Obtaining dependency information for opencv-python~=4.10.0.84 from https://files.pythonhosted.org/packages/3f/a4/d2537f47fd7fcfba966bd806e3ec18e7ee1681056d4b0a9c8d983983e4d5/opencv_python-4.10.0.84-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata
+  Downloading opencv_python-4.10.0.84-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (20 kB)
+Requirement already satisfied: pyyaml~=6.0.1 in /home/pnair/.local/lib/python3.11/site-packages (from -r /home/pnair/spai/requirements.txt (line 9)) (6.0.1)
+Collecting scipy~=1.14.0 (from -r /home/pnair/spai/requirements.txt (line 10))
+  Obtaining dependency information for scipy~=1.14.0 from https://files.pythonhosted.org/packages/93/6b/701776d4bd6bdd9b629c387b5140f006185bd8ddea16788a44434376b98f/scipy-1.14.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata
+  Downloading scipy-1.14.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (60 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 60.8/60.8 kB 16.4 MB/s eta 0:00:00
+Requirement already satisfied: tensorboard in /home/pnair/.local/lib/python3.11/site-packages (from -r /home/pnair/spai/requirements.txt (line 11)) (2.15.2)
+Requirement already satisfied: termcolor~=2.4.0 in /home/pnair/.local/lib/python3.11/site-packages (from -r /home/pnair/spai/requirements.txt (line 12)) (2.4.0)
+Collecting timm==0.4.12 (from -r /home/pnair/spai/requirements.txt (line 13))
+  Obtaining dependency information for timm==0.4.12 from https://files.pythonhosted.org/packages/90/fc/606bc5cf46acac3aa9bd179b3954433c026aaf88ea98d6b19f5d14c336da/timm-0.4.12-py3-none-any.whl.metadata
+  Downloading timm-0.4.12-py3-none-any.whl.metadata (30 kB)
+Collecting yacs~=0.1.8 (from -r /home/pnair/spai/requirements.txt (line 14))
+  Obtaining dependency information for yacs~=0.1.8 from https://files.pythonhosted.org/packages/38/4f/fe9a4d472aa867878ce3bb7efb16654c5d63672b86dc0e6e953a67018433/yacs-0.1.8-py3-none-any.whl.metadata
+  Downloading yacs-0.1.8-py3-none-any.whl.metadata (639 bytes)
+Collecting numpy~=1.26.4 (from -r /home/pnair/spai/requirements.txt (line 15))
+  Obtaining dependency information for numpy~=1.26.4 from https://files.pythonhosted.org/packages/3a/d0/edc009c27b406c4f9cbc79274d6e46d634d139075492ad055e3d68445925/numpy-1.26.4-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata
+  Downloading numpy-1.26.4-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (61 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 61.0/61.0 kB 15.8 MB/s eta 0:00:00
+Collecting torchmetrics~=1.4.0.post0 (from -r /home/pnair/spai/requirements.txt (line 16))
+  Obtaining dependency information for torchmetrics~=1.4.0.post0 from https://files.pythonhosted.org/packages/17/c4/c47f7d7b983807c644193029b3aac3964529b5526cf587effbc7b0558f96/torchmetrics-1.4.3-py3-none-any.whl.metadata
+  Downloading torchmetrics-1.4.3-py3-none-any.whl.metadata (19 kB)
+Collecting tqdm~=4.66.4 (from -r /home/pnair/spai/requirements.txt (line 17))
+  Obtaining dependency information for tqdm~=4.66.4 from https://files.pythonhosted.org/packages/41/73/02342de9c2d20922115f787e101527b831c0cffd2105c946c4a4826bcfd4/tqdm-4.66.6-py3-none-any.whl.metadata
+  Downloading tqdm-4.66.6-py3-none-any.whl.metadata (57 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 57.6/57.6 kB 15.1 MB/s eta 0:00:00
+Collecting pillow~=10.4.0 (from -r /home/pnair/spai/requirements.txt (line 18))
+  Obtaining dependency information for pillow~=10.4.0 from https://files.pythonhosted.org/packages/ba/e5/8c68ff608a4203085158cff5cc2a3c534ec384536d9438c405ed6370d080/pillow-10.4.0-cp311-cp311-manylinux_2_28_x86_64.whl.metadata
+  Downloading pillow-10.4.0-cp311-cp311-manylinux_2_28_x86_64.whl.metadata (9.2 kB)
+Requirement already satisfied: click~=8.1.7 in /home/pnair/.local/lib/python3.11/site-packages (from -r /home/pnair/spai/requirements.txt (line 20)) (8.1.7)
+Collecting neptune~=1.11.1 (from -r /home/pnair/spai/requirements.txt (line 21))
+  Obtaining dependency information for neptune~=1.11.1 from https://files.pythonhosted.org/packages/ab/55/208c0028f73d5ee55c16ebe6b1ef33857c28091df0c7f9c6f35b6590a291/neptune-1.11.1-py3-none-any.whl.metadata
+  Downloading neptune-1.11.1-py3-none-any.whl.metadata (16 kB)
+Collecting albumentations==1.4.14 (from -r /home/pnair/spai/requirements.txt (line 22))
+  Obtaining dependency information for albumentations==1.4.14 from https://files.pythonhosted.org/packages/1e/64/27ecc9a9d0861e401c3fea4dc67ac9425d7a29e2ba48518d449618999601/albumentations-1.4.14-py3-none-any.whl.metadata
+  Using cached albumentations-1.4.14-py3-none-any.whl.metadata (38 kB)
+Collecting albucore==0.0.16 (from -r /home/pnair/spai/requirements.txt (line 23))
+  Obtaining dependency information for albucore==0.0.16 from https://files.pythonhosted.org/packages/73/0c/7fd2eb00f5fd3636718d8fb95010a3301789846537e668c213957904831c/albucore-0.0.16-py3-none-any.whl.metadata
+  Downloading albucore-0.0.16-py3-none-any.whl.metadata (3.1 kB)
+Collecting lmdb~=1.5.1 (from -r /home/pnair/spai/requirements.txt (line 24))
+  Obtaining dependency information for lmdb~=1.5.1 from https://files.pythonhosted.org/packages/29/a5/848894736c402fe592b827587d804ba0d2fb2248f50f354f0eab34aff121/lmdb-1.5.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata
+  Downloading lmdb-1.5.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (1.1 kB)
+Collecting networkx~=3.3 (from -r /home/pnair/spai/requirements.txt (line 25))
+  Obtaining dependency information for networkx~=3.3 from https://files.pythonhosted.org/packages/b9/54/dd730b32ea14ea797530a4479b2ed46a6fb250f682a9cfb997e968bf0261/networkx-3.4.2-py3-none-any.whl.metadata
+  Downloading networkx-3.4.2-py3-none-any.whl.metadata (6.3 kB)
+Requirement already satisfied: seaborn~=0.13.2 in /home/pnair/.local/lib/python3.11/site-packages (from -r /home/pnair/spai/requirements.txt (line 26)) (0.13.2)
+Collecting pandas~=2.2.2 (from -r /home/pnair/spai/requirements.txt (line 27))
+  Obtaining dependency information for pandas~=2.2.2 from https://files.pythonhosted.org/packages/cd/5f/4dba1d39bb9c38d574a9a22548c540177f78ea47b32f99c0ff2ec499fac5/pandas-2.2.3-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata
+  Downloading pandas-2.2.3-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (89 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 89.9/89.9 kB 23.1 MB/s eta 0:00:00
+Collecting einops~=0.8.0 (from -r /home/pnair/spai/requirements.txt (line 29))
+  Obtaining dependency information for einops~=0.8.0 from https://files.pythonhosted.org/packages/87/62/9773de14fe6c45c23649e98b83231fffd7b9892b6cf863251dc2afa73643/einops-0.8.1-py3-none-any.whl.metadata
+  Downloading einops-0.8.1-py3-none-any.whl.metadata (13 kB)
+Collecting onnx (from -r /home/pnair/spai/requirements.txt (line 31))
+  Obtaining dependency information for onnx from https://files.pythonhosted.org/packages/b1/2f/91092557ed478e323a2b4471e2081fdf88d1dd52ae988ceaf7db4e4506ff/onnx-1.17.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata
+  Downloading onnx-1.17.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (16 kB)
+Collecting onnxscript (from -r /home/pnair/spai/requirements.txt (line 32))
+  Obtaining dependency information for onnxscript from https://files.pythonhosted.org/packages/ae/14/1f745eebe7bfe05b4d2e2e2bbf48f5d8db59d86392808963794d2b921a4d/onnxscript-0.2.5-py3-none-any.whl.metadata
+  Downloading onnxscript-0.2.5-py3-none-any.whl.metadata (15 kB)
+Requirement already satisfied: torch>=1.4 in /home/pnair/.local/lib/python3.11/site-packages (from timm==0.4.12->-r /home/pnair/spai/requirements.txt (line 13)) (2.1.2)
+Requirement already satisfied: torchvision in /home/pnair/.local/lib/python3.11/site-packages (from timm==0.4.12->-r /home/pnair/spai/requirements.txt (line 13)) (0.16.2)
+Requirement already satisfied: scikit-image>=0.21.0 in /home/pnair/.local/lib/python3.11/site-packages (from albumentations==1.4.14->-r /home/pnair/spai/requirements.txt (line 22)) (0.25.0)
+Requirement already satisfied: typing-extensions>=4.9.0 in /home/pnair/.local/lib/python3.11/site-packages (from albumentations==1.4.14->-r /home/pnair/spai/requirements.txt (line 22)) (4.9.0)
+Collecting pydantic>=2.7.0 (from albumentations==1.4.14->-r /home/pnair/spai/requirements.txt (line 22))
+  Obtaining dependency information for pydantic>=2.7.0 from https://files.pythonhosted.org/packages/e7/12/46b65f3534d099349e38ef6ec98b1a5a81f42536d17e0ba382c28c67ba67/pydantic-2.11.4-py3-none-any.whl.metadata
+  Downloading pydantic-2.11.4-py3-none-any.whl.metadata (66 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 66.6/66.6 kB 16.7 MB/s eta 0:00:00
+Collecting eval-type-backport (from albumentations==1.4.14->-r /home/pnair/spai/requirements.txt (line 22))
+  Obtaining dependency information for eval-type-backport from https://files.pythonhosted.org/packages/ce/31/55cd413eaccd39125368be33c46de24a1f639f2e12349b0361b4678f3915/eval_type_backport-0.2.2-py3-none-any.whl.metadata
+  Downloading eval_type_backport-0.2.2-py3-none-any.whl.metadata (2.2 kB)
+Requirement already satisfied: opencv-python-headless>=4.9.0.80 in /home/pnair/.local/lib/python3.11/site-packages (from albumentations==1.4.14->-r /home/pnair/spai/requirements.txt (line 22)) (4.10.0.84)
+Requirement already satisfied: absl-py>=0.4 in /home/pnair/.local/lib/python3.11/site-packages (from tensorboard->-r /home/pnair/spai/requirements.txt (line 11)) (2.1.0)
+Requirement already satisfied: grpcio>=1.48.2 in /home/pnair/.local/lib/python3.11/site-packages (from tensorboard->-r /home/pnair/spai/requirements.txt (line 11)) (1.62.0)
+Requirement already satisfied: google-auth<3,>=1.6.3 in /home/pnair/.local/lib/python3.11/site-packages (from tensorboard->-r /home/pnair/spai/requirements.txt (line 11)) (2.28.1)
+Requirement already satisfied: google-auth-oauthlib<2,>=0.5 in /home/pnair/.local/lib/python3.11/site-packages (from tensorboard->-r /home/pnair/spai/requirements.txt (line 11)) (1.2.0)
+Requirement already satisfied: markdown>=2.6.8 in /home/pnair/.local/lib/python3.11/site-packages (from tensorboard->-r /home/pnair/spai/requirements.txt (line 11)) (3.5.2)
+Requirement already satisfied: protobuf!=4.24.0,>=3.19.6 in /home/pnair/.local/lib/python3.11/site-packages (from tensorboard->-r /home/pnair/spai/requirements.txt (line 11)) (4.25.1)
+Requirement already satisfied: requests<3,>=2.21.0 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from tensorboard->-r /home/pnair/spai/requirements.txt (line 11)) (2.31.0)
+Requirement already satisfied: setuptools>=41.0.0 in /home/pnair/.local/lib/python3.11/site-packages (from tensorboard->-r /home/pnair/spai/requirements.txt (line 11)) (69.0.3)
+Requirement already satisfied: six>1.9 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from tensorboard->-r /home/pnair/spai/requirements.txt (line 11)) (1.16.0)
+Requirement already satisfied: tensorboard-data-server<0.8.0,>=0.7.0 in /home/pnair/.local/lib/python3.11/site-packages (from tensorboard->-r /home/pnair/spai/requirements.txt (line 11)) (0.7.2)
+Requirement already satisfied: werkzeug>=1.0.1 in /home/pnair/.local/lib/python3.11/site-packages (from tensorboard->-r /home/pnair/spai/requirements.txt (line 11)) (3.0.1)
+Requirement already satisfied: packaging>17.1 in /home/pnair/.local/lib/python3.11/site-packages (from torchmetrics~=1.4.0.post0->-r /home/pnair/spai/requirements.txt (line 16)) (23.2)
+Requirement already satisfied: lightning-utilities>=0.8.0 in /home/pnair/.local/lib/python3.11/site-packages (from torchmetrics~=1.4.0.post0->-r /home/pnair/spai/requirements.txt (line 16)) (0.10.1)
+Requirement already satisfied: GitPython>=2.0.8 in /home/pnair/.local/lib/python3.11/site-packages (from neptune~=1.11.1->-r /home/pnair/spai/requirements.txt (line 21)) (3.1.40)
+Requirement already satisfied: PyJWT in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from neptune~=1.11.1->-r /home/pnair/spai/requirements.txt (line 21)) (2.4.0)
+Collecting boto3>=1.28.0 (from neptune~=1.11.1->-r /home/pnair/spai/requirements.txt (line 21))
+  Obtaining dependency information for boto3>=1.28.0 from https://files.pythonhosted.org/packages/84/d9/1bd6c2a6c3d3bf1d8b0be52c39230bd1e14bb55b7ecc04f42fcb68b27343/boto3-1.38.8-py3-none-any.whl.metadata
+  Downloading boto3-1.38.8-py3-none-any.whl.metadata (6.6 kB)
+Collecting bravado<12.0.0,>=11.0.0 (from neptune~=1.11.1->-r /home/pnair/spai/requirements.txt (line 21))
+  Obtaining dependency information for bravado<12.0.0,>=11.0.0 from https://files.pythonhosted.org/packages/b4/65/5f66e75cc3b4e83b22187041380b29486197592c7681d4a16956e40129f3/bravado-11.1.0-py2.py3-none-any.whl.metadata
+  Downloading bravado-11.1.0-py2.py3-none-any.whl.metadata (6.0 kB)
+Requirement already satisfied: future>=0.17.1 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from neptune~=1.11.1->-r /home/pnair/spai/requirements.txt (line 21)) (0.18.3)
+Requirement already satisfied: oauthlib>=2.1.0 in /home/pnair/.local/lib/python3.11/site-packages (from neptune~=1.11.1->-r /home/pnair/spai/requirements.txt (line 21)) (3.2.2)
+Requirement already satisfied: psutil in /home/pnair/.local/lib/python3.11/site-packages (from neptune~=1.11.1->-r /home/pnair/spai/requirements.txt (line 21)) (5.9.7)
+Requirement already satisfied: requests-oauthlib>=1.0.0 in /home/pnair/.local/lib/python3.11/site-packages (from neptune~=1.11.1->-r /home/pnair/spai/requirements.txt (line 21)) (1.3.1)
+Collecting swagger-spec-validator>=2.7.4 (from neptune~=1.11.1->-r /home/pnair/spai/requirements.txt (line 21))
+  Obtaining dependency information for swagger-spec-validator>=2.7.4 from https://files.pythonhosted.org/packages/f4/ac/31ba87a959b19e640ebc18851438b82b5b66cef02ad31da7468d1d8bd625/swagger_spec_validator-3.0.4-py2.py3-none-any.whl.metadata
+  Downloading swagger_spec_validator-3.0.4-py2.py3-none-any.whl.metadata (2.5 kB)
+Requirement already satisfied: urllib3 in /home/pnair/.local/lib/python3.11/site-packages (from neptune~=1.11.1->-r /home/pnair/spai/requirements.txt (line 21)) (2.1.0)
+Requirement already satisfied: websocket-client!=1.0.0,>=0.35.0 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from neptune~=1.11.1->-r /home/pnair/spai/requirements.txt (line 21)) (0.58.0)
+Requirement already satisfied: matplotlib!=3.6.1,>=3.4 in /home/pnair/.local/lib/python3.11/site-packages (from seaborn~=0.13.2->-r /home/pnair/spai/requirements.txt (line 26)) (3.8.2)
+Requirement already satisfied: python-dateutil>=2.8.2 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from pandas~=2.2.2->-r /home/pnair/spai/requirements.txt (line 27)) (2.8.2)
+Requirement already satisfied: pytz>=2020.1 in /home/pnair/.local/lib/python3.11/site-packages (from pandas~=2.2.2->-r /home/pnair/spai/requirements.txt (line 27)) (2023.3.post1)
+Requirement already satisfied: tzdata>=2022.7 in /home/pnair/.local/lib/python3.11/site-packages (from pandas~=2.2.2->-r /home/pnair/spai/requirements.txt (line 27)) (2023.4)
+Requirement already satisfied: ftfy in /home/pnair/.local/lib/python3.11/site-packages (from clip==1.0->-r /home/pnair/spai/requirements.txt (line 30)) (6.1.3)
+Requirement already satisfied: regex in /home/pnair/.local/lib/python3.11/site-packages (from clip==1.0->-r /home/pnair/spai/requirements.txt (line 30)) (2023.12.25)
+Collecting typing-extensions>=4.9.0 (from albumentations==1.4.14->-r /home/pnair/spai/requirements.txt (line 22))
+  Obtaining dependency information for typing-extensions>=4.9.0 from https://files.pythonhosted.org/packages/8b/54/b1ae86c0973cc6f0210b53d508ca3641fb6d0c56823f288d108bc7ab3cc8/typing_extensions-4.13.2-py3-none-any.whl.metadata
+  Using cached typing_extensions-4.13.2-py3-none-any.whl.metadata (3.0 kB)
+Requirement already satisfied: ml_dtypes in /home/pnair/.local/lib/python3.11/site-packages (from onnxscript->-r /home/pnair/spai/requirements.txt (line 32)) (0.2.0)
+Collecting botocore<1.39.0,>=1.38.8 (from boto3>=1.28.0->neptune~=1.11.1->-r /home/pnair/spai/requirements.txt (line 21))
+  Obtaining dependency information for botocore<1.39.0,>=1.38.8 from https://files.pythonhosted.org/packages/b4/66/e5a314d1e868cd35ec5c5d11360387c2a85e8d408f084616337f1a282c61/botocore-1.38.8-py3-none-any.whl.metadata
+  Downloading botocore-1.38.8-py3-none-any.whl.metadata (5.7 kB)
+Requirement already satisfied: jmespath<2.0.0,>=0.7.1 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from boto3>=1.28.0->neptune~=1.11.1->-r /home/pnair/spai/requirements.txt (line 21)) (0.10.0)
+Collecting s3transfer<0.13.0,>=0.12.0 (from boto3>=1.28.0->neptune~=1.11.1->-r /home/pnair/spai/requirements.txt (line 21))
+  Obtaining dependency information for s3transfer<0.13.0,>=0.12.0 from https://files.pythonhosted.org/packages/89/64/d2b49620039b82688aeebd510bd62ff4cdcdb86cbf650cc72ae42c5254a3/s3transfer-0.12.0-py3-none-any.whl.metadata
+  Downloading s3transfer-0.12.0-py3-none-any.whl.metadata (1.7 kB)
+Collecting bravado-core>=5.16.1 (from bravado<12.0.0,>=11.0.0->neptune~=1.11.1->-r /home/pnair/spai/requirements.txt (line 21))
+  Downloading bravado-core-6.1.1.tar.gz (63 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 63.9/63.9 kB 18.4 MB/s eta 0:00:00
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'done'
+Collecting monotonic (from bravado<12.0.0,>=11.0.0->neptune~=1.11.1->-r /home/pnair/spai/requirements.txt (line 21))
+  Obtaining dependency information for monotonic from https://files.pythonhosted.org/packages/9a/67/7e8406a29b6c45be7af7740456f7f37025f0506ae2e05fb9009a53946860/monotonic-1.6-py2.py3-none-any.whl.metadata
+  Downloading monotonic-1.6-py2.py3-none-any.whl.metadata (1.5 kB)
+Requirement already satisfied: msgpack in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from bravado<12.0.0,>=11.0.0->neptune~=1.11.1->-r /home/pnair/spai/requirements.txt (line 21)) (1.0.3)
+Collecting simplejson (from bravado<12.0.0,>=11.0.0->neptune~=1.11.1->-r /home/pnair/spai/requirements.txt (line 21))
+  Obtaining dependency information for simplejson from https://files.pythonhosted.org/packages/e1/33/d3e0779d5c58245e7370c98eb969275af6b7a4a5aec3b97cbf85f09ad328/simplejson-3.20.1-cp311-cp311-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata
+  Downloading simplejson-3.20.1-cp311-cp311-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (3.2 kB)
+Requirement already satisfied: gitdb<5,>=4.0.1 in /home/pnair/.local/lib/python3.11/site-packages (from GitPython>=2.0.8->neptune~=1.11.1->-r /home/pnair/spai/requirements.txt (line 21)) (4.0.11)
+Requirement already satisfied: cachetools<6.0,>=2.0.0 in /home/pnair/.local/lib/python3.11/site-packages (from google-auth<3,>=1.6.3->tensorboard->-r /home/pnair/spai/requirements.txt (line 11)) (5.3.2)
+Requirement already satisfied: pyasn1-modules>=0.2.1 in /home/pnair/.local/lib/python3.11/site-packages (from google-auth<3,>=1.6.3->tensorboard->-r /home/pnair/spai/requirements.txt (line 11)) (0.3.0)
+Requirement already satisfied: rsa<5,>=3.1.4 in /home/pnair/.local/lib/python3.11/site-packages (from google-auth<3,>=1.6.3->tensorboard->-r /home/pnair/spai/requirements.txt (line 11)) (4.9)
+Requirement already satisfied: contourpy>=1.0.1 in /home/pnair/.local/lib/python3.11/site-packages (from matplotlib!=3.6.1,>=3.4->seaborn~=0.13.2->-r /home/pnair/spai/requirements.txt (line 26)) (1.2.0)
+Requirement already satisfied: cycler>=0.10 in /home/pnair/.local/lib/python3.11/site-packages (from matplotlib!=3.6.1,>=3.4->seaborn~=0.13.2->-r /home/pnair/spai/requirements.txt (line 26)) (0.12.1)
+Requirement already satisfied: fonttools>=4.22.0 in /home/pnair/.local/lib/python3.11/site-packages (from matplotlib!=3.6.1,>=3.4->seaborn~=0.13.2->-r /home/pnair/spai/requirements.txt (line 26)) (4.47.2)
+Requirement already satisfied: kiwisolver>=1.3.1 in /home/pnair/.local/lib/python3.11/site-packages (from matplotlib!=3.6.1,>=3.4->seaborn~=0.13.2->-r /home/pnair/spai/requirements.txt (line 26)) (1.4.5)
+Requirement already satisfied: pyparsing>=2.3.1 in /home/pnair/.local/lib/python3.11/site-packages (from matplotlib!=3.6.1,>=3.4->seaborn~=0.13.2->-r /home/pnair/spai/requirements.txt (line 26)) (3.1.1)
+Requirement already satisfied: annotated-types>=0.6.0 in /home/pnair/.local/lib/python3.11/site-packages (from pydantic>=2.7.0->albumentations==1.4.14->-r /home/pnair/spai/requirements.txt (line 22)) (0.6.0)
+Collecting pydantic-core==2.33.2 (from pydantic>=2.7.0->albumentations==1.4.14->-r /home/pnair/spai/requirements.txt (line 22))
+  Obtaining dependency information for pydantic-core==2.33.2 from https://files.pythonhosted.org/packages/47/bc/cd720e078576bdb8255d5032c5d63ee5c0bf4b7173dd955185a1d658c456/pydantic_core-2.33.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata
+  Downloading pydantic_core-2.33.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.8 kB)
+Collecting typing-inspection>=0.4.0 (from pydantic>=2.7.0->albumentations==1.4.14->-r /home/pnair/spai/requirements.txt (line 22))
+  Obtaining dependency information for typing-inspection>=0.4.0 from https://files.pythonhosted.org/packages/31/08/aa4fdfb71f7de5176385bd9e90852eaf6b5d622735020ad600f2bab54385/typing_inspection-0.4.0-py3-none-any.whl.metadata
+  Downloading typing_inspection-0.4.0-py3-none-any.whl.metadata (2.6 kB)
+Requirement already satisfied: charset-normalizer<4,>=2 in /home/pnair/.local/lib/python3.11/site-packages (from requests<3,>=2.21.0->tensorboard->-r /home/pnair/spai/requirements.txt (line 11)) (3.3.2)
+Requirement already satisfied: idna<4,>=2.5 in /home/pnair/.local/lib/python3.11/site-packages (from requests<3,>=2.21.0->tensorboard->-r /home/pnair/spai/requirements.txt (line 11)) (3.6)
+Requirement already satisfied: certifi>=2017.4.17 in /home/pnair/.local/lib/python3.11/site-packages (from requests<3,>=2.21.0->tensorboard->-r /home/pnair/spai/requirements.txt (line 11)) (2023.11.17)
+Requirement already satisfied: imageio!=2.35.0,>=2.33 in /home/pnair/.local/lib/python3.11/site-packages (from scikit-image>=0.21.0->albumentations==1.4.14->-r /home/pnair/spai/requirements.txt (line 22)) (2.36.1)
+Requirement already satisfied: tifffile>=2022.8.12 in /home/pnair/.local/lib/python3.11/site-packages (from scikit-image>=0.21.0->albumentations==1.4.14->-r /home/pnair/spai/requirements.txt (line 22)) (2025.1.10)
+Requirement already satisfied: lazy-loader>=0.4 in /home/pnair/.local/lib/python3.11/site-packages (from scikit-image>=0.21.0->albumentations==1.4.14->-r /home/pnair/spai/requirements.txt (line 22)) (0.4)
+Requirement already satisfied: jsonschema in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from swagger-spec-validator>=2.7.4->neptune~=1.11.1->-r /home/pnair/spai/requirements.txt (line 21)) (4.17.3)
+Collecting importlib-resources>=1.3 (from swagger-spec-validator>=2.7.4->neptune~=1.11.1->-r /home/pnair/spai/requirements.txt (line 21))
+  Obtaining dependency information for importlib-resources>=1.3 from https://files.pythonhosted.org/packages/a4/ed/1f1afb2e9e7f38a545d628f864d562a5ae64fe6f7a10e28ffb9b185b4e89/importlib_resources-6.5.2-py3-none-any.whl.metadata
+  Downloading importlib_resources-6.5.2-py3-none-any.whl.metadata (3.9 kB)
+Requirement already satisfied: filelock in /home/pnair/.local/lib/python3.11/site-packages (from torch>=1.4->timm==0.4.12->-r /home/pnair/spai/requirements.txt (line 13)) (3.13.1)
+Requirement already satisfied: sympy in /home/pnair/.local/lib/python3.11/site-packages (from torch>=1.4->timm==0.4.12->-r /home/pnair/spai/requirements.txt (line 13)) (1.12)
+Requirement already satisfied: jinja2 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from torch>=1.4->timm==0.4.12->-r /home/pnair/spai/requirements.txt (line 13)) (3.1.2)
+Requirement already satisfied: fsspec in /home/pnair/.local/lib/python3.11/site-packages (from torch>=1.4->timm==0.4.12->-r /home/pnair/spai/requirements.txt (line 13)) (2023.10.0)
+Requirement already satisfied: nvidia-cuda-nvrtc-cu12==12.1.105 in /home/pnair/.local/lib/python3.11/site-packages (from torch>=1.4->timm==0.4.12->-r /home/pnair/spai/requirements.txt (line 13)) (12.1.105)
+Requirement already satisfied: nvidia-cuda-runtime-cu12==12.1.105 in /home/pnair/.local/lib/python3.11/site-packages (from torch>=1.4->timm==0.4.12->-r /home/pnair/spai/requirements.txt (line 13)) (12.1.105)
+Requirement already satisfied: nvidia-cuda-cupti-cu12==12.1.105 in /home/pnair/.local/lib/python3.11/site-packages (from torch>=1.4->timm==0.4.12->-r /home/pnair/spai/requirements.txt (line 13)) (12.1.105)
+Requirement already satisfied: nvidia-cudnn-cu12==8.9.2.26 in /home/pnair/.local/lib/python3.11/site-packages (from torch>=1.4->timm==0.4.12->-r /home/pnair/spai/requirements.txt (line 13)) (8.9.2.26)
+Requirement already satisfied: nvidia-cublas-cu12==12.1.3.1 in /home/pnair/.local/lib/python3.11/site-packages (from torch>=1.4->timm==0.4.12->-r /home/pnair/spai/requirements.txt (line 13)) (12.1.3.1)
+Requirement already satisfied: nvidia-cufft-cu12==11.0.2.54 in /home/pnair/.local/lib/python3.11/site-packages (from torch>=1.4->timm==0.4.12->-r /home/pnair/spai/requirements.txt (line 13)) (11.0.2.54)
+Requirement already satisfied: nvidia-curand-cu12==10.3.2.106 in /home/pnair/.local/lib/python3.11/site-packages (from torch>=1.4->timm==0.4.12->-r /home/pnair/spai/requirements.txt (line 13)) (10.3.2.106)
+Requirement already satisfied: nvidia-cusolver-cu12==11.4.5.107 in /home/pnair/.local/lib/python3.11/site-packages (from torch>=1.4->timm==0.4.12->-r /home/pnair/spai/requirements.txt (line 13)) (11.4.5.107)
+Requirement already satisfied: nvidia-cusparse-cu12==12.1.0.106 in /home/pnair/.local/lib/python3.11/site-packages (from torch>=1.4->timm==0.4.12->-r /home/pnair/spai/requirements.txt (line 13)) (12.1.0.106)
+Requirement already satisfied: nvidia-nccl-cu12==2.18.1 in /home/pnair/.local/lib/python3.11/site-packages (from torch>=1.4->timm==0.4.12->-r /home/pnair/spai/requirements.txt (line 13)) (2.18.1)
+Requirement already satisfied: nvidia-nvtx-cu12==12.1.105 in /home/pnair/.local/lib/python3.11/site-packages (from torch>=1.4->timm==0.4.12->-r /home/pnair/spai/requirements.txt (line 13)) (12.1.105)
+Requirement already satisfied: triton==2.1.0 in /home/pnair/.local/lib/python3.11/site-packages (from torch>=1.4->timm==0.4.12->-r /home/pnair/spai/requirements.txt (line 13)) (2.1.0)
+Requirement already satisfied: nvidia-nvjitlink-cu12 in /home/pnair/.local/lib/python3.11/site-packages (from nvidia-cusolver-cu12==11.4.5.107->torch>=1.4->timm==0.4.12->-r /home/pnair/spai/requirements.txt (line 13)) (12.3.101)
+Requirement already satisfied: MarkupSafe>=2.1.1 in /home/pnair/.local/lib/python3.11/site-packages (from werkzeug>=1.0.1->tensorboard->-r /home/pnair/spai/requirements.txt (line 11)) (2.1.3)
+Requirement already satisfied: wcwidth<0.3.0,>=0.2.12 in /home/pnair/.local/lib/python3.11/site-packages (from ftfy->clip==1.0->-r /home/pnair/spai/requirements.txt (line 30)) (0.2.13)
+Collecting jsonref (from bravado-core>=5.16.1->bravado<12.0.0,>=11.0.0->neptune~=1.11.1->-r /home/pnair/spai/requirements.txt (line 21))
+  Obtaining dependency information for jsonref from https://files.pythonhosted.org/packages/0c/ec/e1db9922bceb168197a558a2b8c03a7963f1afe93517ddd3cf99f202f996/jsonref-1.1.0-py3-none-any.whl.metadata
+  Downloading jsonref-1.1.0-py3-none-any.whl.metadata (2.7 kB)
+Requirement already satisfied: smmap<6,>=3.0.1 in /home/pnair/.local/lib/python3.11/site-packages (from gitdb<5,>=4.0.1->GitPython>=2.0.8->neptune~=1.11.1->-r /home/pnair/spai/requirements.txt (line 21)) (5.0.1)
+Requirement already satisfied: pyasn1<0.6.0,>=0.4.6 in /home/pnair/.local/lib/python3.11/site-packages (from pyasn1-modules>=0.2.1->google-auth<3,>=1.6.3->tensorboard->-r /home/pnair/spai/requirements.txt (line 11)) (0.5.1)
+Requirement already satisfied: attrs>=17.4.0 in /home/pnair/.local/lib/python3.11/site-packages (from jsonschema->swagger-spec-validator>=2.7.4->neptune~=1.11.1->-r /home/pnair/spai/requirements.txt (line 21)) (23.2.0)
+Requirement already satisfied: pyrsistent!=0.17.0,!=0.17.1,!=0.17.2,>=0.14.0 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from jsonschema->swagger-spec-validator>=2.7.4->neptune~=1.11.1->-r /home/pnair/spai/requirements.txt (line 21)) (0.18.0)
+Requirement already satisfied: mpmath>=0.19 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from sympy->torch>=1.4->timm==0.4.12->-r /home/pnair/spai/requirements.txt (line 13)) (1.3.0)
+Collecting fqdn (from jsonschema->swagger-spec-validator>=2.7.4->neptune~=1.11.1->-r /home/pnair/spai/requirements.txt (line 21))
+  Obtaining dependency information for fqdn from https://files.pythonhosted.org/packages/cf/58/8acf1b3e91c58313ce5cb67df61001fc9dcd21be4fadb76c1a2d540e09ed/fqdn-1.5.1-py3-none-any.whl.metadata
+  Downloading fqdn-1.5.1-py3-none-any.whl.metadata (1.4 kB)
+Collecting isoduration (from jsonschema->swagger-spec-validator>=2.7.4->neptune~=1.11.1->-r /home/pnair/spai/requirements.txt (line 21))
+  Obtaining dependency information for isoduration from https://files.pythonhosted.org/packages/7b/55/e5326141505c5d5e34c5e0935d2908a74e4561eca44108fbfb9c13d2911a/isoduration-20.11.0-py3-none-any.whl.metadata
+  Downloading isoduration-20.11.0-py3-none-any.whl.metadata (5.7 kB)
+Requirement already satisfied: jsonpointer>1.13 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from jsonschema->swagger-spec-validator>=2.7.4->neptune~=1.11.1->-r /home/pnair/spai/requirements.txt (line 21)) (2.1)
+Requirement already satisfied: rfc3339-validator in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from jsonschema->swagger-spec-validator>=2.7.4->neptune~=1.11.1->-r /home/pnair/spai/requirements.txt (line 21)) (0.1.4)
+Requirement already satisfied: rfc3986-validator>0.1.0 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from jsonschema->swagger-spec-validator>=2.7.4->neptune~=1.11.1->-r /home/pnair/spai/requirements.txt (line 21)) (0.1.1)
+Collecting uri-template (from jsonschema->swagger-spec-validator>=2.7.4->neptune~=1.11.1->-r /home/pnair/spai/requirements.txt (line 21))
+  Obtaining dependency information for uri-template from https://files.pythonhosted.org/packages/e7/00/3fca040d7cf8a32776d3d81a00c8ee7457e00f80c649f1e4a863c8321ae9/uri_template-1.3.0-py3-none-any.whl.metadata
+  Downloading uri_template-1.3.0-py3-none-any.whl.metadata (8.8 kB)
+Collecting webcolors>=1.11 (from jsonschema->swagger-spec-validator>=2.7.4->neptune~=1.11.1->-r /home/pnair/spai/requirements.txt (line 21))
+  Obtaining dependency information for webcolors>=1.11 from https://files.pythonhosted.org/packages/60/e8/c0e05e4684d13459f93d312077a9a2efbe04d59c393bc2b8802248c908d4/webcolors-24.11.1-py3-none-any.whl.metadata
+  Downloading webcolors-24.11.1-py3-none-any.whl.metadata (2.2 kB)
+Requirement already satisfied: arrow>=0.15.0 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from isoduration->jsonschema->swagger-spec-validator>=2.7.4->neptune~=1.11.1->-r /home/pnair/spai/requirements.txt (line 21)) (1.2.3)
+Downloading timm-0.4.12-py3-none-any.whl (376 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 377.0/377.0 kB 4.6 MB/s eta 0:00:00
+Downloading albumentations-1.4.14-py3-none-any.whl (177 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 178.0/178.0 kB 42.6 MB/s eta 0:00:00
+Downloading albucore-0.0.16-py3-none-any.whl (9.5 kB)
+Downloading opencv_python-4.10.0.84-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (62.5 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 62.5/62.5 MB 50.6 MB/s eta 0:00:00
+Downloading scipy-1.14.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (41.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 41.2/41.2 MB 50.0 MB/s eta 0:00:00
+Downloading yacs-0.1.8-py3-none-any.whl (14 kB)
+Downloading numpy-1.26.4-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (18.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 18.3/18.3 MB 77.3 MB/s eta 0:00:00
+Downloading torchmetrics-1.4.3-py3-none-any.whl (869 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 869.5/869.5 kB 33.6 MB/s eta 0:00:00
+Downloading tqdm-4.66.6-py3-none-any.whl (78 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 78.3/78.3 kB 23.7 MB/s eta 0:00:00
+Downloading pillow-10.4.0-cp311-cp311-manylinux_2_28_x86_64.whl (4.5 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.5/4.5 MB 119.9 MB/s eta 0:00:00
+Downloading neptune-1.11.1-py3-none-any.whl (501 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 501.4/501.4 kB 3.0 MB/s eta 0:00:00
+Downloading lmdb-1.5.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (297 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 297.9/297.9 kB 68.3 MB/s eta 0:00:00
+Downloading networkx-3.4.2-py3-none-any.whl (1.7 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.7/1.7 MB 104.6 MB/s eta 0:00:00
+Downloading pandas-2.2.3-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (13.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 13.1/13.1 MB 98.1 MB/s eta 0:00:00
+Downloading einops-0.8.1-py3-none-any.whl (64 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 64.4/64.4 kB 17.7 MB/s eta 0:00:00
+Downloading onnx-1.17.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (16.0 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.0/16.0 MB 90.3 MB/s eta 0:00:00
+Downloading onnxscript-0.2.5-py3-none-any.whl (689 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 689.4/689.4 kB 5.1 MB/s eta 0:00:00
+Downloading boto3-1.38.8-py3-none-any.whl (139 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 139.9/139.9 kB 42.0 MB/s eta 0:00:00
+Downloading bravado-11.1.0-py2.py3-none-any.whl (37 kB)
+Downloading pydantic-2.11.4-py3-none-any.whl (443 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 443.9/443.9 kB 67.5 MB/s eta 0:00:00
+Downloading pydantic_core-2.33.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.0 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.0/2.0 MB 133.2 MB/s eta 0:00:00
+Downloading swagger_spec_validator-3.0.4-py2.py3-none-any.whl (28 kB)
+Using cached typing_extensions-4.13.2-py3-none-any.whl (45 kB)
+Downloading eval_type_backport-0.2.2-py3-none-any.whl (5.8 kB)
+Downloading botocore-1.38.8-py3-none-any.whl (13.5 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 13.5/13.5 MB 115.7 MB/s eta 0:00:00
+Downloading importlib_resources-6.5.2-py3-none-any.whl (37 kB)
+Downloading s3transfer-0.12.0-py3-none-any.whl (84 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 84.8/84.8 kB 28.4 MB/s eta 0:00:00
+Downloading typing_inspection-0.4.0-py3-none-any.whl (14 kB)
+Downloading monotonic-1.6-py2.py3-none-any.whl (8.2 kB)
+Downloading simplejson-3.20.1-cp311-cp311-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl (144 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 144.8/144.8 kB 48.6 MB/s eta 0:00:00
+Downloading jsonref-1.1.0-py3-none-any.whl (9.4 kB)
+Downloading webcolors-24.11.1-py3-none-any.whl (14 kB)
+Downloading fqdn-1.5.1-py3-none-any.whl (9.1 kB)
+Downloading isoduration-20.11.0-py3-none-any.whl (11 kB)
+Downloading uri_template-1.3.0-py3-none-any.whl (11 kB)
+Building wheels for collected packages: clip, bravado-core
+  Building wheel for clip (setup.py): started
+  Building wheel for clip (setup.py): finished with status 'done'
+  Created wheel for clip: filename=clip-1.0-py3-none-any.whl size=1369489 sha256=bdc9da9485c0faaefde1a1962b903baecb427ffa90469ff2a7b100dd87f1646c
+  Stored in directory: /gpfs/scratch1/nodespecific/srv9/pnair.11560236/pip-ephem-wheel-cache-ceboqmfr/wheels/3f/7c/a4/9b490845988bf7a4db33674d52f709f088f64392063872eb9a
+  Building wheel for bravado-core (setup.py): started
+  Building wheel for bravado-core (setup.py): finished with status 'done'
+  Created wheel for bravado-core: filename=bravado_core-6.1.1-py2.py3-none-any.whl size=67673 sha256=7264f6643b6f536024cc281ad75a7c495617f41c0b1cf20868fb90fef6ff4c17
+  Stored in directory: /gpfs/home2/pnair/.cache/pip/wheels/cf/d7/1c/1d707a21e0a0323bdbfbb2f6de125ae6bb70d62aa2838df321
+Successfully built clip bravado-core
+Installing collected packages: monotonic, lmdb, yacs, webcolors, uri-template, typing-extensions, tqdm, simplejson, pillow, numpy, networkx, jsonref, importlib-resources, fqdn, eval-type-backport, einops, typing-inspection, swagger-spec-validator, scipy, pydantic-core, pandas, opencv-python, onnx, botocore, s3transfer, pydantic, onnxscript, isoduration, albucore, torchmetrics, boto3, albumentations, timm, clip, bravado-core, bravado, neptune
+  Attempting uninstall: typing-extensions
+    Found existing installation: typing_extensions 4.9.0
+    Uninstalling typing_extensions-4.9.0:
+      Successfully uninstalled typing_extensions-4.9.0
+  Attempting uninstall: tqdm
+    Found existing installation: tqdm 4.66.1
+    Uninstalling tqdm-4.66.1:
+      Successfully uninstalled tqdm-4.66.1
+  Attempting uninstall: pillow
+    Found existing installation: pillow 10.2.0
+    Uninstalling pillow-10.2.0:
+      Successfully uninstalled pillow-10.2.0
+  Attempting uninstall: numpy
+    Found existing installation: numpy 1.26.3
+    Uninstalling numpy-1.26.3:
+      Successfully uninstalled numpy-1.26.3
+  Attempting uninstall: networkx
+    Found existing installation: networkx 3.2.1
+    Uninstalling networkx-3.2.1:
+      Successfully uninstalled networkx-3.2.1
+  Attempting uninstall: einops
+    Found existing installation: einops 0.7.0
+    Uninstalling einops-0.7.0:
+      Successfully uninstalled einops-0.7.0
+  Attempting uninstall: scipy
+    Found existing installation: scipy 1.11.4
+    Uninstalling scipy-1.11.4:
+      Successfully uninstalled scipy-1.11.4
+  Attempting uninstall: pydantic-core
+    Found existing installation: pydantic_core 2.14.6
+    Uninstalling pydantic_core-2.14.6:
+      Successfully uninstalled pydantic_core-2.14.6
+  Attempting uninstall: pandas
+    Found existing installation: pandas 2.1.4
+    Uninstalling pandas-2.1.4:
+      Successfully uninstalled pandas-2.1.4
+  Attempting uninstall: opencv-python
+    Found existing installation: opencv-python 4.9.0.80
+    Uninstalling opencv-python-4.9.0.80:
+      Successfully uninstalled opencv-python-4.9.0.80

@@ -1,0 +1,39 @@
+#!/bin/bash
+#SBATCH --partition=cbuild
+#SBATCH --cpus-per-task=16
+#SBATCH --job-name=keys
+#SBATCH --output=/home/pnair/spai/job_outputs/keys.out
+#SBATCH --time=2:00:00
+
+echo "✅ Job started at: $(date)"
+module purge
+module load 2023
+module load Anaconda3/2023.07-2
+module load CUDA/12.1.1
+
+source activate spai
+
+cd /home/pnair/spai
+#pip install -r requirements.txt
+#pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu121
+export NEPTUNE_API_TOKEN="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiJlZDBmOTg4MS04MTU0LTQ4YTItYTI1Mi1lNjdjZjhiMzJkMzAifQ==" 
+export NEPTUNE_PROJECT="spai/beast-mode"
+export PYTHONPATH=$PYTHONPATH:/home/pnair/spai 
+export NCCL_DEBUG=INFO
+export CUDA_LAUNCH_BLOCKING=0
+
+# Step 1: Create the destination folder
+mkdir -p /scratch-shared/dl2_spai/datasets_copy
+
+# Step 2: Copy dataset folders
+cp -a /scratch-shared/dl2_spai/datasets/{coco,LSUN,latent_diffusion_trainingset} /scratch-shared/dl2_spai/datasets_copy/
+
+# Step 3: Grant access to both users recursively
+for user in azywot scur2690 ekarasev scur2605; do
+  for folder in coco LSUN latent_diffusion_trainingset; do
+    setfacl -R -m u:$user:rwx /scratch-shared/dl2_spai/datasets_copy/$folder
+    setfacl -d -m u:$user:rwx /scratch-shared/dl2_spai/datasets_copy/$folder
+  done
+done
+
+echo "✅ Datasets copied and access granted to azywot scur2690 ekarasev and scur2605"

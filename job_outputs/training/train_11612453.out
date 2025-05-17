@@ -1,0 +1,873 @@
+✅ Job started at: Wed May  7 11:06:07 CEST 2025
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+2025-05-07 11:06:15.072772: I tensorflow/core/util/port.cc:113] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2025-05-07 11:06:15.239380: E external/local_xla/xla/stream_executor/cuda/cuda_dnn.cc:9261] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+2025-05-07 11:06:15.239490: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:607] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2025-05-07 11:06:15.254582: E external/local_xla/xla/stream_executor/cuda/cuda_blas.cc:1515] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+2025-05-07 11:06:15.296633: I tensorflow/core/platform/cpu_feature_guard.cc:182] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI AVX512_BF16 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+/home/pnair/.local/lib/python3.11/site-packages/onnxscript/converter.py:816: FutureWarning: 'onnxscript.values.Op.param_schemas' is deprecated in version 0.1 and will be removed in the future. Please use '.op_signature' instead.
+  param_schemas = callee.param_schemas()
+/home/pnair/.local/lib/python3.11/site-packages/onnxscript/converter.py:816: FutureWarning: 'onnxscript.values.OnnxFunction.param_schemas' is deprecated in version 0.1 and will be removed in the future. Please use '.op_signature' instead.
+  param_schemas = callee.param_schemas()
+/home/pnair/.local/lib/python3.11/site-packages/albumentations/__init__.py:13: UserWarning: A new version of Albumentations is available: 2.0.6 (you have 1.4.14). Upgrade using: pip install -U albumentations. To disable automatic update checks, set the environment variable NO_ALBUMENTATIONS_UPDATE to 1.
+  check_for_updates()
+=> merge config from /home/pnair/spai/configs/spai.yaml
+[2025-05-07 11:06:21 finetune](__main__.py 218): INFO Full config saved to /home/pnair/spai/output/train/finetune/spai/config.json
+[2025-05-07 11:06:21 finetune](__main__.py 221): INFO AMP_OPT_LEVEL: O2
+AUG:
+  AUTO_AUGMENT: rand-m9-mstd0.5-inc1
+  BLUR_PROB: 0.25
+  COLOR_JITTER: 0.0
+  COLOR_JITTER_BRIGHTNESS_RANGE: &id001
+  - 0.8
+  - 1.2
+  COLOR_JITTER_CONTRAST_RANGE: *id001
+  COLOR_JITTER_HUE_RANGE:
+  - -0.1
+  - 0.1
+  COLOR_JITTER_SATURATION_RANGE: *id001
+  CUTMIX: 1.0
+  CUTMIX_MINMAX: null
+  GAUSSIAN_BLUR_LIMIT:
+  - 3
+  - 9
+  GAUSSIAN_BLUR_PROB: 0.5
+  GAUSSIAN_BLUR_SIGMA:
+  - 0.01
+  - 0.5
+  GAUSSIAN_NOISE_PROB: 0.5
+  HORIZONTAL_FLIP_PROB: 0.5
+  JPEG_COMPRESSION_PROB: 0.5
+  JPEG_MAX_QUALITY: 100
+  JPEG_MIN_QUALITY: 50
+  MAX_CROP_AREA: 1.0
+  MIN_CROP_AREA: 0.2
+  MIXUP: 0.8
+  MIXUP_MODE: batch
+  MIXUP_PROB: 1.0
+  MIXUP_SWITCH_PROB: 0.5
+  RECOUNT: 1
+  REMODE: pixel
+  REPROB: 0.25
+  ROTATION_DEGREES: 90
+  ROTATION_PROB: 0.5
+  SHARPEN_ALPHA_RANGE:
+  - 0.01
+  - 0.4
+  SHARPEN_LIGHTNESS_RANGE:
+  - 0.95
+  - 1
+  SHARPEN_PROB: 0.0
+  VERTICAL_FLIP_PROB: 0.5
+  WEBP_COMPRESSION_PROB: 0.0
+  WEBP_MAX_QUALITY: 100
+  WEBP_MIN_QUALITY: 50
+BASE:
+- ''
+DATA:
+  AUGMENTED_VIEWS: 4
+  BATCH_SIZE: 192
+  BLUR:
+    BETA_GAUSSIAN:
+    - 0.5
+    - 4
+    BETA_PLATEAU:
+    - 1
+    - 2
+    KERNEL_LIST:
+    - iso
+    - aniso
+    - generalized_iso
+    - generalized_aniso
+    - plateau_iso
+    - plateau_aniso
+    - sinc
+    KERNEL_PROB:
+    - 0.405
+    - 0.225
+    - 0.108
+    - 0.027
+    - 0.108
+    - 0.027
+    - 0.1
+    KERNEL_SIZE:
+    - 7
+    - 9
+    - 11
+    - 13
+    - 15
+    - 17
+    - 19
+    - 21
+    ROTATE_ANGLE:
+    - -3.1416
+    - 3.1416
+    SIGMA_X:
+    - 0.2
+    - 3
+    SIGMA_Y:
+    - 0.2
+    - 3
+  CSV_ROOT: /home/pnair/spai/datasets
+  DATASET: csv_sid
+  DATA_PATH: /home/pnair/spai/datasets/ldm_train_val_subset.csv
+  FILTER_TYPE: mfm
+  IMG_SIZE: 224
+  INTERPOLATION: bicubic
+  LMDB_PATH: None
+  MASK_RADIUS1: 16
+  MASK_RADIUS2: 999
+  MIN_CROP_SCALE: 0.2
+  NOISE:
+    GAUSSIAN_GRAY_NOISE_PROB: 0.4
+    GAUSSIAN_SIGMA:
+    - 1
+    - 30
+    POISSON_GRAY_NOISE_PROB: 0.4
+    POISSON_SCALE:
+    - 0.05
+    - 3
+    PROB:
+    - 0.5
+    - 0.5
+    TYPE:
+    - gaussian
+    - poisson
+  NUM_WORKERS: 16
+  PIN_MEMORY: true
+  PREFETCH_FACTOR: 2
+  SAMPLE_RATIO: 0.5
+  SR_FACTOR: 8
+  TEST_BATCH_SIZE: null
+  TEST_DATA_CSV_ROOT: []
+  TEST_DATA_PATH: []
+  TEST_PREFETCH_FACTOR: 4
+  VAL_BATCH_SIZE: 256
+  VAL_PREFETCH_FACTOR: null
+EVAL_MODE: false
+LOCAL_RANK: 0
+MODEL:
+  CLS_HEAD:
+    MLP_RATIO: 3
+  DROP_PATH_RATE: 0.1
+  DROP_RATE: 0.0
+  FEATURE_EXTRACTION_BATCH: 400
+  FRE:
+    DISABLE_RECONSTRUCTION_SIMILARITY: false
+    MASKING_RADIUS: 16
+    ORIGINAL_IMAGE_FEATURES_BRANCH: true
+    PROJECTOR_LAST_LAYER_ACTIVATION_TYPE: null
+  FREQ_LOSS:
+    AVE_SPECTRUM: false
+    BATCH_MATRIX: false
+    LOG_MATRIX: false
+    LOSS_GAMMA: 1.0
+    MATRIX_GAMMA: 1.0
+    PATCH_FACTOR: 1
+    WITH_MATRIX: false
+  LABEL_SMOOTHING: 0.1
+  NAME: finetune
+  NUM_CLASSES: 2
+  PATCH_VIT:
+    ATTN_EMBED_DIM: 1536
+    MINIMUM_PATCHES: 4
+    NUM_HEADS: 12
+    PATCH_STRIDE: 224
+  RECOVER_TARGET_TYPE: normal
+  REQUIRED_NORMALIZATION: positive_0_1
+  RESNET:
+    IN_CHANS: 3
+    LAYERS:
+    - 3
+    - 4
+    - 6
+    - 3
+  RESOLUTION_MODE: arbitrary
+  RESUME: ''
+  SID_APPROACH: freq_restoration
+  SID_DROPOUT: 0.5
+  SWIN:
+    APE: false
+    DEPTHS:
+    - 2
+    - 2
+    - 6
+    - 2
+    EMBED_DIM: 96
+    IN_CHANS: 3
+    MLP_RATIO: 4.0
+    NUM_HEADS:
+    - 3
+    - 6
+    - 12
+    - 24
+    PATCH_NORM: true
+    PATCH_SIZE: 4
+    QKV_BIAS: true
+    QK_SCALE: null
+    WINDOW_SIZE: 7
+  TYPE: vit
+  VIT:
+    DECODER:
+      DEPTH: 0
+      EMBED_DIM: 512
+      NUM_HEADS: 16
+    DEPTH: 12
+    EMBED_DIM: 768
+    FEATURES_PROCESSOR: rine
+    INIT_VALUES: null
+    INTERMEDIATE_LAYERS:
+    - 0
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    IN_CHANS: 3
+    MLP_RATIO: 4
+    NUM_HEADS: 12
+    PATCH_POOLING: mean
+    PATCH_PROJECTION: true
+    PATCH_PROJECTION_PER_FEATURE: true
+    PATCH_SIZE: 16
+    PROJECTION_DIM: 1024
+    PROJECTION_LAYERS: 2
+    QKV_BIAS: true
+    USE_APE: true
+    USE_FPE: false
+    USE_INTERMEDIATE_LAYERS: true
+    USE_MEAN_POOLING: true
+    USE_RPB: false
+    USE_SHARED_RPB: false
+MODEL_WEIGHTS: mfm
+OUTPUT: /home/pnair/spai/output/train/finetune/spai
+PRETRAINED: /home/pnair/spai/weights/mfm_pretrain_vit_base.pth
+PRINT_FREQ: 100
+SAVE_FREQ: 10
+SEED: 0
+TAG: spai
+TEST:
+  CROP: true
+  EXPORT_IMAGE_PATCHES: false
+  GAUSSIAN_BLUR: false
+  GAUSSIAN_BLUR_KERNEL_SIZE: 3
+  GAUSSIAN_NOISE: false
+  GAUSSIAN_NOISE_SIGMA: 1.0
+  JPEG_COMPRESSION: false
+  JPEG_QUALITY: 100
+  MAX_SIZE: null
+  ORIGINAL_RESOLUTION: true
+  SCALE: false
+  SCALE_FACTOR: 1.0
+  VIEWS_GENERATION_APPROACH: null
+  VIEWS_REDUCTION_APPROACH: mean
+  WEBP_COMPRESSION: false
+  WEBP_QUALITY: 100
+THROUGHPUT_MODE: false
+TRAIN:
+  ACCUMULATION_STEPS: 1
+  AUTO_RESUME: true
+  BASE_LR: 0.0005
+  CLIP_GRAD: null
+  EPOCHS: 35
+  LAYER_DECAY: 0.8
+  LOSS: bce
+  LR_SCHEDULER:
+    DECAY_EPOCHS: 30
+    DECAY_RATE: 0.1
+    GAMMA: 0.1
+    MULTISTEPS: []
+    NAME: cosine
+  MIN_LR: 2.5e-07
+  MODE: supervised
+  OPTIMIZER:
+    BETAS:
+    - 0.9
+    - 0.999
+    EPS: 1.0e-08
+    MOMENTUM: 0.9
+    NAME: adamw
+  SCALE_LR: false
+  START_EPOCH: 0
+  TRIPLET_LOSS_MARGIN: 0.5
+  USE_CHECKPOINT: false
+  WARMUP_EPOCHS: 5
+  WARMUP_LR: 2.5e-07
+  WEIGHT_DECAY: 0.05
+
+[2025-05-07 11:06:21 finetune](data_finetune.py 482): INFO Data transform | mode: supervised | split: train:
+Compose([
+  RandomResizedCrop(p=1.0, size=(224, 224), scale=(0.2, 1.0), ratio=(0.75, 1.3333333333333333), interpolation=1),
+  HorizontalFlip(p=0.5),
+  VerticalFlip(p=0.5),
+  Rotate(p=0.5, limit=(-90, 90), interpolation=1, border_mode=4, value=None, mask_value=None, rotate_method='largest_box', crop_border=True),
+  Resize(p=1.0, height=224, width=224, interpolation=1),
+  GaussianBlur(p=0.5, blur_limit=(3, 9), sigma_limit=(0.01, 0.5)),
+  GaussNoise(p=0.5, var_limit=(10.0, 50.0), per_channel=True, mean=0.0, noise_scale_factor=1.0),
+  ColorJitter(p=0.0, brightness=(0.8, 1.2), contrast=(0.8, 1.2), saturation=(0.8, 1.2), hue=(-0.1, 0.1)),
+  Sharpen(p=0.0, alpha=(0.01, 0.4), lightness=(0.95, 1.0)),
+  ImageCompression(p=0.5, quality_range=(50, 100), compression_type=0),
+  ImageCompression(p=0.0, quality_range=(50, 100), compression_type=1),
+  Normalize(p=1.0, mean=0.0, std=1.0, max_pixel_value=255.0, normalization='standard'),
+  ToTensorV2(p=1.0, transpose_mask=False),
+], p=1.0, bbox_params=None, keypoint_params=None, additional_targets={}, is_check_shapes=True)
+[2025-05-07 11:06:21 finetune](data_finetune.py 482): INFO Data transform | mode: supervised | split: val:
+Compose([
+  ImageCompression(p=0.0, quality_range=(100, 100), compression_type=0),
+  ImageCompression(p=0.0, quality_range=(100, 100), compression_type=1),
+  GaussianBlur(p=0.0, blur_limit=(3, 3), sigma_limit=(0, 0)),
+  GaussNoise(p=0.0, var_limit=(1.0, 1.0), per_channel=True, mean=0.0, noise_scale_factor=1.0),
+  RandomScale(p=0.0, interpolation=1, scale_limit=(0.0, 0.0)),
+  PadIfNeeded(p=1.0, min_height=224, min_width=224, pad_height_divisor=None, pad_width_divisor=None, position=PositionType.CENTER, border_mode=4, value=None, mask_value=None),
+  Normalize(p=1.0, mean=0.0, std=1.0, max_pixel_value=255.0, normalization='standard'),
+  ToTensorV2(p=1.0, transpose_mask=False),
+], p=1.0, bbox_params=None, keypoint_params=None, additional_targets={}, is_check_shapes=True)
+[2025-05-07 11:06:21 finetune](data_finetune.py 343): INFO Train images: 27000 | Validation images: 3000
+[2025-05-07 11:06:21 finetune](data_finetune.py 344): INFO Train Images Source: /home/pnair/spai/datasets
+[2025-05-07 11:06:21 finetune](data_finetune.py 345): INFO Validation Images Source: /home/pnair/spai/datasets
+[neptune] [info   ] Neptune initialized. Open in the app: https://app.neptune.ai/spai/beast-mode/e/BEAS-13
+[2025-05-07 11:06:22 finetune](__main__.py 232): INFO Creating model:vit/finetune
+[2025-05-07 11:06:25 finetune](__main__.py 235): INFO PatchBasedMFViT(
+  (mfvit): MFViT(
+    (vit): VisionTransformer(
+      (patch_embed): PatchEmbed(
+        (proj): Conv2d(3, 768, kernel_size=(16, 16), stride=(16, 16))
+      )
+      (pos_drop): Dropout(p=0.0, inplace=False)
+      (blocks): ModuleList(
+        (0): Block(
+          (norm1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+          (attn): Attention(
+            (qkv): Linear(in_features=768, out_features=2304, bias=False)
+            (attn_drop): Dropout(p=0.0, inplace=False)
+            (proj): Linear(in_features=768, out_features=768, bias=True)
+            (proj_drop): Dropout(p=0.0, inplace=False)
+          )
+          (drop_path): Identity()
+          (norm2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+          (mlp): Mlp(
+            (fc1): Linear(in_features=768, out_features=3072, bias=True)
+            (act): GELU(approximate='none')
+            (fc2): Linear(in_features=3072, out_features=768, bias=True)
+            (drop): Dropout(p=0.0, inplace=False)
+          )
+        )
+        (1-11): 11 x Block(
+          (norm1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+          (attn): Attention(
+            (qkv): Linear(in_features=768, out_features=2304, bias=False)
+            (attn_drop): Dropout(p=0.0, inplace=False)
+            (proj): Linear(in_features=768, out_features=768, bias=True)
+            (proj_drop): Dropout(p=0.0, inplace=False)
+          )
+          (drop_path): DropPath()
+          (norm2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+          (mlp): Mlp(
+            (fc1): Linear(in_features=768, out_features=3072, bias=True)
+            (act): GELU(approximate='none')
+            (fc2): Linear(in_features=3072, out_features=768, bias=True)
+            (drop): Dropout(p=0.0, inplace=False)
+          )
+        )
+      )
+      (norm): Identity()
+      (fc_norm): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+      (cls_blocks): ModuleList(
+        (0): Block(
+          (norm1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+          (attn): Attention(
+            (qkv): Linear(in_features=768, out_features=2304, bias=False)
+            (attn_drop): Dropout(p=0.0, inplace=False)
+            (proj): Linear(in_features=768, out_features=768, bias=True)
+            (proj_drop): Dropout(p=0.0, inplace=False)
+          )
+          (drop_path): Identity()
+          (norm2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+          (mlp): Mlp(
+            (fc1): Linear(in_features=768, out_features=3072, bias=True)
+            (act): GELU(approximate='none')
+            (fc2): Linear(in_features=3072, out_features=768, bias=True)
+            (drop): Dropout(p=0.0, inplace=False)
+          )
+        )
+      )
+      (cls_norm): Identity()
+      (intermediate_fc_norm): ModuleList(
+        (0-11): 12 x LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+      )
+      (head): Linear(in_features=9216, out_features=2, bias=True)
+    )
+    (features_processor): FrequencyRestorationEstimator(
+      (semantic_fusion): SemanticFusionModule(
+        (attn): MultiheadAttention(
+          (out_proj): NonDynamicallyQuantizableLinear(in_features=1024, out_features=1024, bias=True)
+        )
+      )
+      (patch_projector): FeatureSpecificProjector(
+        (projectors): ModuleList(
+          (0-11): 12 x Projector(
+            (norm1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (projector): Sequential(
+              (0): Dropout(p=0.5, inplace=False)
+              (1): Linear(in_features=768, out_features=1024, bias=True)
+              (2): GELU(approximate='none')
+              (3): Dropout(p=0.5, inplace=False)
+              (4): Linear(in_features=1024, out_features=1024, bias=True)
+              (5): Identity()
+              (6): Dropout(p=0.5, inplace=False)
+            )
+            (norm2): LayerNorm((1024,), eps=1e-05, elementwise_affine=True)
+          )
+        )
+      )
+      (original_features_processor): FeatureImportanceProjector(
+        (proj1): Projector(
+          (norm1): Identity()
+          (projector): Sequential(
+            (0): Dropout(p=0.5, inplace=False)
+            (1): Linear(in_features=2048, out_features=1024, bias=True)
+            (2): GELU(approximate='none')
+            (3): Dropout(p=0.5, inplace=False)
+            (4): Linear(in_features=1024, out_features=1024, bias=True)
+            (5): GELU(approximate='none')
+            (6): Dropout(p=0.5, inplace=False)
+          )
+          (norm2): LayerNorm((1024,), eps=1e-05, elementwise_affine=True)
+        )
+        (proj2): Projector(
+          (norm1): Identity()
+          (projector): Sequential(
+            (0): Dropout(p=0.5, inplace=False)
+            (1): Linear(in_features=1024, out_features=1024, bias=True)
+            (2): GELU(approximate='none')
+            (3): Dropout(p=0.5, inplace=False)
+            (4): Linear(in_features=1024, out_features=1024, bias=True)
+            (5): GELU(approximate='none')
+            (6): Dropout(p=0.5, inplace=False)
+          )
+          (norm2): LayerNorm((1024,), eps=1e-05, elementwise_affine=True)
+        )
+      )
+    )
+    (backbone_norm): Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
+  )
+  (attend): Softmax(dim=-1)
+  (dropout): Dropout(p=0.5, inplace=False)
+  (to_kv): Linear(in_features=1096, out_features=3072, bias=False)
+  (to_out): Sequential(
+    (0): Linear(in_features=1536, out_features=1096, bias=False)
+    (1): Dropout(p=0.5, inplace=False)
+  )
+  (norm): LayerNorm((1096,), eps=1e-05, elementwise_affine=True)
+  (cls_head): ClassificationHead(
+    (head): Sequential(
+      (0): Linear(in_features=1096, out_features=3288, bias=True)
+      (1): ReLU()
+      (2): Dropout(p=0.5, inplace=False)
+      (3): Linear(in_features=3288, out_features=3288, bias=True)
+      (4): ReLU()
+      (5): Dropout(p=0.5, inplace=False)
+      (6): Linear(in_features=3288, out_features=1, bias=True)
+    )
+  )
+)
+[2025-05-07 11:06:25 finetune](__main__.py 238): INFO 🚨 Freezing all parameters from pretrained model
+[2025-05-07 11:06:25 finetune](__main__.py 244): INFO 🚨 Unfreezing semantic fusion and classification head
+[2025-05-07 11:06:25 finetune](__main__.py 246): INFO 🚨 Modules in the model: <generator object Module.named_modules at 0x15414307d7a0>
+[2025-05-07 11:06:25 finetune](__main__.py 255): INFO 🚨 Backbone frozen, semantic fusion and classification head unfrozen.
+[2025-05-07 11:06:25 finetune](__main__.py 258): INFO 🚨 Trainable parameters:
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: patch_aggregator, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.frequencies_mask, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.cls_token, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.pos_embed, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.cls_pos_embed, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.actual_cls_token, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.patch_embed.proj.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.patch_embed.proj.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.0.norm1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.0.norm1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.0.attn.q_bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.0.attn.v_bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.0.attn.qkv.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.0.attn.proj.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.0.attn.proj.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.0.norm2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.0.norm2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.0.mlp.fc1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.0.mlp.fc1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.0.mlp.fc2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.0.mlp.fc2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.1.norm1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.1.norm1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.1.attn.q_bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.1.attn.v_bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.1.attn.qkv.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.1.attn.proj.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.1.attn.proj.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.1.norm2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.1.norm2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.1.mlp.fc1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.1.mlp.fc1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.1.mlp.fc2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.1.mlp.fc2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.2.norm1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.2.norm1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.2.attn.q_bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.2.attn.v_bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.2.attn.qkv.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.2.attn.proj.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.2.attn.proj.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.2.norm2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.2.norm2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.2.mlp.fc1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.2.mlp.fc1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.2.mlp.fc2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.2.mlp.fc2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.3.norm1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.3.norm1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.3.attn.q_bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.3.attn.v_bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.3.attn.qkv.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.3.attn.proj.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.3.attn.proj.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.3.norm2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.3.norm2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.3.mlp.fc1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.3.mlp.fc1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.3.mlp.fc2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.3.mlp.fc2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.4.norm1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.4.norm1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.4.attn.q_bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.4.attn.v_bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.4.attn.qkv.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.4.attn.proj.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.4.attn.proj.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.4.norm2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.4.norm2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.4.mlp.fc1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.4.mlp.fc1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.4.mlp.fc2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.4.mlp.fc2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.5.norm1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.5.norm1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.5.attn.q_bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.5.attn.v_bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.5.attn.qkv.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.5.attn.proj.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.5.attn.proj.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.5.norm2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.5.norm2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.5.mlp.fc1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.5.mlp.fc1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.5.mlp.fc2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.5.mlp.fc2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.6.norm1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.6.norm1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.6.attn.q_bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.6.attn.v_bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.6.attn.qkv.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.6.attn.proj.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.6.attn.proj.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.6.norm2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.6.norm2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.6.mlp.fc1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.6.mlp.fc1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.6.mlp.fc2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.6.mlp.fc2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.7.norm1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.7.norm1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.7.attn.q_bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.7.attn.v_bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.7.attn.qkv.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.7.attn.proj.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.7.attn.proj.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.7.norm2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.7.norm2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.7.mlp.fc1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.7.mlp.fc1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.7.mlp.fc2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.7.mlp.fc2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.8.norm1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.8.norm1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.8.attn.q_bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.8.attn.v_bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.8.attn.qkv.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.8.attn.proj.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.8.attn.proj.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.8.norm2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.8.norm2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.8.mlp.fc1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.8.mlp.fc1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.8.mlp.fc2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.8.mlp.fc2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.9.norm1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.9.norm1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.9.attn.q_bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.9.attn.v_bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.9.attn.qkv.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.9.attn.proj.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.9.attn.proj.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.9.norm2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.9.norm2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.9.mlp.fc1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.9.mlp.fc1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.9.mlp.fc2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.9.mlp.fc2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.10.norm1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.10.norm1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.10.attn.q_bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.10.attn.v_bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.10.attn.qkv.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.10.attn.proj.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.10.attn.proj.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.10.norm2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.10.norm2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.10.mlp.fc1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.10.mlp.fc1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.10.mlp.fc2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.10.mlp.fc2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.11.norm1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.11.norm1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.11.attn.q_bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.11.attn.v_bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.11.attn.qkv.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.11.attn.proj.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.11.attn.proj.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.11.norm2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.11.norm2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.11.mlp.fc1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.11.mlp.fc1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.11.mlp.fc2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.blocks.11.mlp.fc2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.fc_norm.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.fc_norm.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.cls_blocks.0.norm1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.cls_blocks.0.norm1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.cls_blocks.0.attn.q_bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.cls_blocks.0.attn.v_bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.cls_blocks.0.attn.qkv.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.cls_blocks.0.attn.proj.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.cls_blocks.0.attn.proj.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.cls_blocks.0.norm2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.cls_blocks.0.norm2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.cls_blocks.0.mlp.fc1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.cls_blocks.0.mlp.fc1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.cls_blocks.0.mlp.fc2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.cls_blocks.0.mlp.fc2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.0.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.0.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.3.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.3.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.4.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.4.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.5.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.5.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.6.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.6.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.7.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.7.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.8.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.8.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.9.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.9.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.10.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.10.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.11.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.intermediate_fc_norm.11.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.head.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.vit.head.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.semantic_fusion.attn.in_proj_weight, ⛭ Trainable: True
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.semantic_fusion.attn.in_proj_bias, ⛭ Trainable: True
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.semantic_fusion.attn.out_proj.weight, ⛭ Trainable: True
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.semantic_fusion.attn.out_proj.bias, ⛭ Trainable: True
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.0.norm1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.0.norm1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.0.projector.1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.0.projector.1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.0.projector.4.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.0.projector.4.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.0.norm2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.0.norm2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.1.norm1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.1.norm1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.1.projector.1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.1.projector.1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.1.projector.4.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.1.projector.4.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.1.norm2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.1.norm2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.2.norm1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.2.norm1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.2.projector.1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.2.projector.1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.2.projector.4.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.2.projector.4.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.2.norm2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.2.norm2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.3.norm1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.3.norm1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.3.projector.1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.3.projector.1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.3.projector.4.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.3.projector.4.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.3.norm2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.3.norm2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.4.norm1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.4.norm1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.4.projector.1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.4.projector.1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.4.projector.4.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.4.projector.4.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.4.norm2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.4.norm2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.5.norm1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.5.norm1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.5.projector.1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.5.projector.1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.5.projector.4.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.5.projector.4.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.5.norm2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.5.norm2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.6.norm1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.6.norm1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.6.projector.1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.6.projector.1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.6.projector.4.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.6.projector.4.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.6.norm2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.6.norm2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.7.norm1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.7.norm1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.7.projector.1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.7.projector.1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.7.projector.4.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.7.projector.4.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.7.norm2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.7.norm2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.8.norm1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.8.norm1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.8.projector.1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.8.projector.1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.8.projector.4.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.8.projector.4.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.8.norm2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.8.norm2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.9.norm1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.9.norm1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.9.projector.1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.9.projector.1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.9.projector.4.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.9.projector.4.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.9.norm2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.9.norm2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.10.norm1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.10.norm1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.10.projector.1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.10.projector.1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.10.projector.4.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.10.projector.4.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.10.norm2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.10.norm2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.11.norm1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.11.norm1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.11.projector.1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.11.projector.1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.11.projector.4.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.11.projector.4.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.11.norm2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.patch_projector.projectors.11.norm2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.original_features_processor.alpha, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.original_features_processor.proj1.projector.1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.original_features_processor.proj1.projector.1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.original_features_processor.proj1.projector.4.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.original_features_processor.proj1.projector.4.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.original_features_processor.proj1.norm2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.original_features_processor.proj1.norm2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.original_features_processor.proj2.projector.1.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.original_features_processor.proj2.projector.1.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.original_features_processor.proj2.projector.4.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.original_features_processor.proj2.projector.4.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.original_features_processor.proj2.norm2.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: mfvit.features_processor.original_features_processor.proj2.norm2.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: to_kv.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: to_out.0.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: norm.weight, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: norm.bias, ⛭ Trainable: False
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: cls_head.head.0.weight, ⛭ Trainable: True
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: cls_head.head.0.bias, ⛭ Trainable: True
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: cls_head.head.3.weight, ⛭ Trainable: True
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: cls_head.head.3.bias, ⛭ Trainable: True
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: cls_head.head.6.weight, ⛭ Trainable: True
+[2025-05-07 11:06:25 finetune](__main__.py 260): INFO   ⍟ Parameter: cls_head.head.6.bias, ⛭ Trainable: True
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/gpfs/home2/pnair/spai/spai/__main__.py", line 1239, in <module>
+    cli()
+  File "/home/pnair/.local/lib/python3.11/site-packages/click/core.py", line 1157, in __call__
+    return self.main(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pnair/.local/lib/python3.11/site-packages/click/core.py", line 1078, in main
+    rv = self.invoke(ctx)
+         ^^^^^^^^^^^^^^^^
+  File "/home/pnair/.local/lib/python3.11/site-packages/click/core.py", line 1688, in invoke
+    return _process_result(sub_ctx.command.invoke(sub_ctx))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pnair/.local/lib/python3.11/site-packages/click/core.py", line 1434, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pnair/.local/lib/python3.11/site-packages/click/core.py", line 783, in invoke
+    return __callback(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/gpfs/home2/pnair/spai/spai/__main__.py", line 263, in train
+    n_semantic = sum(p.numel() for p in model.features_processor.semantic_fusion.parameters() if p.requires_grad)
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pnair/.local/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1695, in __getattr__
+    raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
+AttributeError: 'PatchBasedMFViT' object has no attribute 'features_processor'
+[neptune] [info   ] Shutting down background jobs, please wait a moment...
+[neptune] [info   ] Done!
+[neptune] [info   ] Waiting for the remaining 360 operations to synchronize with Neptune. Do not kill this process.
+[neptune] [info   ] All 360 operations synced, thanks for waiting!
+[neptune] [info   ] Explore the metadata in the Neptune app: https://app.neptune.ai/spai/beast-mode/e/BEAS-13/metadata
+
+JOB STATISTICS
+==============
+Job ID: 11612453
+Cluster: snellius
+User/Group: pnair/pnair
+State: RUNNING
+Nodes: 1
+Cores per node: 16
+CPU Utilized: 00:00:00
+CPU Efficiency: 0.00% of 00:08:16 core-walltime
+Job Wall-clock time: 00:00:31
+Memory Utilized: 0.00 MB
+Memory Efficiency: 0.00% of 180.00 GB (180.00 GB/node)
+WARNING: Efficiency statistics can only be obtained after the job has ended as seff tool is based on the accounting database data.
