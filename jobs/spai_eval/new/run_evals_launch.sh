@@ -7,9 +7,9 @@ MODEL_DIR="/scratch-shared/dl2_spai_models/finetune"
 # Test sets
 declare -A TEST_SETS=(
   ["flux"]="test_set_flux.csv"
-  # ["gigagan"]="test_set_gigagan.csv"
-  # ["midjourney"]="test_set_midjourney-v6_1.csv"
-  # ["sd3"]="test_set_sd3_fixed.csv"
+  ["gigagan"]="test_set_gigagan.csv"
+  ["midjourney"]="test_set_midjourney-v6_1.csv"
+  ["sd3"]="test_set_sd3_fixed.csv"
 )
 
 # Model -> Model path
