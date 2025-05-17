@@ -19,7 +19,6 @@ declare -A CONFIGS=(
 # Dataset splits or CSVs (can add more)
 declare -A DATASETS=(
   ["ldm"]="/home/azywot/DL2/spai/datasets/ldm_train_val_subset.csv"
-  ["lsun"]="/home/azywot/DL2/spai/datasets/lsun_train_val.csv"
   ["ldm_lsun"]="/home/azywot/DL2/spai/datasets/ldm_lsun_train_val_subset.csv"
   ["chameleon"]="/home/azywot/DL2/spai/datasets/chameleon_dataset_split.csv"
 )
