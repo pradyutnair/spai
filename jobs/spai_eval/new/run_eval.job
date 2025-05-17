@@ -1,0 +1,32 @@
+#!/bin/bash
+
+echo "✅ Job started at: $(date)"
+module purge
+module load 2023
+module load Anaconda3/2023.07-2
+module load CUDA/12.1.1
+
+source activate spai
+
+cd "$ROOT_DIR"
+export NEPTUNE_API_TOKEN="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiJjMGEzN2M5OS0zYjQ3LTRlYTQtOTdhNy1hMGM3ZTFlZTU1MzYifQ=="
+export NEPTUNE_PROJECT="dl2-spai/beast-mode"
+export PYTHONPATH=$PYTHONPATH:"$ROOT_DIR"
+export NCCL_DEBUG=INFO
+export CUDA_LAUNCH_BLOCKING=0
+
+COMMON_OPTS=(
+  --cfg "$CONFIG_PATH"
+  --batch-size 8
+  --tag "spai_ldm_cross_attn_after_sca"
+  --opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4"
+  --opt "DATA.NUM_WORKERS" "8"
+  --opt "MODEL.FEATURE_EXTRACTION_BATCH" "400"
+  --opt "DATA.TEST_PREFETCH_FACTOR" "1"
+)
+
+python -m spai test \
+  "${COMMON_OPTS[@]}" \
+  --model "$MODEL_PATH" \
+  --output "$ROOT_DIR/output/17_05_2025/${MODEL_NAME}/test_${CSV_NAME%.csv}" \
+  --test-csv "$ROOT_DIR/datasets/${CSV_NAME}"

@@ -1,0 +1,42 @@
+#!/bin/bash
+#SBATCH --partition=gpu_h100
+#SBATCH --gpus=1
+#SBATCH --cpus-per-task=16
+#SBATCH --time=14:00:00
+#SBATCH --mem=180G
+#SBATCH --hint=nomultithread
+
+# Use generic job-name and output; overridden on submission if needed
+#SBATCH --job-name=train_job
+#SBATCH --output=/home/azywot/DL2/spai/jobs/out_files_train/train_job_%A.out
+
+echo "✅ Job started at: $(date)"
+
+module purge
+module load 2023
+module load Anaconda3/2023.07-2
+module load CUDA/12.1.1
+
+source activate spai
+
+cd "$ROOT_DIR"
+
+export NEPTUNE_API_TOKEN="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiJjMGEzN2M5OS0zYjQ3LTRlYTQtOTdhNy1hMGM3ZTFlZTU1MzYifQ=="
+export NEPTUNE_PROJECT="dl2-spai/beast-mode"
+export PYTHONPATH=$PYTHONPATH:"$ROOT_DIR"
+export NCCL_DEBUG=INFO
+export CUDA_LAUNCH_BLOCKING=0
+
+python -m spai train \
+  --cfg "$CONFIG_PATH" \
+  --batch-size 192 \
+  --pretrained "$PRETRAINED" \
+  --output "$OUTPUT_DIR" \
+  --data-path "$DATA_PATH" \
+  --tag "$TAG" \
+  --amp-opt-level "O0" \
+  --data-workers 16 \
+  --save-all \
+  --opt "DATA.VAL_BATCH_SIZE" "256" \
+  --opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
+  --opt "DATA.TEST_PREFETCH_FACTOR" "4"

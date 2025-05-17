@@ -38,11 +38,23 @@ except ImportError:
 
 def filter_state_patchbasedmfvit(state):
     # Remove all keys related to the semantic encoder
-    filtered_state = {k: v for k, v in state.items() if not "semantic_encoder" not in k}
+    filtered_state = {k: v for k, v in state.items() if "semantic_encoder" not in k}
     # print the number of keys removed
     num_removed_keys = len(state) - len(filtered_state)
     print(f"Removed {num_removed_keys} keys related to the semantic encoder.")
     return filtered_state
+
+
+def print_keys(obj, prefix=''):
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            full_key = f"{prefix}.{key}" if prefix else key
+            print(f"{full_key}: {type(value).__name__}")
+            # Recursively print subkeys if it's another dictionary
+            if isinstance(value, dict):
+                print_keys(value, prefix=full_key)
+    else:
+        print(f"{prefix}: {type(obj).__name__}")
 
 
 def load_checkpoint(config, model, optimizer, lr_scheduler, logger):
@@ -74,9 +86,9 @@ def load_checkpoint(config, model, optimizer, lr_scheduler, logger):
 
 def save_checkpoint(config, epoch, model, max_accuracy, optimizer, lr_scheduler, logger):
     model_state_dict = model.state_dict()
-    # if isinstance(model, PatchBasedMFViT): # NOTE: for now do regardless
+    # if isinstance(model, PatchBasedMFViT): # NOTE: dont do it as it breaks the loading of the model
     model_state_dict = filter_state_patchbasedmfvit(model_state_dict)
-    save_state = {'model': model_state_dict,
+    save_state = {'model': model.state_dict(),
                   'optimizer': optimizer.state_dict(),
                   'lr_scheduler': lr_scheduler.state_dict(),
                   'max_accuracy': max_accuracy,
@@ -163,9 +175,14 @@ def load_pretrained(
         logger.info(f">>>>>>>>>> Fine-tuned from {config.PRETRAINED} ..........")
     checkpoint = torch.load(checkpoint_path, map_location='cpu', weights_only=False)
     checkpoint_model = checkpoint['model'] if 'model' in checkpoint else checkpoint
+    # print('<>'*50)
+    # if isinstance(checkpoint_model, dict):
+    #         print_keys(checkpoint_model)
+    # print('<>'*50)
     checkpoint_epoch: Optional[int] = checkpoint.get('epoch', None)
 
-    if any([True if 'encoder.' in k else False for k in checkpoint_model.keys()]):
+    # NOTE: commented this out since it was based on the 'encoder' keyword, now we have 'semantic_encoder' so it breaks the loading
+    if False: # any([True if 'encoder.' in k else False for k in checkpoint_model.keys()]):
         checkpoint_model = {
             k.replace('encoder.', ''): v
             for k, v in checkpoint_model.items() if k.startswith('encoder.')
