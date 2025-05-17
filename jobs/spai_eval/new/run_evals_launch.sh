@@ -3,6 +3,8 @@
 # Path to project root (if needed)
 ROOT_DIR="/home/azywot/DL2/spai"
 MODEL_DIR="/scratch-shared/dl2_spai_models/finetune"
+MAX_JOBS=4       # Max concurrent jobs allowed
+SLEEP_TIME=60    # Seconds to wait before checking again
 
 # Test sets
 declare -A TEST_SETS=(
