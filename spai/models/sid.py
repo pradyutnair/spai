@@ -1276,8 +1276,8 @@ def _init_weights(m: nn.Module) -> None:
 
 class SemanticContextModel(nn.Module):
     """
-    Combines SPAI's spectral features with ConvNeXt semantic features using late fusion.
-    Adds modality-specific projection heads and learnable scaling for dynamic balancing.
+    Combines SPAI's spectral features with ConvNeXt semantic features using residual connections
+    to structurally bias the model toward spectral features.
     """
     def __init__(
         self,
@@ -1325,124 +1325,32 @@ class SemanticContextModel(nn.Module):
             nn.GELU(),
             nn.Dropout(dropout)
         )
-        # self.spectral_proj = nn.Sequential(
-        #     nn.LayerNorm(spectral_features_dim),
-        #     nn.Linear(spectral_features_dim, projection_dim),
-        #     nn.GELU(),
-        #     nn.Dropout(dropout)
-        # )
 
-        # # === Added: learnable scalar weights for semantic/spectral emphasis ===
-        # self.semantic_scale = nn.Parameter(torch.tensor(1.0))
-        # self.spectral_scale = nn.Parameter(torch.tensor(1.0))
-
-        # === Fusion MLP Head ===
-        # fusion_input_dim = 2 * projection_dim
-        # fusion_layers = []
-        # for hidden_dim in hidden_dims:
-        #     fusion_layers.extend([
-        #         nn.Linear(fusion_input_dim, hidden_dim),
-        #         nn.GELU(),
-        #         nn.Dropout(dropout)
-        #     ])
-        #     fusion_input_dim = hidden_dim
-        # fusion_layers.append(nn.Linear(fusion_input_dim, 1))
-        # self.fusion_head = nn.Sequential(*fusion_layers)
-
-        # self.feature_gate = nn.Sequential(
-        #     nn.Linear(2 * projection_dim, 2 * projection_dim),
-        #     nn.Sigmoid()
-        # )
+        # === Added: fusion layer to process combined features ===
+        self.fusion_layer = nn.Sequential(
+            nn.Linear(1096 + projection_dim, 512),
+            nn.GELU(),
+            nn.Dropout(dropout)
+        )
         
-        # NEW
-        self.classifier=nn.Sequential(
-            nn.Linear(1096+projection_dim, 512),
+        # === Modified: classifier with residual connection ===
+        # Takes both spectral features directly and fusion output
+        self.classifier = nn.Sequential(
+            nn.Linear(1096 + 512, 512),  # spectral features + fusion features
             nn.GELU(),
             nn.Dropout(dropout),
-            nn.Linear(512, 1) # num classes
+            nn.Linear(512, 1)
         )
 
         # === Initialization ===
-        #self.fusion_head.apply(_init_weights)
         self.semantic_projection.apply(_init_weights)
-        #self.spectral_proj.apply(_init_weights)
-        
-        # NEW
+        self.fusion_layer.apply(_init_weights)
         self.classifier.apply(_init_weights)
-
-
-    # def forward(self, x: Union[torch.Tensor, List[torch.Tensor]], feature_extraction_batch_size: Optional[int] = None
-    # ) -> torch.Tensor:
-    #     """
-    #     Forward pass for training and validation:
-    #     - SPAI expects unnormalized [0, 1] images.
-    #     - ConvNeXt expects ImageNet-normalized inputs.
-    #     """
-    #     device = next(self.parameters()).device
-    #     normalize = transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD)
-    #     resize = transforms.Resize((224, 224), antialias=True)
-
-    #     # === Validation/inference mode: list of images ===
-    #     if isinstance(x, list):
-    #         spai_input, convnext_input = [], []
-    #         for img in x:
-    #             if img.dim() == 4 and img.size(0) == 1:
-    #                 img = img.squeeze(0)
-    #             elif img.dim() != 3:
-    #                 raise ValueError(f"Expected C×H×W or 1×C×H×W, got {img.shape}")
-    #             if img.max() > 1.0:
-    #                 img = img / 255.0
-    #             img_resized = resize(img)  # <-- resize for both
-    #             spai_input.append(img_resized)
-    #             convnext_input.append(normalize(img_resized))
-    #         x_spai = torch.stack(spai_input).to(device).float()
-    #         x_convnext = torch.stack(convnext_input).to(device).float()
-
-    #     # === Training mode: batched tensor ===
-    #     else:
-    #         if x.dim() != 4:
-    #             raise ValueError(f"Expected batched input (B×C×H×W), got {x.shape}")
-    #         if x.max() > 1.0:
-    #             x = x / 255.0
-    #         x_spai = x.to(device).float()
-    #         x_convnext = normalize(x).to(device).float()
-
-    #     # === Extract features ===
-    #     with torch.no_grad():
-    #         # SPAI: remove classification head temporarily
-    #         original_cls_head = self.spai_model.cls_head
-    #         self.spai_model.cls_head = nn.Identity()
-    #         spectral_features = self.spai_model(x_spai)
-    #         self.spai_model.cls_head = original_cls_head
-
-    #         semantic_features = self.semantic_backbone(x_convnext)
-    #         semantic_features = self.global_pool(semantic_features).flatten(1)
-
-    #     # === Project, scale, and process each modality ===
-    #     spectral_proj = self.spectral_proj(spectral_features) * self.spectral_scale
-    #     semantic_proj = self.semantic_projection(semantic_features) * self.semantic_scale
-
-    #     # Optional non-linear processing
-    #     spectral_proj = F.normalize(spectral_proj, dim=1)
-    #     semantic_proj = F.normalize(semantic_proj, dim=1)
-
-    #     # === Concatenate and fuse ===
-    #     combined = torch.cat([spectral_proj, semantic_proj], dim=1)
-    #     feature_weights = self.feature_gate(combined)
-    #     combined = combined * feature_weights
-    #     output = self.fusion_head(combined)
-
-    #     if not self.training:
-    #         torch.cuda.empty_cache()
-
-    #     return output
 
     def forward(self, x: Union[torch.Tensor, List[torch.Tensor]], feature_extraction_batch_size: Optional[int] = None
     ) -> torch.Tensor:
         """
-        Forward pass for training and validation:
-        - SPAI expects unnormalized [0, 1] images.
-        - ConvNeXt expects ImageNet-normalized inputs.
+        Forward pass with residual connection for spectral features.
         """
         device = next(self.parameters()).device
         normalize = transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD)
@@ -1485,15 +1393,19 @@ class SemanticContextModel(nn.Module):
             semantic_features = self.semantic_backbone(x_convnext)
             semantic_features = self.global_pool(semantic_features).flatten(1)
 
-        # === Semantic projection only ===
+        # === Semantic projection ===
         semantic_proj = self.semantic_projection(semantic_features)  # e.g. 3072 → 256
-        #semantic_proj = F.normalize(semantic_proj, dim=1)
 
-        # === Late fusion: concatenate raw SPAI + semantic vector ===
+        # === Combined features with weighting ===
         combined = torch.cat([spectral_features, semantic_proj], dim=1)
-
-        # === Final classifier ===
-        output = self.classifier(combined)
+        # === Process combined features ===
+        fused_features = self.fusion_layer(combined)
+        
+        # === RESIDUAL CONNECTION: concatenate raw spectral features with fusion output ===
+        final_features = torch.cat([spectral_features, fused_features], dim=1)
+        
+        # === Final classification ===
+        output = self.classifier(final_features)
 
         if not self.training:
             torch.cuda.empty_cache()
