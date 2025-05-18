@@ -234,45 +234,73 @@ def train(
     model.cuda()
     logger.info(str(model))
 
-    # Step 2: Freeze all parameters
-    logger.info("🚨 Freezing all parameters from pretrained model")
-    model.freeze_backbone()
-    for param in model.parameters():
-        param.requires_grad = False
+    # Step 1: Log initial parameter counts
+    total_params = sum(p.numel() for p in model.parameters())
+    trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    logger.info(f"📊 Initial parameter counts:")
+    logger.info(f"  • Total parameters: {total_params:,}")
+    logger.info(f"  • Trainable parameters: {trainable_params:,}")
+    logger.info(f"  • Frozen parameters: {total_params - trainable_params:,}")
 
-    # Step 3: Unfreeze semantic fusion and classification head
-    #logger.info("🚨 Unfreezing semantic fusion and classification head")
-    # Print all the modules in the model
-    logger.info(f"🚨 Modules in the model: {model.named_modules()}")
-    # Unfreeze semantic fusion
-    for param in model.mfvit.features_processor.semantic_fusion.parameters():
-        param.requires_grad = True
-        print(f"🚨 Unfreezing semantic fusion: Param: {param}, Requires grad: {param.requires_grad}")
-    # Unfreeze classification head
-    for param in model.cls_head.parameters():
-        param.requires_grad = True
-        print(f"🚨 Unfreezing classification head: Param: {param}, Requires grad: {param.requires_grad}")
-
-    # Step 4: Freeze the backbone
-    logger.info("🚨 Backbone frozen, semantic fusion and classification head unfrozen.")
-
-    # Step 5: Log and show which parameters are trainable
-    logger.info("🚨 Trainable parameters:")
+    # Step 2: Freeze backbone parameters
+    logger.info("🔒 Freezing backbone parameters...")
     for name, param in model.named_parameters():
-        logger.info(f"  ⍟ Parameter: {name}, ⛭ Trainable: {param.requires_grad}")
-    
-    # Step 6: Number of trainable parameters
-    n_semantic = sum(p.numel() for p in model.mfvit.features_processor.semantic_fusion.parameters() if p.requires_grad)
-    n_cls_head = sum(p.numel() for p in model.cls_head.parameters() if p.requires_grad)
-    n_total = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    logger.info(f"⛭ Trainable params in semantic_fusion: {n_semantic}")
-    logger.info(f"⛭ Trainable params in cls_head: {n_cls_head}")
-    logger.info(f"⛭ Total trainable params: {n_total}")
+        if any(x in name for x in ['vit.', 'backbone.']):
+            param.requires_grad = False
+            logger.info(f"  • Frozen: {name}")
+        else:
+            logger.info(f"  • Trainable: {name}")
+
+    # Step 3: Log parameter counts after freezing
+    total_params = sum(p.numel() for p in model.parameters())
+    trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    logger.info(f"📊 Parameter counts after freezing:")
+    logger.info(f"  • Total parameters: {total_params:,}")
+    logger.info(f"  • Trainable parameters: {trainable_params:,}")
+    logger.info(f"  • Frozen parameters: {total_params - trainable_params:,}")
+
+    # Step 4: Group parameters by trainable status
+    trainable_params_by_module = {}
+    frozen_params_by_module = {}
+    for name, param in model.named_parameters():
+        module_name = name.split('.')[0]
+        if param.requires_grad:
+            trainable_params_by_module[module_name] = trainable_params_by_module.get(module_name, 0) + param.numel()
+        else:
+            frozen_params_by_module[module_name] = frozen_params_by_module.get(module_name, 0) + param.numel()
+
+    logger.info("📊 Parameter distribution by module:")
+    logger.info("🔄 Trainable modules:")
+    for module, count in trainable_params_by_module.items():
+        logger.info(f"    • {module}: {count:,} parameters")
+    logger.info("🔒 Frozen modules:")
+    for module, count in frozen_params_by_module.items():
+        logger.info(f"    • {module}: {count:,} parameters")
+
+    # Step 5: Verify semantic components are trainable
+    semantic_components = ['early_fusion_gates', 'cross_attention', 'cross_attention_norm']
+    logger.info("🔍 Verifying semantic components:")
+    for name, param in model.named_parameters():
+        if any(comp in name for comp in semantic_components):
+            # If they are initally frozen, they should be trainable
+            if not param.requires_grad:
+                param.requires_grad = True
+                logger.info(f"  • {name} was frozen, now making it trainable: {param.requires_grad}")
+            else:
+                logger.info(f"  • {name} is already trainable: {param.requires_grad}")
 
     optimizer = build_optimizer(config, model, logger, is_pretrain=False)
     if config.AMP_OPT_LEVEL != "O0":
         model, optimizer = amp.initialize(model, optimizer, opt_level=config.AMP_OPT_LEVEL)
     model_without_ddp = model
+
+    # Step 6: Log final parameter counts after optimizer setup
+    total_params = sum(p.numel() for p in model.parameters())
+    trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    logger.info(f"📊 Final parameter counts after optimizer setup:")
+    logger.info(f"  • Total parameters: {total_params:,}")
+    logger.info(f"  • Trainable parameters: {trainable_params:,}")
+    logger.info(f"  • Frozen parameters: {total_params - trainable_params:,}")
 
     n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
     logger.info(f"number of params: {n_parameters}")
@@ -285,12 +313,11 @@ def train(
     logger.info(f"Loss: \n{criterion}")
 
     if config.PRETRAINED:
-        #load_pretrained(config, model_without_ddp.get_vision_transformer(), logger)
         model_ckpt: pathlib.Path = find_pretrained_checkpoints(config)[0]
         load_pretrained(config, model, logger, model_ckpt, verbose=True)
+        logger.info("✅ Loaded pretrained weights from spai.pth")
     else:
-        model_without_ddp.unfreeze_backbone()
-        logger.info(f"No pretrained model. Backbone parameters are trainable.")
+        logger.info("⚠️ No pretrained model. Training from scratch.")
 
     test_datasets_names, test_datasets, test_loaders = build_loader_test(config, logger)
 
@@ -901,7 +928,7 @@ def train_model(
     neptune_run,
     save_all: bool = False
 ) -> None:
-    logger.info("Start training")
+    logger.info("🚀 Starting training")
 
     start_time: float = time.time()
     val_accuracy_per_epoch: list[float] = []
@@ -912,85 +939,108 @@ def train_model(
     for epoch in range(config.TRAIN.START_EPOCH, config.TRAIN.EPOCHS):
         epoch_start_time: float = time.time()
 
-        train_one_epoch(
-            config,
-            model,
-            criterion,
-            data_loader_train,
-            optimizer,
-            epoch,
-            lr_scheduler,
-            log_writer,
-            neptune_run
-        )
+        # Stage 1: Train semantic components (first 5 epochs)
+        if epoch < 5:
+            logger.info(f"🎯 Stage 1: Training semantic components (Epoch {epoch})")
+            train_one_epoch(
+                config,
+                model,
+                criterion,
+                data_loader_train,
+                optimizer,
+                epoch,
+                lr_scheduler,
+                log_writer,
+                neptune_run,
+                stage="semantic"
+            )
+        # Stage 2: Joint training (after 5 epochs)
+        else:
+            logger.info(f"🔄 Stage 2: Joint training (Epoch {epoch})")
+            train_one_epoch(
+                config,
+                model,
+                criterion,
+                data_loader_train,
+                optimizer,
+                epoch,
+                lr_scheduler,
+                log_writer,
+                neptune_run,
+                stage="joint"
+            )
+
         neptune_run["train/last_epoch"] = epoch + 1
         neptune_run["train/epochs_trained"] = epoch + 1 - config.TRAIN.START_EPOCH
 
-        # Validate the model.
-        acc: float
-        ap: float
-        auc: float
-        loss: float
+        # Validate the model
+        logger.info("📊 Validating model...")
         acc, ap, auc, loss = validate(config, data_loader_val, model, criterion, neptune_run)
-        logger.info(f"Val | Epoch {epoch} | Images: {len(dataset_val)} | loss: {loss:.4f}")
-        logger.info(f"Val | Epoch {epoch} | Images: {len(dataset_val)} | ACC: {acc:.3f}")
-        logger.info(f"Val | Epoch {epoch} | Images: {len(dataset_val)} | AP: {ap:.3f}")
-        logger.info(f"Val | Epoch {epoch} | Images: {len(dataset_val)} | AUC: {auc:.3f}")
+        logger.info(f"✅ Val | Epoch {epoch} | Images: {len(dataset_val)} | loss: {loss:.4f}")
+        logger.info(f"✅ Val | Epoch {epoch} | Images: {len(dataset_val)} | ACC: {acc:.3f}")
+        logger.info(f"✅ Val | Epoch {epoch} | Images: {len(dataset_val)} | AP: {ap:.3f}")
+        logger.info(f"✅ Val | Epoch {epoch} | Images: {len(dataset_val)} | AUC: {auc:.3f}")
+        
+        # Log metrics to Neptune
         neptune_run["val/auc"].append(auc)
         neptune_run["val/ap"].append(ap)
         neptune_run["val/accuracy"].append(acc)
         neptune_run["val/loss"].append(loss)
 
-        # Display the best epochs so far.
+        # Display best epochs
         val_accuracy_per_epoch.append(acc)
         val_ap_per_epoch.append(ap)
         val_auc_per_epoch.append(auc)
         val_loss_per_epoch.append(loss)
-        logger.info(f"Val | Min loss: {min(val_loss_per_epoch):.4f} "
+        logger.info(f"🏆 Val | Min loss: {min(val_loss_per_epoch):.4f} "
                     f"| Epoch: {config.TRAIN.START_EPOCH + np.argmin(val_loss_per_epoch)}")
-        logger.info(f"Val | Max ACC: {max(val_accuracy_per_epoch):.3f} "
+        logger.info(f"🏆 Val | Max ACC: {max(val_accuracy_per_epoch):.3f} "
                     f"| Epoch: {config.TRAIN.START_EPOCH+np.argmax(val_accuracy_per_epoch)}")
-        logger.info(f"Val | Max AP: {max(val_ap_per_epoch):.3f} "
+        logger.info(f"🏆 Val | Max AP: {max(val_ap_per_epoch):.3f} "
                     f"| Epoch: {config.TRAIN.START_EPOCH + np.argmax(val_ap_per_epoch)}")
-        logger.info(f"Val | Max AUC: {max(val_auc_per_epoch):.3f} "
+        logger.info(f"🏆 Val | Max AUC: {max(val_auc_per_epoch):.3f} "
                     f"| Epoch: {config.TRAIN.START_EPOCH + np.argmax(val_auc_per_epoch)}")
 
-        # Save only the checkpoints that decrease validation loss.
+        # Save checkpoints
         if len(val_loss_per_epoch) == 1 or loss < min(val_loss_per_epoch[:-1]) or save_all:
+            logger.info("💾 Saving checkpoint...")
             save_checkpoint(config, epoch, model_without_ddp, max(val_accuracy_per_epoch),
                             optimizer, lr_scheduler, logger)
 
-        # Test the model.
+        # Test the model
         for test_data_loader, test_dataset, test_data_name in zip(data_loaders_test,
                                                                   datasets_test,
                                                                   datasets_test_names):
+            logger.info(f"🧪 Testing on {test_data_name}...")
             acc, ap, auc, loss = validate(config, test_data_loader, model,
                                           criterion, neptune_run)
-            logger.info(f"Test | {test_data_name} | Epoch {epoch} | Images: {len(test_dataset)} "
+            logger.info(f"📊 Test | {test_data_name} | Epoch {epoch} | Images: {len(test_dataset)} "
                         f"| loss: {loss:.4f}")
-            logger.info(f"Test | {test_data_name} | Epoch {epoch} | Images: {len(test_dataset)} "
+            logger.info(f"📊 Test | {test_data_name} | Epoch {epoch} | Images: {len(test_dataset)} "
                         f"| ACC: {acc:.3f}")
-            logger.info(f"Test | {test_data_name} | Epoch {epoch} | Images: {len(test_dataset)} "
+            logger.info(f"📊 Test | {test_data_name} | Epoch {epoch} | Images: {len(test_dataset)} "
                         f"| AP: {ap:.3f}")
-            logger.info(f"Test | {test_data_name} | Epoch {epoch} | Images: {len(test_dataset)} "
+            logger.info(f"📊 Test | {test_data_name} | Epoch {epoch} | Images: {len(test_dataset)} "
                         f"| AUC: {auc:.3f}")
+            
+            # Log test metrics
             neptune_run[f"test/{test_data_name}/acc"].append(acc)
             neptune_run[f"test/{test_data_name}/ap"].append(ap)
             neptune_run[f"test/{test_data_name}/auc"].append(auc)
             neptune_run[f"test/{test_data_name}/loss"].append(loss if not np.isnan(loss) else -100.)
 
-        # Compute epoch time.
+        # Log epoch time
         epoch_time: float = time.time() - epoch_start_time
-        logger.info(f"Epoch training time: {epoch_time:.3f}s")
+        logger.info(f"⏱️ Epoch training time: {epoch_time:.3f}s")
         neptune_run["train/epoch_train_time"].append(epoch_time)
 
         if neptune_run is not None:
             neptune_run.sync()
 
-    # Compute total training time.
+    # Log total training time
     total_time: float = time.time() - start_time
     total_time_str: str = str(datetime.timedelta(seconds=int(total_time)))
-    logger.info(f"Overall training time: {total_time_str}")
+    logger.info(f"⏱️ Overall training time: {total_time_str}")
     neptune_run["train/total_train_time"].append(total_time_str)
 
 
@@ -1003,14 +1053,15 @@ def train_one_epoch(
     epoch,
     lr_scheduler,
     log_writer,
-    neptune_run
+    neptune_run,
+    stage: str = "joint"
 ):
     model.train()
     criterion.train()
     optimizer.zero_grad()
     
     logger.info(
-        "Current learning rate for different parameter groups: "
+        "📈 Current learning rate for different parameter groups: "
         f"{[it['lr'] for it in optimizer.param_groups]}"
     )
 
@@ -1036,22 +1087,27 @@ def train_one_epoch(
             batch_size: int = samples.size(0)
             samples = samples.cuda(non_blocking=True)
             targets = targets.cuda(non_blocking=True)
-            # Forward pass each augmented view of the batch separately in order to not
-            # significantly increase memory requirements.
-            outputs_views: list[torch.Tensor] = [
-                model(samples[:, i, :, :, :]) for i in range(samples.size(1))
-            ]
+            
+            # Forward pass each augmented view of the batch separately
+            #logger.info("🔄 Processing batch views...")
+            outputs_views: list[torch.Tensor] = []
+            for i in range(samples.size(1)):
+                view = samples[:, i, :, :, :].float()
+                output = model(view)
+                outputs_views.append(output)
             outputs: torch.Tensor = torch.stack(outputs_views, dim=1)
             outputs = outputs if outputs.size(dim=1) > 1 else outputs.squeeze(dim=1)
 
-        # if mixup_fn is not None:
-        #     samples, targets = mixup_fn(samples, targets)
+        # Compute loss
+        if isinstance(criterion, TripletMarginLoss):
+            loss = criterion(anchor_outputs, positive_outputs, negative_outputs)
+        else:
+            loss = criterion(outputs.squeeze(), targets)
+            
+        #logger.info(f"📊 Batch {idx}/{num_steps} | Loss: {loss.item():.4f}")
 
+        # Backward pass
         if config.TRAIN.ACCUMULATION_STEPS > 1:
-            if isinstance(criterion, TripletMarginLoss):
-                loss = criterion(anchor_outputs, positive_outputs, negative_outputs)
-            else:
-                loss = criterion(outputs, targets)
             loss = loss / config.TRAIN.ACCUMULATION_STEPS
             if config.AMP_OPT_LEVEL != "O0":
                 with amp.scale_loss(loss, optimizer) as scaled_loss:
@@ -1071,10 +1127,6 @@ def train_one_epoch(
                 optimizer.zero_grad()
                 lr_scheduler.step_update(epoch * num_steps + idx)
         else:
-            if isinstance(criterion, TripletMarginLoss):
-                loss = criterion(anchor_outputs, positive_outputs, negative_outputs)
-            else:
-                loss = criterion(outputs.squeeze(), targets)
             optimizer.zero_grad()
             if config.AMP_OPT_LEVEL != "O0":
                 with amp.scale_loss(loss, optimizer) as scaled_loss:
@@ -1103,40 +1155,19 @@ def train_one_epoch(
         batch_time.update(time.time() - end)
         end = time.time()
 
-        lr = optimizer.param_groups[-1]["lr"]
-        loss_value_reduce = loss.cpu().detach().numpy()
-        grad_norm_cpu = (grad_norm.cpu().detach().numpy()
-                         if isinstance(grad_norm, torch.Tensor) else grad_norm)
-
-        if log_writer is not None and (idx + 1) % config.TRAIN.ACCUMULATION_STEPS == 0:
-            """ We use epoch_1000x as the x-axis in tensorboard.
-            This calibrates different curves when batch size changes.
-            """
-            epoch_1000x = int((idx / num_steps + epoch) * 1000)
-            log_writer.add_scalar('train_loss', loss_value_reduce, epoch_1000x)
-            log_writer.add_scalar('grad_norm', grad_norm_cpu, epoch_1000x)
-            log_writer.add_scalar('lr', lr, epoch_1000x)
-            neptune_run["train/loss"].append(
-                inf_nan_to_num(loss_value_reduce, nan_value=-100., inf_value=-50.)
-            )
-            neptune_run["train/grad_norm"].append(
-                inf_nan_to_num(grad_norm_cpu,  nan_value=-100., inf_value=-50.)
-            )
-            neptune_run["train/lr"].append(lr)
-
         if idx % config.PRINT_FREQ == 0:
             memory_used = torch.cuda.max_memory_allocated() / (1024.0 * 1024.0)
             etas = batch_time.avg * (num_steps - idx)
             logger.info(
-                f'Train: [{epoch}/{config.TRAIN.EPOCHS}][{idx}/{num_steps}]\t'
-                f'eta {datetime.timedelta(seconds=int(etas))} lr {lr:.6f}\t'
+                f'⏱️ Train: [{epoch}/{config.TRAIN.EPOCHS}][{idx}/{num_steps}]\t'
+                f'eta {datetime.timedelta(seconds=int(etas))} lr {optimizer.param_groups[-1]["lr"]:.6f}\t'
                 f'time {batch_time.val:.4f} ({batch_time.avg:.4f})\t'
                 f'loss {loss_meter.val:.4f} ({loss_meter.avg:.4f})\t'
                 f'grad_norm {norm_meter.val:.4f} ({norm_meter.avg:.4f})\t'
                 f'mem {memory_used:.0f}MB')
 
     epoch_time = time.time() - start
-    logger.info(f"EPOCH {epoch} training takes {datetime.timedelta(seconds=int(epoch_time))}")
+    logger.info(f"⏱️ EPOCH {epoch} training takes {datetime.timedelta(seconds=int(epoch_time))}")
 
 
 @torch.no_grad()

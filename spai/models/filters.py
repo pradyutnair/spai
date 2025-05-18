@@ -51,7 +51,9 @@ def filter_image_frequencies(
         - The residual of the filtered image (filtered with the inverse mask).
             Dimensionality: [[B] x C] x H x W
     """
-    # Compute FFT.
+    # Always cast to float32 for FFT to avoid cuFFT float16 limitations
+    orig_dtype = image.dtype
+    image = image.float()
     image = fft.fft2(image)
     image = fft.fftshift(image)
 
@@ -65,6 +67,9 @@ def filter_image_frequencies(
     residual_filtered_image = fft.ifftshift(residual_filtered_image)
     residual_filtered_image = fft.ifft2(residual_filtered_image).real
 
+    # Cast back to original dtype if needed
+    filtered_image = filtered_image.to(orig_dtype)
+    residual_filtered_image = residual_filtered_image.to(orig_dtype)
     return filtered_image, residual_filtered_image
 
 

@@ -1,10 +1,10 @@
 #!/bin/bash
-#SBATCH --partition=gpu_a100
+#SBATCH --partition=gpu_h100
 #SBATCH --gpus=1
 #SBATCH --cpus-per-task=16
-#SBATCH --job-name=lsun
-#SBATCH --output=/home/pnair/spai/jobs/job_outputs/lsun.out
-#SBATCH --time=01:00:00
+#SBATCH --job-name=train
+#SBATCH --output=/home/pnair/spai/jobs/job_outputs/train.log
+#SBATCH --time=04:00:00
 ##SBATCH --mem=180G
 #SBATCH --hint=nomultithread
 
@@ -32,9 +32,9 @@ export CUDA_LAUNCH_BLOCKING=0
 #   --lsun_dir "/scratch-shared/dl2_spai_datasets/LSUN/lsun/scenes/" \
 #   -o "/home/pnair/spai/datasets/ldm_train_val_lsun.csv" 
 
-python /home/pnair/spai/spai/tools/create_dmid_ldm_train_val_csv_copy.py \
-  --lsun_dir "/scratch-shared/dl2_spai_datasets/LSUN/lsun/scenes/" \
-  -o "/home/pnair/spai/datasets/lsun_train_val_lsun_test.csv"
+# python /home/pnair/spai/spai/tools/create_dmid_ldm_train_val_csv_copy.py \
+#   --lsun_dir "/scratch-shared/dl2_spai_datasets/LSUN/lsun/scenes/" \
+#   -o "/home/pnair/spai/datasets/lsun_train_val_lsun_test.csv"
 
 # python /home/pnair/spai/spai/tools/augment_dataset.py \
 #   --cfg ./configs/vit_base/vit_base__multipatch__100ep__intermediate__restore__patch_proj_per_feature__last_proj_layer_no_activ__fre_orig_branch__all_layers__bce_loss__light_augmentations.yaml \
@@ -44,10 +44,10 @@ python /home/pnair/spai/spai/tools/create_dmid_ldm_train_val_csv_copy.py \
 
 # python -m spai train \
 #   --cfg "/home/pnair/spai/configs/spai.yaml" \
-#   --batch-size 192 \
+#   --batch-size 32 \
 #   --pretrained "/home/pnair/spai/weights/spai.pth" \
-#   --output "/home/pnair/spai/output/train" \
-#   --data-path "/home/pnair/spai/datasets/ldm_train_val_subset.csv" \
+#   --output "/home/pnair/spai/output/train_mid_level_cross_attn" \
+#   --data-path "/home/pnair/spai/datasets/ldm_lsun_train_val_subset.csv" \
 #   --tag "spai" \
 #   --amp-opt-level "O2" \
 #   --data-workers 16 \
@@ -56,12 +56,13 @@ python /home/pnair/spai/spai/tools/create_dmid_ldm_train_val_csv_copy.py \
 #   --opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
 #   --opt "DATA.TEST_PREFETCH_FACTOR" "4"
 
+# echo "🔍 Testing FLUX"
 
-# FLUX
+# # FLUX
 # python -m spai test \
 #   --cfg "/home/pnair/spai/configs/spai.yaml" \
 #   --batch-size 8 \
-#   --model "/home/pnair/spai/output_prad_trained_spai/train/finetune/spai/ckpt_epoch_34.pth" \
+#   --model "/home/pnair/spai/output/train/finetune/spai/ckpt_epoch_9.pth" \
 #   --output "/home/pnair/spai/output_prad_trained_spai/test" \
 #   --tag "spai" \
 #   --opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
@@ -70,11 +71,12 @@ python /home/pnair/spai/spai/tools/create_dmid_ldm_train_val_csv_copy.py \
 #   --opt "DATA.TEST_PREFETCH_FACTOR" "1" \
 #   --test-csv "/home/pnair/spai/datasets/test_set_flux_no_imagenet.csv"
 
-# # GIGAGAN
+# echo "🔍 Testing GIGAGAN"
+# # # GIGAGAN
 # python -m spai test \
 #   --cfg "/home/pnair/spai/configs/spai.yaml" \
 #   --batch-size 8 \
-#   --model "/home/pnair/spai/output_prad_trained_spai/train/finetune/spai/ckpt_epoch_34.pth" \
+#   --model "/home/pnair/spai/output/train/finetune/spai/ckpt_epoch_9.pth" \
 #   --output "/home/pnair/spai/output_prad_trained_spai/test" \
 #   --tag "spai" \
 #   --opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
@@ -83,11 +85,12 @@ python /home/pnair/spai/spai/tools/create_dmid_ldm_train_val_csv_copy.py \
 #   --opt "DATA.TEST_PREFETCH_FACTOR" "1" \
 #   --test-csv "/home/pnair/spai/datasets/test_set_gigagan_no_imagenet.csv"
 
+# echo "🔍 Testing MIDJOURNEY-V6.1"
 # # MIDJOURNEY-V6.1
 # python -m spai test \
 #   --cfg "/home/pnair/spai/configs/spai.yaml" \
 #   --batch-size 8 \
-#   --model "/home/pnair/spai/output_prad_trained_spai/train/finetune/spai/ckpt_epoch_34.pth" \
+#   --model "/home/pnair/spai/output/train/finetune/spai/ckpt_epoch_9.pth" \
 #   --output "/home/pnair/spai/output_prad_trained_spai/test" \
 #   --tag "spai" \
 #   --opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
@@ -96,11 +99,11 @@ python /home/pnair/spai/spai/tools/create_dmid_ldm_train_val_csv_copy.py \
 #   --opt "DATA.TEST_PREFETCH_FACTOR" "1" \
 #   --test-csv "/home/pnair/spai/datasets/test_set_midjourney-v6.1_no_imagenet.csv"
 
-# # SD3
+# echo "🔍 Testing SD3"
 # python -m spai test \
 #   --cfg "/home/pnair/spai/configs/spai.yaml" \
 #   --batch-size 8 \
-#   --model "/home/pnair/spai/output_prad_trained_spai/train/finetune/spai/ckpt_epoch_34.pth" \
+#   --model "/home/pnair/spai/output/train/finetune/spai/ckpt_epoch_9.pth" \
 #   --output "/home/pnair/spai/output_prad_trained_spai/test" \
 #   --tag "spai" \
 #   --opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
@@ -109,4 +112,31 @@ python /home/pnair/spai/spai/tools/create_dmid_ldm_train_val_csv_copy.py \
 #   --opt "DATA.TEST_PREFETCH_FACTOR" "1" \
 #   --test-csv "/home/pnair/spai/datasets/test_set_sd3_fixed_no_imagenet.csv"
 
+# echo "🔍 Testing ARTIFACT"
+# python -m spai test \
+#   --cfg "/home/pnair/spai/configs/spai.yaml" \
+#   --batch-size 8 \
+#   --model "/home/pnair/spai/output/train/finetune/spai/ckpt_epoch_9.pth" \
+#   --output "/home/pnair/spai/output_prad_trained_spai/test" \
+#   --tag "spai" \
+#   --opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
+#   --opt "DATA.NUM_WORKERS" "8" \
+#   --opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
+#   --opt "DATA.TEST_PREFETCH_FACTOR" "1" \
+#   --test-csv "/home/pnair/spai/datasets/artifact_test.csv"
+
+# echo "🔍 Testing LSUN"
+# python -m spai test \
+#   --cfg "/home/pnair/spai/configs/spai.yaml" \
+#   --batch-size 8 \
+#   --model "/home/pnair/spai/output/train/finetune/spai/ckpt_epoch_9.pth" \
+#   --output "/home/pnair/spai/output_prad_trained_spai/test" \
+#   --tag "spai" \
+#   --opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
+#   --opt "DATA.NUM_WORKERS" "8" \
+#   --opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
+#   --opt "DATA.TEST_PREFETCH_FACTOR" "1" \
+#   --test-csv "/home/pnair/spai/datasets/lsun_test.csv"
+
 # # SD3-5
+echo "✅ Job finished at: $(date)"

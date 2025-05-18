@@ -40,15 +40,31 @@ class CLIPBackbone(nn.Module):
     def __init__(
         self,
         clip_model: str = "ViT-B/16",
-        device: str = "cpu"
+        device: str = "cuda" if torch.cuda.is_available() else "cpu"
     ) -> None:
         super().__init__()
 
         # Load and freeze CLIP
         self.clip, self.preprocess = clip.load(clip_model, device=device)
         self.device = device
-        for name, param in self.clip.named_parameters():
+        
+        # Force model to float32
+        self.clip = self.clip.float()
+        self.clip.visual = self.clip.visual.float()
+        
+        # Convert all parameters to float32
+        for param in self.clip.parameters():
             param.requires_grad = False
+            param.data = param.data.to(torch.float32)
+            
+        # Convert all LayerNorm modules to float32
+        for m in self.clip.modules():
+            if isinstance(m, (nn.LayerNorm, clip.model.LayerNorm)):
+                m.float()
+                if m.weight is not None:
+                    m.weight.data = m.weight.data.to(torch.float32)
+                if m.bias is not None:
+                    m.bias.data = m.bias.data.to(torch.float32)
 
         # Register hooks to get intermediate layer outputs
         self.hooks = [
@@ -63,9 +79,18 @@ class CLIPBackbone(nn.Module):
         x: (B, C, H, W)
         Returns: (B, D)
         """
-        x = x.to(self.device)
+        if x.device != self.device:
+            x = x.to(self.device)
+            
+        # Force float32
+        x = x.to(dtype=torch.float32)
+        
         with torch.no_grad():
+            # Ensure CLIP model is in float32 mode
+            self.clip.visual.float()
             img_emb = self.clip.encode_image(x)
+            img_emb = img_emb.to(dtype=torch.float32)
+            
         return img_emb
 
     def get_text_embedding(self, text_prompts) -> torch.Tensor:
@@ -79,18 +104,25 @@ class CLIPBackbone(nn.Module):
         with torch.no_grad():
             text_tokens = clip.tokenize(text_prompts).to(self.device)
             text_emb = self.clip.encode_text(text_tokens)
+            text_emb = text_emb.to(dtype=torch.float32)
         return text_emb
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Processes a batch of images using a CLIP backbone and returns intermediate layers."""
-        if self.clip.visual.transformer.resblocks[1].ln_1.weight.dtype != torch.float32:
-            for m in self.clip.modules():
-                if isinstance(m, clip.model.LayerNorm):
-                    m.float()
-
+        if x.device != self.device:
+            x = x.to(self.device)
+            
+        # Force float32
+        x = x.to(dtype=torch.float32)
+        
+        # Ensure CLIP model is in float32 mode
+        self.clip.visual.float()
         self.clip.encode_image(x)
-        x = torch.stack([h.output for h in self.hooks], dim=2)[1:, :, :, :]
+        
+        # Stack and permute outputs
+        x = torch.stack([h.output.to(dtype=torch.float32) for h in self.hooks], dim=2)[1:, :, :, :]
         x = torch.permute(x, (1, 2, 0, 3))
+        
         return x
 
 

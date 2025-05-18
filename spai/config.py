@@ -109,7 +109,7 @@ _C.MODEL = CN()
 # Model type
 _C.MODEL.TYPE = 'vit'
 # Type of weights that will be used to initialize the backbone. Supported "mfm", "clip", "dinov2".
-_C.MODEL_WEIGHTS = "mfm"
+_C.MODEL_WEIGHTS = "clip"
 # Model name
 _C.MODEL.NAME = 'pretrain'
 # Checkpoint to resume, could be overwritten by command line argument
@@ -192,6 +192,10 @@ _C.MODEL.FRE.MASKING_RADIUS = 16
 _C.MODEL.FRE.PROJECTOR_LAST_LAYER_ACTIVATION_TYPE = "gelu"
 _C.MODEL.FRE.ORIGINAL_IMAGE_FEATURES_BRANCH = False
 _C.MODEL.FRE.DISABLE_RECONSTRUCTION_SIMILARITY = False
+_C.MODEL.FRE.SEMANTIC_DIM = 512
+_C.MODEL.FRE.NUM_HEADS = 8
+_C.MODEL.FRE.EARLY_FUSION_LAYERS = [3, 6]
+_C.MODEL.FRE.DROPOUT = 0.5
 
 # PatchBasedMFViT related parameters
 _C.MODEL.PATCH_VIT = CN()
@@ -492,3 +496,58 @@ def get_custom_config(cfg):
     config = _C.clone()
     _update_config_from_file(config, cfg)
     return config
+
+
+def get_cfg_defaults():
+    """Get a yacs CfgNode object with default values for my_project."""
+    # Return a clone so that the defaults will not be altered
+    # This is for the "local variable" use pattern
+    _C = CN()
+
+    # Model
+    _C.MODEL = CN()
+    _C.MODEL.SID_APPROACH = "freq_restoration"
+    _C.MODEL.TYPE = "vit"
+    _C.MODEL.NAME = "finetune"
+    _C.MODEL.DROP_PATH_RATE = 0.1
+    _C.MODEL.NUM_CLASSES = 2
+    _C.MODEL.REQUIRED_NORMALIZATION = "positive_0_1"
+    _C.MODEL.RESOLUTION_MODE = "arbitrary"
+    _C.MODEL.FEATURE_EXTRACTION_BATCH = 400
+    _C.MODEL.SID_DROPOUT = 0.5
+
+    # Model - VIT
+    _C.MODEL.VIT = CN()
+    _C.MODEL.VIT.EMBED_DIM = 768
+    _C.MODEL.VIT.DEPTH = 12
+    _C.MODEL.VIT.NUM_HEADS = 12
+    _C.MODEL.VIT.INIT_VALUES = None
+    _C.MODEL.VIT.USE_APE = True
+    _C.MODEL.VIT.USE_RPB = False
+    _C.MODEL.VIT.USE_SHARED_RPB = False
+    _C.MODEL.VIT.USE_MEAN_POOLING = True
+    _C.MODEL.VIT.USE_INTERMEDIATE_LAYERS = True
+    _C.MODEL.VIT.PROJECTION_DIM = 1024
+    _C.MODEL.VIT.PROJECTION_LAYERS = 2
+    _C.MODEL.VIT.PATCH_PROJECTION = True
+    _C.MODEL.VIT.PATCH_PROJECTION_PER_FEATURE = True
+    _C.MODEL.VIT.INTERMEDIATE_LAYERS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    _C.MODEL.VIT.FEATURES_PROCESSOR = "rine"
+    _C.MODEL.VIT.PATCH_POOLING = "mean"
+
+    # Model - FRE
+    _C.MODEL.FRE = CN()
+    _C.MODEL.FRE.MASKING_RADIUS = 16
+    _C.MODEL.FRE.PROJECTOR_LAST_LAYER_ACTIVATION_TYPE = None
+    _C.MODEL.FRE.ORIGINAL_IMAGE_FEATURES_BRANCH = True
+    _C.MODEL.FRE.DISABLE_RECONSTRUCTION_SIMILARITY = False
+    _C.MODEL.FRE.SEMANTIC_DIM = 512
+    _C.MODEL.FRE.NUM_HEADS = 8
+    _C.MODEL.FRE.EARLY_FUSION_LAYERS = [3, 6]
+    _C.MODEL.FRE.DROPOUT = 0.5
+
+    # Model - CLS Head
+    _C.MODEL.CLS_HEAD = CN()
+    _C.MODEL.CLS_HEAD.MLP_RATIO = 3
+
+    return _C
