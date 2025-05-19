@@ -105,6 +105,11 @@ class PatchBasedMFViT(nn.Module):
         self.semantic_encoder_type = semantic_encoder
 
         if self.use_semantic_cross_attn_sca in ["before", "after"]:
+            # Trainable fusion gate to explicitly learn how much semantic context should affect the decision
+            self.semantic_fusion_gate = nn.Parameter(
+                torch.tensor(0.5)
+            )  # scalar gate - [0, 1]
+
             print(f"Using semantic cross-attention: {self.use_semantic_cross_attn_sca}")
             self.semantic_mha = nn.MultiheadAttention(
                 embed_dim=cls_vector_dim, num_heads=self.semantic_heads, dropout=dropout
@@ -114,37 +119,47 @@ class PatchBasedMFViT(nn.Module):
             if self.use_dual_cross_attn_sca:
                 print("Using dual cross-attention SCA")
                 self.semantic_mha2 = nn.MultiheadAttention(
-                    embed_dim=cls_vector_dim, num_heads=self.semantic_heads, dropout=dropout
+                    embed_dim=cls_vector_dim,
+                    num_heads=self.semantic_heads,
+                    dropout=dropout,
                 )
 
             self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
             if self.semantic_encoder_type == "clip":
                 print("Using CLIP backbone for semantic encoding")
-                # NOTE: using projection layer only in the case of CLIP backbone as SemanticPipeline contains the projection
-                self.semantic_projection = nn.Linear(
-                    self.semantic_embed_dim, cls_vector_dim
+                self.semantic_encoder = backbones.CLIPBackbone(
+                    device=self.device
+                ).float()
+                self.semantic_encoder.eval()
+                for param in self.semantic_encoder.parameters():
+                    param.requires_grad = False
+
+                # 🔧 ensure projection is trainable and dimensional match is correct
+                assert (
+                    self.semantic_embed_dim is not None
+                ), "semantic_embed_dim must be set for CLIP"
+                self.semantic_projection = nn.Sequential(
+                    nn.LayerNorm(self.semantic_embed_dim),
+                    nn.Linear(self.semantic_embed_dim, cls_vector_dim),
+                    nn.ReLU(),
+                    nn.Linear(cls_vector_dim, cls_vector_dim),
                 )
-                self.semantic_encoder = backbones.CLIPBackbone(device=self.device)
-                self.semantic_encoder = self.semantic_encoder.float()
+                self.semantic_projection.requires_grad_(True)  # make trainable
+
             elif self.semantic_encoder_type == "convnext":
                 print("Using ConvNeXt backbone for semantic encoding")
-                self.semantic_encoder = SemanticPipeline(output_dim=cls_vector_dim).to(self.device)
-            else:
-                raise ValueError(f"Unknown semantic_encoder: {self.semantic_encoder_type}")
-
-            # freeze everything in the semantic encoder except for convnext_proj parameters
-            if self.semantic_encoder_type == "convnext":
+                self.semantic_encoder = SemanticPipeline(output_dim=cls_vector_dim).to(
+                    self.device
+                )
                 self.semantic_encoder.backbone.eval()
                 for param in self.semantic_encoder.backbone.parameters():
                     param.requires_grad = False
                 for param in self.semantic_encoder.convnext_proj.parameters():
                     param.requires_grad = True
             else:
-                self.semantic_encoder.eval()
-                for param in self.semantic_encoder.parameters():
-                    param.requires_grad = False
-                for param in self.semantic_projection.parameters():
-                    param.requires_grad = True
+                raise ValueError(
+                    f"Unknown semantic_encoder: {self.semantic_encoder_type}"
+                )
 
         if initialization_scope == "all":
             self.apply(_init_weights)
@@ -159,9 +174,6 @@ class PatchBasedMFViT(nn.Module):
             raise TypeError(
                 f"Non-supported weight initialization type: {initialization_scope}"
             )
-
-
-
 
     def forward(
         self,
@@ -225,12 +237,16 @@ class PatchBasedMFViT(nn.Module):
         if self.use_semantic_cross_attn_sca in ["before", "after"]:
             # Get the global image encoding from the CLIP backbone
             # Resize the image to 224x224 for CLIP
-            x_resized = F.interpolate(x, size=(224, 224), mode="bilinear", align_corners=False)
+            x_resized = F.interpolate(
+                x, size=(224, 224), mode="bilinear", align_corners=False
+            )
 
             # CLIP
             if self.semantic_encoder_type == "clip":
                 # Get the global image encoding from the CLIP backbone
-                global_image_encoding = self.semantic_encoder.get_image_embedding(x_resized.float())
+                global_image_encoding = self.semantic_encoder.get_image_embedding(
+                    x_resized.float()
+                )
                 # Project global image encoding to match the cross-attention query dimension
                 global_image_encoding = self.semantic_projection(
                     global_image_encoding.to(self.semantic_projection.weight.dtype)
@@ -256,73 +272,53 @@ class PatchBasedMFViT(nn.Module):
 
         # Spectral-semantic cross-attention
         if self.use_semantic_cross_attn_sca == "before":
-            # Q - semantic context, K, V - spectral context
             semantic_enc = global_image_encoding.unsqueeze(1).expand(
                 -1, x.size(1), -1
             )  # B x L x D
 
-            # NOTE: normalize the query, key and value - double check if needed
-            semantic_enc = F.normalize(semantic_enc, dim=-1)  # B x L x D
-            # x = F.normalize(x, dim=-1)  # B x L x D
-
-            # Cross-attention with semantic features as query and spectral features as key/value
-            attn_output, _ = self.semantic_mha(
-                query=semantic_enc,  # B x L x D
-                key=x,  # B x L x D
-                value=x,  # B x L x D
-                need_weights=True,
+            attn_output, attn_weights = self.semantic_mha(
+                query=x, key=semantic_enc, value=semantic_enc, need_weights=True
             )
-            # Residual connection and layer normalization
-            x_out = attn_output  # B x L x D
 
             if self.use_dual_cross_attn_sca:
-                # KV - semantic context, Q - spectral context
-                attn_output, _ = self.semantic_mha2(
-                    query=x,  # B x L x D
-                    key=semantic_enc,  # B x D
-                    value=semantic_enc,  # B x D
-                    need_weights=True,
+                attn_output2, _ = self.semantic_mha2(
+                    query=semantic_enc, key=x, value=x, need_weights=True
                 )
-                x2 = attn_output  # B x L x D
-                # take the mean 
-                x_out = (x_out + x2) / 2
-            
-            # Residual connection and layer normalization
-            x = self.semantic_layer_norm(x + x_out)  # B x L x D
+                x_out = (attn_output + attn_output2) / 2
+            else:
+                x_out = attn_output
+
+            # 💡 Apply fusion gate
+            fusion_gate = torch.sigmoid(self.semantic_fusion_gate)
+            print(f"[Fusion Gate (before)] = {fusion_gate.item():.4f}")
+            print(f"[Semantic Attn Mean (before)] = {attn_weights.mean().item():.4f}")
+
+            x = self.semantic_layer_norm((1 - fusion_gate) * x + fusion_gate * x_out)
 
         # Spectral context attention (SCA)
         x = self.patches_attention(x)  # B x D
         x = self.norm(x)  # B x D
 
         if self.use_semantic_cross_attn_sca == "after":
-            # Q - semantic context, K, V - spectral context
             semantic_enc = global_image_encoding  # B x D
 
-            # NOTE: normalize the query, key and value - double check if needed
-            semantic_enc = F.normalize(semantic_enc, dim=-1)  # B x D
-            # x = F.normalize(x, dim=-1)
-
-            # Cross-attention
-            attn_output, _ = self.semantic_mha(
-                query=semantic_enc, key=x, value=x, need_weights=True
+            attn_output, attn_weights = self.semantic_mha(
+                query=x, key=semantic_enc, value=semantic_enc, need_weights=True
             )
-            x_out = attn_output  # B x D
 
             if self.use_dual_cross_attn_sca:
-                # KV - semantic context, Q - spectral context
-                attn_output, _ = self.semantic_mha2(
-                    query=x,
-                    key=semantic_enc,
-                    value=semantic_enc,
-                    need_weights=True
+                attn_output2, _ = self.semantic_mha2(
+                    query=semantic_enc, key=x, value=x, need_weights=True
                 )
-                x2 = attn_output
-                # take the mean
-                x_out = (x_out + x2) / 2
-            
+                x_out = (attn_output + attn_output2) / 2
+            else:
+                x_out = attn_output
 
-            # Residual connection and layer normalization
-            x = self.semantic_layer_norm(x + x_out)  # B x D
+            fusion_gate = torch.sigmoid(self.semantic_fusion_gate)
+            print(f"[Fusion Gate (after)] = {fusion_gate.item():.4f}")
+            print(f"[Semantic Attn Mean (after)] = {attn_weights.mean().item():.4f}")
+
+            x = self.semantic_layer_norm((1 - fusion_gate) * x + fusion_gate * x_out)
 
         x = self.cls_head(x)  # B x 1
 
