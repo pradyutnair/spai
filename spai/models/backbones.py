@@ -82,6 +82,36 @@ class CLIPBackbone(nn.Module):
             text_emb = self.clip.encode_text(text_tokens)
         return text_emb
 
+
+    def get_patch_tokens(self, x: torch.Tensor) -> torch.Tensor:
+        with torch.no_grad():
+            x = x.to(self.device)
+
+            # Step 1: Initial convolution
+            x = self.clip.visual.conv1(x)  # (B, C, H', W')
+            x = x.reshape(x.shape[0], x.shape[1], -1)  # Flatten spatial dims → (B, C, HW)
+            x = x.permute(0, 2, 1)  # → (B, num_patches, C)
+
+            # Step 2: Prepend CLS token (reshaped properly)
+            cls_token = self.clip.visual.class_embedding.to(x.dtype).unsqueeze(0).unsqueeze(1)  # (1, 1, D)
+            cls_token = cls_token.expand(x.shape[0], -1, -1)  # (B, 1, D)
+            x = torch.cat([cls_token, x], dim=1)  # (B, 1 + num_patches, D)
+
+            # Step 3: Add positional embedding
+            x = x + self.clip.visual.positional_embedding[:x.size(1)].to(x.dtype)
+
+            # Step 4: Layer norm, transformer
+            x = self.clip.visual.ln_pre(x)  # (B, N, D)
+            x = x.permute(1, 0, 2)  # (N, B, D) for transformer
+            x = self.clip.visual.transformer(x)
+            x = x.permute(1, 0, 2)  # Back to (B, N, D)
+
+            # Step 5: Return only patch tokens (exclude CLS)
+            patch_tokens = x[:, 1:, :]  # (B, num_patches, D)
+            
+        return patch_tokens
+
+    
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Processes a batch of images using a CLIP backbone and returns intermediate layers."""
         # Make sure that the parameters of LayerNorm are always in FP32, even during FP16
