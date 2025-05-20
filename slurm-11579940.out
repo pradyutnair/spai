@@ -1,0 +1,298 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+Retrieving notices: ...working... DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): repo.anaconda.com:443
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): repo.anaconda.com:443
+DEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/notices.json HTTP/1.1" 404 None
+DEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/r/notices.json HTTP/1.1" 404 None
+done
+WARNING: A conda environment already exists at '/home/scur2620/.conda/envs/spai'
+Remove existing environment (y/[n])? 
+
+CondaSystemExit: Exiting.
+
+usage: conda [-h] [--no-plugins] [-V] COMMAND ...
+conda: error: argument COMMAND: invalid choice: 'activate' (choose from 'clean', 'compare', 'config', 'create', 'info', 'init', 'install', 'list', 'notices', 'package', 'remove', 'uninstall', 'rename', 'run', 'search', 'update', 'upgrade', 'build', 'convert', 'debug', 'develop', 'doctor', 'index', 'inspect', 'metapackage', 'render', 'skeleton', 'pack', 'token', 'server', 'repo', 'verify', 'env', 'content-trust')
+Collecting package metadata (current_repodata.json): ...working... DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): conda.anaconda.org:443
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): repo.anaconda.com:443
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): conda.anaconda.org:443
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): repo.anaconda.com:443
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): repo.anaconda.com:443
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): repo.anaconda.com:443
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): conda.anaconda.org:443
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): conda.anaconda.org:443
+DEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/r/noarch/current_repodata.json HTTP/1.1" 304 0
+DEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/linux-64/current_repodata.json HTTP/1.1" 200 None
+DEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/r/linux-64/current_repodata.json HTTP/1.1" 200 None
+DEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/noarch/current_repodata.json HTTP/1.1" 200 None
+DEBUG:urllib3.connectionpool:https://conda.anaconda.org:443 "GET /nvidia/noarch/current_repodata.json HTTP/1.1" 200 None
+DEBUG:urllib3.connectionpool:https://conda.anaconda.org:443 "GET /pytorch/noarch/current_repodata.json HTTP/1.1" 304 0
+DEBUG:urllib3.connectionpool:https://conda.anaconda.org:443 "GET /pytorch/linux-64/current_repodata.json HTTP/1.1" 200 None
+DEBUG:urllib3.connectionpool:https://conda.anaconda.org:443 "GET /nvidia/linux-64/current_repodata.json HTTP/1.1" 200 None
+done
+Solving environment: ...working... done
+
+
+==> WARNING: A newer version of conda exists. <==
+  current version: 23.7.2
+  latest version: 25.3.1
+
+Please update conda by running
+
+    $ conda update -n base -c defaults conda
+
+Or to minimize the number of packages updated during conda update use
+
+     conda install conda=25.3.1
+
+
+
+## Package Plan ##
+
+  environment location: /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2
+
+  added / updated specs:
+    - pytorch
+    - pytorch-cuda=12.4
+    - torchaudio
+    - torchvision
+
+
+The following packages will be downloaded:
+
+    package                    |            build
+    ---------------------------|-----------------
+    certifi-2025.4.26          |  py311h06a4308_0         156 KB
+    ------------------------------------------------------------
+                                           Total:         156 KB
+
+The following NEW packages will be INSTALLED:
+
+  cuda-cudart        pkgs/main/linux-64::cuda-cudart-12.4.127-h99ab3db_0 
+  cuda-cudart_linux~ pkgs/main/noarch::cuda-cudart_linux-64-12.4.127-hd681fbe_0 
+  cuda-cupti         pkgs/main/linux-64::cuda-cupti-12.4.127-h6a678d5_1 
+  cuda-libraries     pkgs/main/linux-64::cuda-libraries-12.4.1-h06a4308_1 
+  cuda-nvrtc         pkgs/main/linux-64::cuda-nvrtc-12.4.127-h99ab3db_1 
+  cuda-nvtx          pkgs/main/linux-64::cuda-nvtx-12.4.127-h6a678d5_1 
+  cuda-opencl        pkgs/main/linux-64::cuda-opencl-12.4.127-h6a678d5_0 
+  cuda-runtime       pkgs/main/noarch::cuda-runtime-12.4.1-hb982923_0 
+  cuda-version       pkgs/main/noarch::cuda-version-12.4-hbda6634_3 
+  ffmpeg             pytorch/linux-64::ffmpeg-4.3-hf484d3e_0 
+  gnutls             pkgs/main/linux-64::gnutls-3.6.15-he1e5248_0 
+  lame               pkgs/main/linux-64::lame-3.100-h7b6447c_0 
+  libcublas          pkgs/main/linux-64::libcublas-12.4.5.8-h99ab3db_1 
+  libcufft           pkgs/main/linux-64::libcufft-11.2.1.3-h99ab3db_1 
+  libcufile          pkgs/main/linux-64::libcufile-1.9.1.3-h99ab3db_1 
+  libcurand          pkgs/main/linux-64::libcurand-10.3.5.147-h99ab3db_1 
+  libcusolver        pkgs/main/linux-64::libcusolver-11.6.1.9-h99ab3db_1 
+  libcusparse        pkgs/main/linux-64::libcusparse-12.3.1.170-h99ab3db_1 
+  libiconv           pkgs/main/linux-64::libiconv-1.16-h5eee18b_3 
+  libidn2            pkgs/main/linux-64::libidn2-2.3.4-h5eee18b_0 
+  libjpeg-turbo      pytorch/linux-64::libjpeg-turbo-2.0.0-h9bf148f_0 
+  libnpp             pkgs/main/linux-64::libnpp-12.2.5.30-h99ab3db_1 
+  libnvfatbin        pkgs/main/linux-64::libnvfatbin-12.4.127-h7934f7d_2 
+  libnvjitlink       pkgs/main/linux-64::libnvjitlink-12.4.127-h99ab3db_1 
+  libnvjpeg          pkgs/main/linux-64::libnvjpeg-12.3.1.117-h6a678d5_1 
+  libtasn1           pkgs/main/linux-64::libtasn1-4.19.0-h5eee18b_0 
+  libunistring       pkgs/main/linux-64::libunistring-0.9.10-h27cfd23_0 
+  llvm-openmp        pkgs/main/linux-64::llvm-openmp-14.0.6-h9e868ea_0 
+  nettle             pkgs/main/linux-64::nettle-3.7.3-hbbd107a_1 
+  ocl-icd            pkgs/main/linux-64::ocl-icd-2.3.2-h5eee18b_1 
+  openh264           pkgs/main/linux-64::openh264-2.1.1-h4ff587b_0 
+  pytorch-cuda       pytorch/linux-64::pytorch-cuda-12.4-hc786d27_7 
+  pytorch-mutex      pytorch/noarch::pytorch-mutex-1.0-cuda 
+  torchaudio         pytorch/linux-64::torchaudio-2.5.1-py311_cu124 
+  torchtriton        pytorch/linux-64::torchtriton-3.1.0-py311 
+  torchvision        pytorch/linux-64::torchvision-0.20.1-py311_cu124 
+
+The following packages will be UPDATED:
+
+  ca-certificates                     2023.05.30-h06a4308_0 --> 2025.2.25-h06a4308_0 
+  certifi                         2023.7.22-py311h06a4308_0 --> 2025.4.26-py311h06a4308_0 
+  conda-content-tru~ pkgs/main/noarch::conda-content-trust~ --> pkgs/main/linux-64::conda-content-trust-0.2.0-py311h06a4308_1 
+  openssl                                 1.1.1u-h7f8727e_0 --> 1.1.1w-h7f8727e_0 
+  pytorch            pkgs/main::pytorch-2.0.1-cpu_py311h6d~ --> pytorch::pytorch-2.5.1-py3.11_cuda12.4_cudnn9.1.0_0 
+
+
+Proceed ([y]/n)? 
+
+Downloading and Extracting Packages
+certifi-2025.4.26    | 156 KB    |            |   0% DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): repo.anaconda.com:443
+DEBUG:urllib3.connectionpool:https://repo.anaconda.com:443 "GET /pkgs/main/linux-64/certifi-2025.4.26-py311h06a4308_0.conda HTTP/1.1" 200 160222
+certifi-2025.4.26    | 156 KB    | ########## | 100%                                                      
+Preparing transaction: ...working... done
+Verifying transaction: ...working... failed
+
+EnvironmentNotWritableError: The current user does not have write permissions to the target environment.
+  environment location: /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2
+  uid: 67433
+  gid: 66909
+
+
+Defaulting to user installation because normal site-packages is not writeable
+Collecting git+https://github.com/openai/CLIP.git (from -r requirements.txt (line 30))
+  Cloning https://github.com/openai/CLIP.git to /gpfs/scratch1/nodespecific/gcn29/scur2620.11579940/pip-req-build-83h_hrlw
+  Running command git clone --filter=blob:none --quiet https://github.com/openai/CLIP.git /gpfs/scratch1/nodespecific/gcn29/scur2620.11579940/pip-req-build-83h_hrlw
+  Resolved https://github.com/openai/CLIP.git to commit dcba3cb2e2827b402d2701e7e1c7d9fed8a20ef1
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'done'
+Requirement already satisfied: opencv-python~=4.10.0.84 in /home/scur2620/.local/lib/python3.11/site-packages (from -r requirements.txt (line 8)) (4.10.0.84)
+Requirement already satisfied: pyyaml~=6.0.1 in /home/scur2620/.local/lib/python3.11/site-packages (from -r requirements.txt (line 9)) (6.0.2)
+Requirement already satisfied: scipy~=1.14.0 in /home/scur2620/.local/lib/python3.11/site-packages (from -r requirements.txt (line 10)) (1.14.1)
+Requirement already satisfied: tensorboard in /home/scur2620/.local/lib/python3.11/site-packages (from -r requirements.txt (line 11)) (2.19.0)
+Requirement already satisfied: termcolor~=2.4.0 in /home/scur2620/.local/lib/python3.11/site-packages (from -r requirements.txt (line 12)) (2.4.0)
+Requirement already satisfied: timm==0.4.12 in /home/scur2620/.local/lib/python3.11/site-packages (from -r requirements.txt (line 13)) (0.4.12)
+Requirement already satisfied: yacs~=0.1.8 in /home/scur2620/.local/lib/python3.11/site-packages (from -r requirements.txt (line 14)) (0.1.8)
+Requirement already satisfied: numpy~=1.26.4 in /home/scur2620/.local/lib/python3.11/site-packages (from -r requirements.txt (line 15)) (1.26.4)
+Requirement already satisfied: torchmetrics~=1.4.0.post0 in /home/scur2620/.local/lib/python3.11/site-packages (from -r requirements.txt (line 16)) (1.4.3)
+Requirement already satisfied: tqdm~=4.66.4 in /home/scur2620/.local/lib/python3.11/site-packages (from -r requirements.txt (line 17)) (4.66.6)
+Requirement already satisfied: pillow~=10.4.0 in /home/scur2620/.local/lib/python3.11/site-packages (from -r requirements.txt (line 18)) (10.4.0)
+Requirement already satisfied: click~=8.1.7 in /home/scur2620/.local/lib/python3.11/site-packages (from -r requirements.txt (line 20)) (8.1.8)
+Requirement already satisfied: neptune~=1.11.1 in /home/scur2620/.local/lib/python3.11/site-packages (from -r requirements.txt (line 21)) (1.11.1)
+Requirement already satisfied: albumentations==1.4.14 in /home/scur2620/.local/lib/python3.11/site-packages (from -r requirements.txt (line 22)) (1.4.14)
+Requirement already satisfied: albucore==0.0.16 in /home/scur2620/.local/lib/python3.11/site-packages (from -r requirements.txt (line 23)) (0.0.16)
+Requirement already satisfied: lmdb~=1.5.1 in /home/scur2620/.local/lib/python3.11/site-packages (from -r requirements.txt (line 24)) (1.5.1)
+Requirement already satisfied: networkx~=3.3 in /home/scur2620/.local/lib/python3.11/site-packages (from -r requirements.txt (line 25)) (3.4.2)
+Requirement already satisfied: seaborn~=0.13.2 in /home/scur2620/.local/lib/python3.11/site-packages (from -r requirements.txt (line 26)) (0.13.2)
+Requirement already satisfied: pandas~=2.2.2 in /home/scur2620/.local/lib/python3.11/site-packages (from -r requirements.txt (line 27)) (2.2.3)
+Requirement already satisfied: einops~=0.8.0 in /home/scur2620/.local/lib/python3.11/site-packages (from -r requirements.txt (line 29)) (0.8.1)
+Requirement already satisfied: onnx in /home/scur2620/.local/lib/python3.11/site-packages (from -r requirements.txt (line 31)) (1.17.0)
+Requirement already satisfied: onnxscript in /home/scur2620/.local/lib/python3.11/site-packages (from -r requirements.txt (line 32)) (0.2.4)
+Requirement already satisfied: torch>=1.4 in /home/scur2620/.local/lib/python3.11/site-packages (from timm==0.4.12->-r requirements.txt (line 13)) (2.6.0)
+Requirement already satisfied: torchvision in /home/scur2620/.local/lib/python3.11/site-packages (from timm==0.4.12->-r requirements.txt (line 13)) (0.21.0)
+Requirement already satisfied: scikit-image>=0.21.0 in /home/scur2620/.local/lib/python3.11/site-packages (from albumentations==1.4.14->-r requirements.txt (line 22)) (0.25.2)
+Requirement already satisfied: typing-extensions>=4.9.0 in /home/scur2620/.local/lib/python3.11/site-packages (from albumentations==1.4.14->-r requirements.txt (line 22)) (4.13.2)
+Requirement already satisfied: pydantic>=2.7.0 in /home/scur2620/.local/lib/python3.11/site-packages (from albumentations==1.4.14->-r requirements.txt (line 22)) (2.11.3)
+Requirement already satisfied: eval-type-backport in /home/scur2620/.local/lib/python3.11/site-packages (from albumentations==1.4.14->-r requirements.txt (line 22)) (0.2.2)
+Requirement already satisfied: opencv-python-headless>=4.9.0.80 in /home/scur2620/.local/lib/python3.11/site-packages (from albumentations==1.4.14->-r requirements.txt (line 22)) (4.11.0.86)
+Requirement already satisfied: absl-py>=0.4 in /home/scur2620/.local/lib/python3.11/site-packages (from tensorboard->-r requirements.txt (line 11)) (2.2.2)
+Requirement already satisfied: grpcio>=1.48.2 in /home/scur2620/.local/lib/python3.11/site-packages (from tensorboard->-r requirements.txt (line 11)) (1.71.0)
+Requirement already satisfied: markdown>=2.6.8 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from tensorboard->-r requirements.txt (line 11)) (3.4.1)
+Requirement already satisfied: packaging in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from tensorboard->-r requirements.txt (line 11)) (23.0)
+Requirement already satisfied: protobuf!=4.24.0,>=3.19.6 in /home/scur2620/.local/lib/python3.11/site-packages (from tensorboard->-r requirements.txt (line 11)) (6.30.2)
+Requirement already satisfied: setuptools>=41.0.0 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from tensorboard->-r requirements.txt (line 11)) (68.0.0)
+Requirement already satisfied: six>1.9 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from tensorboard->-r requirements.txt (line 11)) (1.16.0)
+Requirement already satisfied: tensorboard-data-server<0.8.0,>=0.7.0 in /home/scur2620/.local/lib/python3.11/site-packages (from tensorboard->-r requirements.txt (line 11)) (0.7.2)
+Requirement already satisfied: werkzeug>=1.0.1 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from tensorboard->-r requirements.txt (line 11)) (2.2.3)
+Requirement already satisfied: lightning-utilities>=0.8.0 in /home/scur2620/.local/lib/python3.11/site-packages (from torchmetrics~=1.4.0.post0->-r requirements.txt (line 16)) (0.14.3)
+Requirement already satisfied: GitPython>=2.0.8 in /home/scur2620/.local/lib/python3.11/site-packages (from neptune~=1.11.1->-r requirements.txt (line 21)) (3.1.44)
+Requirement already satisfied: PyJWT in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from neptune~=1.11.1->-r requirements.txt (line 21)) (2.4.0)
+Requirement already satisfied: boto3>=1.28.0 in /home/scur2620/.local/lib/python3.11/site-packages (from neptune~=1.11.1->-r requirements.txt (line 21)) (1.37.35)
+Requirement already satisfied: bravado<12.0.0,>=11.0.0 in /home/scur2620/.local/lib/python3.11/site-packages (from neptune~=1.11.1->-r requirements.txt (line 21)) (11.1.0)
+Requirement already satisfied: future>=0.17.1 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from neptune~=1.11.1->-r requirements.txt (line 21)) (0.18.3)
+Requirement already satisfied: oauthlib>=2.1.0 in /home/scur2620/.local/lib/python3.11/site-packages (from neptune~=1.11.1->-r requirements.txt (line 21)) (3.2.2)
+Requirement already satisfied: psutil in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from neptune~=1.11.1->-r requirements.txt (line 21)) (5.9.0)
+Requirement already satisfied: requests>=2.20.0 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from neptune~=1.11.1->-r requirements.txt (line 21)) (2.31.0)
+Requirement already satisfied: requests-oauthlib>=1.0.0 in /home/scur2620/.local/lib/python3.11/site-packages (from neptune~=1.11.1->-r requirements.txt (line 21)) (2.0.0)
+Requirement already satisfied: swagger-spec-validator>=2.7.4 in /home/scur2620/.local/lib/python3.11/site-packages (from neptune~=1.11.1->-r requirements.txt (line 21)) (3.0.4)
+Requirement already satisfied: urllib3 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from neptune~=1.11.1->-r requirements.txt (line 21)) (1.26.16)
+Requirement already satisfied: websocket-client!=1.0.0,>=0.35.0 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from neptune~=1.11.1->-r requirements.txt (line 21)) (0.58.0)
+Requirement already satisfied: matplotlib!=3.6.1,>=3.4 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from seaborn~=0.13.2->-r requirements.txt (line 26)) (3.7.1)
+Requirement already satisfied: python-dateutil>=2.8.2 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from pandas~=2.2.2->-r requirements.txt (line 27)) (2.8.2)
+Requirement already satisfied: pytz>=2020.1 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from pandas~=2.2.2->-r requirements.txt (line 27)) (2022.7)
+Requirement already satisfied: tzdata>=2022.7 in /home/scur2620/.local/lib/python3.11/site-packages (from pandas~=2.2.2->-r requirements.txt (line 27)) (2025.2)
+Requirement already satisfied: ftfy in /home/scur2620/.local/lib/python3.11/site-packages (from clip==1.0->-r requirements.txt (line 30)) (6.3.1)
+Requirement already satisfied: regex in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from clip==1.0->-r requirements.txt (line 30)) (2022.7.9)
+Requirement already satisfied: ml_dtypes in /home/scur2620/.local/lib/python3.11/site-packages (from onnxscript->-r requirements.txt (line 32)) (0.5.1)
+Requirement already satisfied: botocore<1.38.0,>=1.37.35 in /home/scur2620/.local/lib/python3.11/site-packages (from boto3>=1.28.0->neptune~=1.11.1->-r requirements.txt (line 21)) (1.37.35)
+Requirement already satisfied: jmespath<2.0.0,>=0.7.1 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from boto3>=1.28.0->neptune~=1.11.1->-r requirements.txt (line 21)) (0.10.0)
+Requirement already satisfied: s3transfer<0.12.0,>=0.11.0 in /home/scur2620/.local/lib/python3.11/site-packages (from boto3>=1.28.0->neptune~=1.11.1->-r requirements.txt (line 21)) (0.11.4)
+Requirement already satisfied: bravado-core>=5.16.1 in /home/scur2620/.local/lib/python3.11/site-packages (from bravado<12.0.0,>=11.0.0->neptune~=1.11.1->-r requirements.txt (line 21)) (6.1.1)
+Requirement already satisfied: monotonic in /home/scur2620/.local/lib/python3.11/site-packages (from bravado<12.0.0,>=11.0.0->neptune~=1.11.1->-r requirements.txt (line 21)) (1.6)
+Requirement already satisfied: msgpack in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from bravado<12.0.0,>=11.0.0->neptune~=1.11.1->-r requirements.txt (line 21)) (1.0.3)
+Requirement already satisfied: simplejson in /home/scur2620/.local/lib/python3.11/site-packages (from bravado<12.0.0,>=11.0.0->neptune~=1.11.1->-r requirements.txt (line 21)) (3.20.1)
+Requirement already satisfied: gitdb<5,>=4.0.1 in /home/scur2620/.local/lib/python3.11/site-packages (from GitPython>=2.0.8->neptune~=1.11.1->-r requirements.txt (line 21)) (4.0.12)
+Requirement already satisfied: contourpy>=1.0.1 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from matplotlib!=3.6.1,>=3.4->seaborn~=0.13.2->-r requirements.txt (line 26)) (1.0.5)
+Requirement already satisfied: cycler>=0.10 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from matplotlib!=3.6.1,>=3.4->seaborn~=0.13.2->-r requirements.txt (line 26)) (0.11.0)
+Requirement already satisfied: fonttools>=4.22.0 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from matplotlib!=3.6.1,>=3.4->seaborn~=0.13.2->-r requirements.txt (line 26)) (4.25.0)
+Requirement already satisfied: kiwisolver>=1.0.1 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from matplotlib!=3.6.1,>=3.4->seaborn~=0.13.2->-r requirements.txt (line 26)) (1.4.4)
+Requirement already satisfied: pyparsing>=2.3.1 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from matplotlib!=3.6.1,>=3.4->seaborn~=0.13.2->-r requirements.txt (line 26)) (3.0.9)
+Requirement already satisfied: annotated-types>=0.6.0 in /home/scur2620/.local/lib/python3.11/site-packages (from pydantic>=2.7.0->albumentations==1.4.14->-r requirements.txt (line 22)) (0.7.0)
+Requirement already satisfied: pydantic-core==2.33.1 in /home/scur2620/.local/lib/python3.11/site-packages (from pydantic>=2.7.0->albumentations==1.4.14->-r requirements.txt (line 22)) (2.33.1)
+Requirement already satisfied: typing-inspection>=0.4.0 in /home/scur2620/.local/lib/python3.11/site-packages (from pydantic>=2.7.0->albumentations==1.4.14->-r requirements.txt (line 22)) (0.4.0)
+Requirement already satisfied: charset-normalizer<4,>=2 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from requests>=2.20.0->neptune~=1.11.1->-r requirements.txt (line 21)) (2.0.4)
+Requirement already satisfied: idna<4,>=2.5 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from requests>=2.20.0->neptune~=1.11.1->-r requirements.txt (line 21)) (3.4)
+Requirement already satisfied: certifi>=2017.4.17 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from requests>=2.20.0->neptune~=1.11.1->-r requirements.txt (line 21)) (2023.7.22)
+Requirement already satisfied: imageio!=2.35.0,>=2.33 in /home/scur2620/.local/lib/python3.11/site-packages (from scikit-image>=0.21.0->albumentations==1.4.14->-r requirements.txt (line 22)) (2.37.0)
+Requirement already satisfied: tifffile>=2022.8.12 in /home/scur2620/.local/lib/python3.11/site-packages (from scikit-image>=0.21.0->albumentations==1.4.14->-r requirements.txt (line 22)) (2025.3.30)
+Requirement already satisfied: lazy-loader>=0.4 in /home/scur2620/.local/lib/python3.11/site-packages (from scikit-image>=0.21.0->albumentations==1.4.14->-r requirements.txt (line 22)) (0.4)
+Requirement already satisfied: jsonschema in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from swagger-spec-validator>=2.7.4->neptune~=1.11.1->-r requirements.txt (line 21)) (4.17.3)
+Requirement already satisfied: importlib-resources>=1.3 in /home/scur2620/.local/lib/python3.11/site-packages (from swagger-spec-validator>=2.7.4->neptune~=1.11.1->-r requirements.txt (line 21)) (6.5.2)
+Requirement already satisfied: filelock in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from torch>=1.4->timm==0.4.12->-r requirements.txt (line 13)) (3.9.0)
+Requirement already satisfied: jinja2 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from torch>=1.4->timm==0.4.12->-r requirements.txt (line 13)) (3.1.2)
+Requirement already satisfied: fsspec in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from torch>=1.4->timm==0.4.12->-r requirements.txt (line 13)) (2023.4.0)
+Requirement already satisfied: nvidia-cuda-nvrtc-cu12==12.4.127 in /home/scur2620/.local/lib/python3.11/site-packages (from torch>=1.4->timm==0.4.12->-r requirements.txt (line 13)) (12.4.127)
+Requirement already satisfied: nvidia-cuda-runtime-cu12==12.4.127 in /home/scur2620/.local/lib/python3.11/site-packages (from torch>=1.4->timm==0.4.12->-r requirements.txt (line 13)) (12.4.127)
+Requirement already satisfied: nvidia-cuda-cupti-cu12==12.4.127 in /home/scur2620/.local/lib/python3.11/site-packages (from torch>=1.4->timm==0.4.12->-r requirements.txt (line 13)) (12.4.127)
+Requirement already satisfied: nvidia-cudnn-cu12==9.1.0.70 in /home/scur2620/.local/lib/python3.11/site-packages (from torch>=1.4->timm==0.4.12->-r requirements.txt (line 13)) (9.1.0.70)
+Requirement already satisfied: nvidia-cublas-cu12==12.4.5.8 in /home/scur2620/.local/lib/python3.11/site-packages (from torch>=1.4->timm==0.4.12->-r requirements.txt (line 13)) (12.4.5.8)
+Requirement already satisfied: nvidia-cufft-cu12==11.2.1.3 in /home/scur2620/.local/lib/python3.11/site-packages (from torch>=1.4->timm==0.4.12->-r requirements.txt (line 13)) (11.2.1.3)
+Requirement already satisfied: nvidia-curand-cu12==10.3.5.147 in /home/scur2620/.local/lib/python3.11/site-packages (from torch>=1.4->timm==0.4.12->-r requirements.txt (line 13)) (10.3.5.147)
+Requirement already satisfied: nvidia-cusolver-cu12==11.6.1.9 in /home/scur2620/.local/lib/python3.11/site-packages (from torch>=1.4->timm==0.4.12->-r requirements.txt (line 13)) (11.6.1.9)
+Requirement already satisfied: nvidia-cusparse-cu12==12.3.1.170 in /home/scur2620/.local/lib/python3.11/site-packages (from torch>=1.4->timm==0.4.12->-r requirements.txt (line 13)) (12.3.1.170)
+Requirement already satisfied: nvidia-cusparselt-cu12==0.6.2 in /home/scur2620/.local/lib/python3.11/site-packages (from torch>=1.4->timm==0.4.12->-r requirements.txt (line 13)) (0.6.2)
+Requirement already satisfied: nvidia-nccl-cu12==2.21.5 in /home/scur2620/.local/lib/python3.11/site-packages (from torch>=1.4->timm==0.4.12->-r requirements.txt (line 13)) (2.21.5)
+Requirement already satisfied: nvidia-nvtx-cu12==12.4.127 in /home/scur2620/.local/lib/python3.11/site-packages (from torch>=1.4->timm==0.4.12->-r requirements.txt (line 13)) (12.4.127)
+Requirement already satisfied: nvidia-nvjitlink-cu12==12.4.127 in /home/scur2620/.local/lib/python3.11/site-packages (from torch>=1.4->timm==0.4.12->-r requirements.txt (line 13)) (12.4.127)
+Requirement already satisfied: triton==3.2.0 in /home/scur2620/.local/lib/python3.11/site-packages (from torch>=1.4->timm==0.4.12->-r requirements.txt (line 13)) (3.2.0)
+Requirement already satisfied: sympy==1.13.1 in /home/scur2620/.local/lib/python3.11/site-packages (from torch>=1.4->timm==0.4.12->-r requirements.txt (line 13)) (1.13.1)
+Requirement already satisfied: mpmath<1.4,>=1.1.0 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from sympy==1.13.1->torch>=1.4->timm==0.4.12->-r requirements.txt (line 13)) (1.3.0)
+Requirement already satisfied: MarkupSafe>=2.1.1 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from werkzeug>=1.0.1->tensorboard->-r requirements.txt (line 11)) (2.1.1)
+Requirement already satisfied: wcwidth in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from ftfy->clip==1.0->-r requirements.txt (line 30)) (0.2.5)
+Requirement already satisfied: jsonref in /home/scur2620/.local/lib/python3.11/site-packages (from bravado-core>=5.16.1->bravado<12.0.0,>=11.0.0->neptune~=1.11.1->-r requirements.txt (line 21)) (1.1.0)
+Requirement already satisfied: smmap<6,>=3.0.1 in /home/scur2620/.local/lib/python3.11/site-packages (from gitdb<5,>=4.0.1->GitPython>=2.0.8->neptune~=1.11.1->-r requirements.txt (line 21)) (5.0.2)
+Requirement already satisfied: attrs>=17.4.0 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from jsonschema->swagger-spec-validator>=2.7.4->neptune~=1.11.1->-r requirements.txt (line 21)) (22.1.0)
+Requirement already satisfied: pyrsistent!=0.17.0,!=0.17.1,!=0.17.2,>=0.14.0 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from jsonschema->swagger-spec-validator>=2.7.4->neptune~=1.11.1->-r requirements.txt (line 21)) (0.18.0)
+Requirement already satisfied: fqdn in /home/scur2620/.local/lib/python3.11/site-packages (from jsonschema->swagger-spec-validator>=2.7.4->neptune~=1.11.1->-r requirements.txt (line 21)) (1.5.1)
+Requirement already satisfied: isoduration in /home/scur2620/.local/lib/python3.11/site-packages (from jsonschema->swagger-spec-validator>=2.7.4->neptune~=1.11.1->-r requirements.txt (line 21)) (20.11.0)
+Requirement already satisfied: jsonpointer>1.13 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from jsonschema->swagger-spec-validator>=2.7.4->neptune~=1.11.1->-r requirements.txt (line 21)) (2.1)
+Requirement already satisfied: rfc3339-validator in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from jsonschema->swagger-spec-validator>=2.7.4->neptune~=1.11.1->-r requirements.txt (line 21)) (0.1.4)
+Requirement already satisfied: rfc3986-validator>0.1.0 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from jsonschema->swagger-spec-validator>=2.7.4->neptune~=1.11.1->-r requirements.txt (line 21)) (0.1.1)
+Requirement already satisfied: uri-template in /home/scur2620/.local/lib/python3.11/site-packages (from jsonschema->swagger-spec-validator>=2.7.4->neptune~=1.11.1->-r requirements.txt (line 21)) (1.3.0)
+Requirement already satisfied: webcolors>=1.11 in /home/scur2620/.local/lib/python3.11/site-packages (from jsonschema->swagger-spec-validator>=2.7.4->neptune~=1.11.1->-r requirements.txt (line 21)) (24.11.1)
+Requirement already satisfied: arrow>=0.15.0 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from isoduration->jsonschema->swagger-spec-validator>=2.7.4->neptune~=1.11.1->-r requirements.txt (line 21)) (1.2.3)
+Defaulting to user installation because normal site-packages is not writeable
+Requirement already satisfied: gdown in /home/scur2620/.local/lib/python3.11/site-packages (5.2.0)
+Requirement already satisfied: beautifulsoup4 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from gdown) (4.12.2)
+Requirement already satisfied: filelock in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from gdown) (3.9.0)
+Requirement already satisfied: requests[socks] in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from gdown) (2.31.0)
+Requirement already satisfied: tqdm in /home/scur2620/.local/lib/python3.11/site-packages (from gdown) (4.66.6)
+Requirement already satisfied: soupsieve>1.2 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from beautifulsoup4->gdown) (2.4)
+Requirement already satisfied: charset-normalizer<4,>=2 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from requests[socks]->gdown) (2.0.4)
+Requirement already satisfied: idna<4,>=2.5 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from requests[socks]->gdown) (3.4)
+Requirement already satisfied: urllib3<3,>=1.21.1 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from requests[socks]->gdown) (1.26.16)
+Requirement already satisfied: certifi>=2017.4.17 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from requests[socks]->gdown) (2023.7.22)
+Requirement already satisfied: PySocks!=1.5.7,>=1.5.6 in /sw/arch/RHEL8/EB_production/2023/software/Anaconda3/2023.07-2/lib/python3.11/site-packages (from requests[socks]->gdown) (1.7.1)
+/home/scur2620/.local/lib/python3.11/site-packages/gdown/parse_url.py:48: UserWarning: You specified a Google Drive link that is not the correct link to download a file. You might want to try `--fuzzy` option or the following url: https://drive.google.com/uc?id=None
+  warnings.warn(
+Downloading...
+From: https://drive.google.com/1vvXmZqs6TVJdj8iF1oJ4L_fcgdQrp_YI
+To: /gpfs/home6/scur2620/spai/1vvXmZqs6TVJdj8iF1oJ4L_fcgdQrp_YI
+0.00B [00:00, ?B/s]1.65kB [00:00, 5.67MB/s]
+
+JOB STATISTICS
+==============
+Job ID: 11579940
+Cluster: snellius
+User/Group: scur2620/scur2620
+State: RUNNING
+Nodes: 1
+Cores per node: 18
+CPU Utilized: 00:00:00
+CPU Efficiency: 0.00% of 00:34:12 core-walltime
+Job Wall-clock time: 00:01:54
+Memory Utilized: 0.00 MB
+Memory Efficiency: 0.00% of 120.00 GB (120.00 GB/node)
+WARNING: Efficiency statistics can only be obtained after the job has ended as seff tool is based on the accounting database data.

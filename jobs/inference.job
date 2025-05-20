@@ -16,6 +16,8 @@ module load Anaconda3/2023.07-2
 # Setup 
 # conda create -n spai python=3.11
 conda activate spai
+# pip install open-clip-torch
+# pip install timm==1.0.14 # 0.4.12, 1.0.15 do not work
 # pip install filetype
 # conda install pytorch torchvision torchaudio pytorch-cuda=12.4 -c pytorch -c nvidia
 # pip install -r requirements.txt
@@ -23,6 +25,6 @@ conda activate spai
 # Inference
 # srun python -m spai --help
 # pip install timm==0.4.12
-srun python -m spai infer --input "/home/ekarasev/spai/TinyTest" \
+srun python -m spai infer --input "/home/scur2620/spai/tinyTest/dalle_2" \
                         --output "output_runs" \
-                        --model "None" \
+                        --model "weights/spai.pth" \

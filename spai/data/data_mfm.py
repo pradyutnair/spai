@@ -5,7 +5,7 @@ import torchvision.transforms as T
 from torch.utils.data import DataLoader, DistributedSampler
 from torch.utils.data._utils.collate import default_collate
 from torchvision.datasets import ImageFolder
-from timm.data.transforms import _pil_interp
+from timm.data.transforms import str_to_pil_interp
 
 from .random_degradations import RandomBlur, RandomNoise
 
@@ -41,7 +41,7 @@ class MFMTransform:
     def __init__(self, config):
         self.transform_img = T.Compose([
             T.Lambda(lambda img: img.convert('RGB') if img.mode != 'RGB' else img),
-            T.RandomResizedCrop(config.DATA.IMG_SIZE, scale=(config.DATA.MIN_CROP_SCALE, 1.), interpolation=_pil_interp(config.DATA.INTERPOLATION)),
+            T.RandomResizedCrop(config.DATA.IMG_SIZE, scale=(config.DATA.MIN_CROP_SCALE, 1.), interpolation=str_to_pil_interp(config.DATA.INTERPOLATION)),
             T.RandomHorizontalFlip(),
         ])
 

@@ -3,15 +3,18 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=9
 #SBATCH --gpus=1
-#SBATCH --output="outputs/inference.out"
-#SBATCH --partition=gpu_a100
-#SBATCH --time=01:00:00
-
+#SBATCH --output="outputs/train_chameleon_gigatransformer_%A.out"
+#SBATCH --partition=gpu_h100
+#SBATCH --time=04:00:00
+#SBATCH --mem=180G
 cd $HOME/spai
 
 module purge
 module load 2023
 module load Anaconda3/2023.07-2
+
+export NEPTUNE_API_TOKEN="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI4YzJlMmMyYy01YzU4LTQ0MGItODM5Zi1mY2MyYjE4YTYyMmIifQ=="
+
 
 # Setup 
 # conda create -n spai python=3.11
@@ -19,19 +22,23 @@ conda activate spai
 # pip install filetype
 # conda install pytorch torchvision torchaudio pytorch-cuda=12.4 -c pytorch -c nvidia
 # pip install -r requirements.txt
-pip install open_clip_torch
+# pip install open_clip_torch
+# pip install jsonschema
 # Inference
 # srun python -m spai --help
+
 srun python -m spai train \
   --cfg "./configs/spai.yaml" \
-  --batch-size 72 \
-  --pretrained "./weights/mfm_pretrain_vit_base.pth" \
+  --batch-size 512 \
+  --pretrained "weights/spai.pth" \
   --output "./output/train" \
-  --data-path "./datasets/ldm_train_val.csv" \
-  --tag "spai_with_context" \
-  --amp-opt-level "O2" \
+  --data-path "/home/scur2620/spai/chameleon_dataset_split.csv" \
+  --tag "spai_chad_transformer" \
+  --amp-opt-level "O0" \
   --data-workers 8 \
   --save-all \
-  --opt "DATA.VAL_BATCH_SIZE" "256" \
+  --opt "DATA.VAL_BATCH_SIZE" "512" \
   --opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
-  --opt "DATA.TEST_PREFETCH_FACTOR" "1"
+  --opt "DATA.TEST_PREFETCH_FACTOR" "1" \
+  --with_semantics True 
+# --pretrained "./weights/mfm_pretrain_vit_base.pth" \ 

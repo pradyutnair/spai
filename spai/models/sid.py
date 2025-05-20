@@ -185,6 +185,10 @@ class PatchBasedMFViT(nn.Module):
         x = self.cls_head(x)  # B x 1
 
         x = torch.cat([x, x_context], dim=1) if x_context is not None else x
+        # x = torch.cat([torch.zeros_like(x), x_context], dim=1) if x_context is not None else x
+        
+
+
         x = self.semantics_head(x) if self.semantics_head is not None else x
 
         return x
@@ -251,8 +255,12 @@ class PatchBasedMFViT(nn.Module):
         x = self.norm(x)  # B x D
 
         
-        x = self.cls_head(x)  # B x 1
+        x = self.cls_head(x)  # B x 1F
+
         x = torch.cat([x, x_context], dim=1) if x_context is not None else x
+        # x = torch.cat([torch.zeros_like(x), x_context], dim=1) if x_context is not None else x
+
+
         x = self.semantics_head(x) if self.semantics_head is not None else x
 
         return x
@@ -718,7 +726,8 @@ class ClassificationVisionTransformer(nn.Module):
                 x = self.cls_head(x)
             else:
                 print("Uses classification vit with context")
-                x = self.cls_head(torch.cat([x, x_context], dim=1))
+                assert False
+                # x = self.cls_head(torch.cat([x, x_context], dim=1))
         return x
 
     def get_vision_transformer(self) -> vision_transformer.VisionTransformer:
@@ -925,54 +934,105 @@ class Projector(nn.Module):
 
 
 import clip
+import open_clip
 from torchvision.transforms import Resize, Compose, Normalize, ToTensor
+
+# class SemanticFeatureEmbedding(nn.Module):
+#     """Projector that embeds the CLIP features into a lower-dimensional space."""
+#     def __init__(self, model_name="ViT-B/32", device='cuda' if torch.cuda.is_available() else 'cpu', proj_dim=256):
+#         super().__init__()
+#         self.device = device
+#         self.clip_model, _ = clip.load(model_name, device=device)
+#         self.clip_model.eval()  # Freeze CLIP
+#         for param in self.clip_model.parameters():
+#             param.requires_grad = False
+
+#         self.projection = nn.Linear(self.clip_model.visual.output_dim, proj_dim)
+
+#     def forward(self, images):
+#         # Handle input types: list of tensors vs 4D tensor
+#         if isinstance(images, list):
+#             # Assume list of 3D tensors: [C, H, W]
+#             # print(f"Shape of imageL {images[0].shape}")
+#             processed_images = torch.stack([
+#                 self.preprocess_image(img).to(self.device).squeeze(0) for img in images
+#             ])
+#             # print(f"Shape of processed imagesList: {processed_images.shape}")
+#         else: 
+#             # Assume 4D tensor: [B, C, H, W]
+#             # processed_images = images.to(self.device)
+#             # print(f"Shape of imageL {images[0].shape}")
+#             processed_images = torch.stack([
+#                 self.preprocess_image(img).to(self.device).squeeze(0) for img in images
+#             ])
+#             # print(f"Shape of processed imagesTensor: {processed_images.shape}")
+
+#         # print(f"Shape of processed images: {processed_images.shape}")
+#         # Extract CLIP features
+#         with torch.no_grad():
+#             features = self.clip_model.encode_image(processed_images)
+
+#         # Project to lower dimension
+#         features = features.float()
+#         embedded = self.projection(features)
+#         return embedded
+
+#     def preprocess_image(self, image_tensor):
+#         # Manually define CLIP's preprocessing pipeline (default 224x224)
+#         preprocess = Compose([
+#             Resize((224, 224)),
+#             Normalize(mean=(0.4815, 0.4578, 0.4082),
+#                       std=(0.2686, 0.2613, 0.2758))
+#         ])
+#         return preprocess(image_tensor)
+import logging
+
 
 class SemanticFeatureEmbedding(nn.Module):
     """Projector that embeds the CLIP features into a lower-dimensional space."""
-    def __init__(self, model_name="ViT-B/32", device='cuda' if torch.cuda.is_available() else 'cpu', proj_dim=256):
+    def __init__(self, model_name="convnext_xxlarge", pretrained="laion2b_s34b_b82k_augreg", 
+                 device='cuda' if torch.cuda.is_available() else 'cpu', proj_dim=512):
         super().__init__()
         self.device = device
-        self.clip_model, _ = clip.load(model_name, device=device)
-        self.clip_model.eval()  # Freeze CLIP
+        
+        # Load ConvNext-XXLarge using open_clip instead of standard clip
+        self.clip_model, _, self.preprocess = open_clip.create_model_and_transforms(
+            model_name=model_name,
+            pretrained=pretrained,
+            device=device
+        )
+        
+        self.clip_model.eval()  # Freeze model
         for param in self.clip_model.parameters():
             param.requires_grad = False
-
-        self.projection = nn.Linear(self.clip_model.visual.output_dim, proj_dim)
+            
 
     def forward(self, images):
         # Handle input types: list of tensors vs 4D tensor
         if isinstance(images, list):
-            # Assume list of 3D tensors: [C, H, W]
-            # print(f"Shape of imageL {images[0].shape}")
             processed_images = torch.stack([
                 self.preprocess_image(img).to(self.device).squeeze(0) for img in images
             ])
-            # print(f"Shape of processed imagesList: {processed_images.shape}")
-        else: 
-            # Assume 4D tensor: [B, C, H, W]
-            # processed_images = images.to(self.device)
-            # print(f"Shape of imageL {images[0].shape}")
+        else:
             processed_images = torch.stack([
                 self.preprocess_image(img).to(self.device).squeeze(0) for img in images
             ])
-            # print(f"Shape of processed imagesTensor: {processed_images.shape}")
 
-        # print(f"Shape of processed images: {processed_images.shape}")
-        # Extract CLIP features
+        # Extract features using open_clip's encoding method
         with torch.no_grad():
             features = self.clip_model.encode_image(processed_images)
 
         # Project to lower dimension
         features = features.float()
-        embedded = self.projection(features)
-        return embedded
+        return features
 
     def preprocess_image(self, image_tensor):
-        # Manually define CLIP's preprocessing pipeline (default 224x224)
+        # For OpenCLIP, we'll use its normalization values 
+        # But keep the same resizing approach for consistency
         preprocess = Compose([
             Resize((224, 224)),
-            Normalize(mean=(0.4815, 0.4578, 0.4082),
-                      std=(0.2686, 0.2613, 0.2758))
+            Normalize(mean=(0.48145466, 0.4578275, 0.40821073),
+                     std=(0.26862954, 0.26130258, 0.27577711))
         ])
         return preprocess(image_tensor)
 
@@ -983,7 +1043,7 @@ class ClassificationHead(nn.Module):
         input_dim: int,
         num_classes: int,
         mlp_ratio: int = 1,
-        dropout: float = 0.5,
+        dropout: float = 1,
     ):
         super().__init__()
 
@@ -1009,27 +1069,101 @@ class ClassificationHead(nn.Module):
         ])
         return preprocess(image_tensor)
 
+# class ClassificationHeadSemantics(nn.Module):
+#     def __init__(
+#         self,
+#         input_dim: int,
+#         num_classes: int,
+#         mlp_ratio: int = 1,
+#         dropout: float = 1,
+#         semantic_dim: int = 0,
+#     ):
+#         super().__init__()
+
+#         self.head = nn.Sequential(
+#             nn.Linear(input_dim*mlp_ratio + semantic_dim, 512),
+#             nn.ReLU(),
+#             nn.Dropout(dropout),
+#             nn.Linear(512, num_classes)
+#         )
+    
+#     def forward(self, x: torch.Tensor) -> torch.Tensor:
+#         return self.head(x)
+
 class ClassificationHeadSemantics(nn.Module):
     def __init__(
         self,
         input_dim: int,
+        semantic_dim: int,
         num_classes: int,
+        projection_dim: int = 512,
+        num_heads: int = 4,
+        dropout: float = 1,
         mlp_ratio: int = 1,
-        dropout: float = 0.5,
-        semantic_dim: int = 0,
     ):
         super().__init__()
-
-        self.head = nn.Sequential(
-            nn.Linear(input_dim*mlp_ratio + semantic_dim, 512),
-            nn.ReLU(),
-            nn.Dropout(dropout),
-            nn.Linear(512, num_classes)
+        
+        self.spectral_dim = input_dim*mlp_ratio 
+        # Projections
+        self.spectral_proj = nn.Linear(self.spectral_dim, projection_dim)
+        self.semantic_proj = nn.Linear(semantic_dim, projection_dim)
+        
+        # Cross-attention modules (bidirectional)
+        self.spectral_to_semantic_attn = nn.MultiheadAttention(
+            embed_dim=projection_dim,
+            num_heads=num_heads,
+            dropout=dropout,
+            batch_first=True,
         )
-    
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.head(x)
+        
+        self.semantic_to_spectral_attn = nn.MultiheadAttention(
+            embed_dim=projection_dim,
+            num_heads=num_heads,
+            dropout=dropout,
+            batch_first=True,
+        )
+        
+        # Stabilization
+        self.norm1 = nn.LayerNorm(projection_dim)
+        self.norm2 = nn.LayerNorm(projection_dim)
+        self.dropout = nn.Dropout(dropout)
 
+        # Fusion and classification
+        self.fusion = nn.Linear(2 * projection_dim, projection_dim)  # Combine both attended features
+        self.classifier = nn.Linear(projection_dim, num_classes)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        
+        spectral_features = x[:, :self.spectral_dim]
+        semantic_features = x[:, self.spectral_dim:]
+
+        # Project both modalities
+        spectral_proj = self.spectral_proj(spectral_features).unsqueeze(1)  # [B, 1, D]
+        semantic_proj = self.semantic_proj(semantic_features).unsqueeze(1)  # [B, 1, D]
+
+        # Bidirectional cross-attention:
+        # 1. Spectral features attend to semantic features
+        spectral_attended, _ = self.spectral_to_semantic_attn(
+            query=spectral_proj,
+            key=semantic_proj,
+            value=semantic_proj,
+        )
+        spectral_attended = self.norm1(spectral_proj + self.dropout(spectral_attended))
+
+        # 2. Semantic features attend to spectral features
+        semantic_attended, _ = self.semantic_to_spectral_attn(
+            query=semantic_proj,
+            key=spectral_proj,
+            value=spectral_proj,
+        )
+        semantic_attended = self.norm2(semantic_proj + self.dropout(semantic_attended))
+
+        # Fuse both attended features
+        fused = torch.cat([spectral_attended, semantic_attended], dim=-1)  # [B, 1, 2*D]
+        fused = self.fusion(fused).squeeze(1)  # [B, D]
+
+        # Classify
+        return self.classifier(fused)
 
 class FeatureImportanceProjector(nn.Module):
 
@@ -1349,7 +1483,7 @@ def build_mf_vit(config) -> MFViT:
             num_classes=config.MODEL.NUM_CLASSES if config.MODEL.NUM_CLASSES > 2 else 1,
             mlp_ratio=config.MODEL.CLS_HEAD.MLP_RATIO,
             dropout=config.MODEL.SID_DROPOUT,
-            semantic_dim=256
+            semantic_dim=1024
         )
     else:
         raise RuntimeError(f"Unsupported train mode: {config.TRAIN.MODE}")

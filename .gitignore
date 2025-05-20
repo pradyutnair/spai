@@ -146,3 +146,4 @@ output_runs/
 gigagan/
 midjourney-v6.1/
 *.pth
+jobs/

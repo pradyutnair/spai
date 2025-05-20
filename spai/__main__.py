@@ -231,22 +231,23 @@ def train(
         config, logger, is_pretrain=False, is_test=False
     )
 
-    full_dataset = data_loader_train.dataset
-    total_len = len(full_dataset)
-    sample_len = int(0.1 * total_len)
+    # full_dataset = data_loader_train.dataset
+    # total_len = len(full_dataset)
+    # sample_len = int(0.15 * total_len)
+    # logger.info(f"THe number of training samples - {sample_len}")
 
-    # Optionally shuffle indices
-    subset, _ = random_split(full_dataset, [sample_len, total_len - sample_len])
+    # # Optionally shuffle indices
+    # subset, _ = random_split(full_dataset, [sample_len, total_len - sample_len])
 
-    # Re-create a new DataLoader with the subset
-    data_loader_train = DataLoader(
-        subset,
-        batch_size=data_loader_train.batch_size,
-        shuffle=True,
-        num_workers=data_loader_train.num_workers,
-        pin_memory=True,
-        drop_last=data_loader_train.drop_last,
-    )
+    # # Re-create a new DataLoader with the subset
+    # data_loader_train = DataLoader(
+    #    subset,
+    #    batch_size=data_loader_train.batch_size,
+    #    shuffle=True,
+    #    num_workers=data_loader_train.num_workers,
+    #    pin_memory=True,
+    #    drop_last=data_loader_train.drop_last,
+    # )
 
     neptune_run = neptune.init_run(
         name=config.TAG,
@@ -259,9 +260,9 @@ def train(
     model.cuda()
     logger.info(str(model))
 
-    for name, param in model.named_parameters():
-        if "mfvit" in name or "to_kv" in name or "to_out.0." in name:
-            param.requires_grad = False
+    # for name, param in model.named_parameters():
+    #     if "mfvit" in name or "to_kv" in name or "to_out.0." in name:
+    #         param.requires_grad = False
 
     optimizer = build_optimizer(config, model, logger, is_pretrain=False)
     if config.AMP_OPT_LEVEL != "O0":
@@ -289,11 +290,17 @@ def train(
 
     test_datasets_names, test_datasets, test_loaders = build_loader_test(config, logger)
 
+    # for name, param in model.named_parameters():
+    #     if ("semantics_head" in name) or ("cls_head" in name):
+    #         param.requires_grad = True
+    #     else:
+    #         param.requires_grad = False
+
     for name, param in model.named_parameters():
-        if "semantics_head" in name:
-            param.requires_grad = True
-        else:
+        if ("mfvit" in name) or ("context_backbone" in name):
             param.requires_grad = False
+        else:
+            param.requires_grad = True
     
     total_params = sum(p.numel() for p in model.parameters())
     n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -414,6 +421,7 @@ def test(
     neptune_tags.extend([p.stem for p in test_csv])
     neptune_run = neptune.init_run(
         name=config.TAG,
+        project="SPAI-with-CLIP/SPAI-CLIP",
         tags=neptune_tags
     )
 

@@ -21,4 +21,4 @@ pip install -r requirements.txt
 # Download test data
 pip install gdown
 
-gdown 'https://drive.google.com/uc?id=1grvgKiIq0ny8ImQzSUXPk3nd-AMEDjNb'
+gdown 'https://drive.google.com/1qgMuODAxAapwXZXbH2Bgo5s5O_zc1bdl'
