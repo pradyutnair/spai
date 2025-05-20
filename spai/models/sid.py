@@ -36,55 +36,63 @@ from .semantic_fusion import SemanticFusionModule, FUSION_TYPES
 from spai.utils import save_image_with_attention_overlay
 
 
+
 class PatchFusionModule(nn.Module):
-    """
-    Fuses the low, high frequency vectors and semantic vector using attention.
-    """
-    def __init__(self, feature_dim: int, num_heads: int, dropout: float):
+    def __init__(self, input_dim: int, feature_dim: int, num_heads: int, dropout: float):
         super().__init__()
-        # Ensure feature_dim is divisible by num_heads
         self.feature_dim = (feature_dim // num_heads) * num_heads
         self.num_heads = num_heads
-        self.head_dim = self.feature_dim // num_heads
         self.dropout = dropout
         
-        self.query_proj = nn.Linear(feature_dim, self.feature_dim)
-        self.key_proj = nn.Linear(feature_dim, self.feature_dim)
-        self.value_proj = nn.Linear(feature_dim, self.feature_dim)
-        self.semantic_proj = nn.Linear(feature_dim, self.feature_dim)
-        self.attn = nn.MultiheadAttention(embed_dim=self.feature_dim, num_heads=num_heads, batch_first=True)
-        self.out_proj = nn.Linear(self.feature_dim, feature_dim)
+        print(f"🚀 Initializing PatchFusionModule with input_dim={input_dim}, feature_dim={feature_dim}, num_heads={num_heads}")
         
-        self.norm = nn.LayerNorm(feature_dim)
-        self.residual = nn.Identity()
+        # Project input features to the desired dimension
+        self.input_proj = nn.Linear(input_dim, self.feature_dim)
+        self.query_proj = nn.Linear(self.feature_dim, self.feature_dim)
+        self.key_proj = nn.Linear(self.feature_dim, self.feature_dim)
+        self.value_proj = nn.Linear(self.feature_dim, self.feature_dim)
+        
+        # Attention module with batch_first=True
+        self.attn = nn.MultiheadAttention(embed_dim=self.feature_dim, num_heads=num_heads, batch_first=True)
+        self.out_proj = nn.Linear(self.feature_dim, self.feature_dim)
+        
+        # Normalization and feed-forward layers
+        self.norm = nn.LayerNorm(self.feature_dim)
         self.feed_forward = nn.Sequential(
-            nn.Linear(feature_dim, feature_dim * 4),
+            nn.Linear(self.feature_dim, self.feature_dim * 4),
             nn.GELU(),
             nn.Dropout(dropout),
-            nn.Linear(feature_dim * 4, feature_dim),
+            nn.Linear(self.feature_dim * 4, self.feature_dim),
             nn.Dropout(dropout)
         )
 
     def forward(self, low, high, semantic):
-        # low, high, semantic: (B, D)
-        B = low.size(0)
-        # Stack features: (B, 3, D)
-        feats = torch.stack([low, high, semantic], dim=1)
-        # Project features
-        q = self.query_proj(low).unsqueeze(1)  # (B, 1, D)
-        k = self.key_proj(feats)                # (B, 3, D)
-        v = self.value_proj(feats)              # (B, 3, D)
-        # Project semantic and concatenate as an extra key/value
-        sem = self.semantic_proj(semantic).unsqueeze(1)  # (B, 1, D)
-        k = torch.cat([k, sem], dim=1)  # (B, 4, D)
-        v = torch.cat([v, sem], dim=1)  # (B, 4, D)
-        # Attention: query=low, key/value=[low,high,semantic]
-        attn_out, _ = self.attn(q, k, v)  # (B, 1, D)
-        out = self.out_proj(attn_out.squeeze(1))  # (B, D)
+        # Log input shapes
+        print(f"📥 Input shapes - low: {low.shape}, high: {high.shape}, semantic: {semantic.shape}")
+        
+        # Stack features into a sequence: (B, 3, D)
+        feats = torch.stack([low, high, semantic], dim=1)  # (B, 3, feature_dim)
+        print(f"📦 Stacked features shape: {feats.shape}")
+        
+        # Prepare query (using semantic), keys, and values
+        q = self.query_proj(semantic).unsqueeze(1)  # (B, 1, feature_dim)
+        k = self.key_proj(feats)                    # (B, 3, feature_dim)
+        v = self.value_proj(feats)                  # (B, 3, feature_dim)
+        print(f"🔍 Attention shapes - q: {q.shape}, k: {k.shape}, v: {v.shape}")
+        
+        # Apply attention
+        attn_out, _ = self.attn(q, k, v)  # (B, 1, feature_dim)
+        print(f"🎯 Attention output shape: {attn_out.shape}")
+        
+        # Project and squeeze to remove sequence dim
+        out = self.out_proj(attn_out.squeeze(1))  # (B, feature_dim)
+        print(f"📤 Final output shape: {out.shape}")
+        
+        # Apply normalization and feed-forward
         out = self.norm(out)
-        out = self.residual(out) + out
         out = out + self.feed_forward(out)
-        return out
+        
+        return out  # (B, feature_dim)
 
 
 class PatchBasedMFViT(nn.Module):
@@ -92,7 +100,7 @@ class PatchBasedMFViT(nn.Module):
         self,
         vit: Union[vision_transformer.VisionTransformer,
                    backbones.CLIPBackbone,
-                   backbones.DINOv2Backbone],
+                   backbones.DINOv2FeatureEmbedding],
         features_processor: 'FrequencyRestorationEstimator',
         cls_head: Optional[nn.Module],
         masking_radius: int,
@@ -137,11 +145,36 @@ class PatchBasedMFViT(nn.Module):
         self.cls_head = cls_head
         
         # Add patch-level fusion module
+        # Determine backbone output dimension
+        if isinstance(vit, backbones.DINOv2FeatureEmbedding):
+            backbone_dim = vit.output_dim  # e.g., 384 for vits14, 768 for vitb14
+        elif isinstance(vit, backbones.CLIPBackbone):
+            backbone_dim = 512  # Typical for ViT-B/16, adjust if different
+        else:  # Custom VisionTransformer
+            backbone_dim = 768
+
+        self.img_patch_size = img_patch_size
+        self.img_patch_stride = img_patch_stride
+        self.minimum_patches = minimum_patches
+        self.cls_vector_dim = cls_vector_dim
+        
+        # Initialize PatchFusionModule with backbone_dim
         self.patch_fusion = PatchFusionModule(
+            input_dim=backbone_dim,
             feature_dim=cls_vector_dim,
             num_heads=num_heads,
             dropout=dropout
         )
+        self.patch_fusion.to(torch.float32)
+        
+        # Add semantic fusion MHA after spectral context, picking head count dividing feature dim
+        semantic_heads = num_heads
+        for h in range(num_heads, 0, -1):
+            if cls_vector_dim % h == 0:
+                semantic_heads = h
+                break
+        self.semantic_mha = nn.MultiheadAttention(embed_dim=cls_vector_dim, num_heads=semantic_heads, batch_first=True)
+        self.semantic_ln = nn.LayerNorm(cls_vector_dim)
         
         if initialization_scope == "all":
             self.apply(_init_weights)
@@ -170,9 +203,10 @@ class PatchBasedMFViT(nn.Module):
         :param export_dirs:
         """
         x = x.float()
-        print(f"Input type: {type(x)}")
         if isinstance(x, torch.Tensor):
-            x =  self.forward_batch(x)
+            # Fixed-resolution: convert batch to list for arbitrary pipeline
+            img_list = [x[i:i+1] for i in range(x.size(0))]
+            x = self.forward_arbitrary_resolution_batch(img_list, feature_extraction_batch_size or x.size(0))
         elif isinstance(x, list):
             if feature_extraction_batch_size is None:
                 feature_extraction_batch_size = len(x)
@@ -195,16 +229,29 @@ class PatchBasedMFViT(nn.Module):
         drop_top: bool = False
     ) -> torch.Tensor:
         """Perform cross attention between a learnable vector and the patches of an image."""
-        # Ensure input is in correct shape (B, N, D)
+        # Get model dtype for consistency
+        model_dtype = next(self.parameters()).dtype
+        
+        # Ensure input is in correct shape and dtype
         if len(x.shape) == 4:  # If input is (B, C, H, W)
             B, C, H, W = x.shape
             x = x.flatten(2).transpose(1, 2)  # (B, H*W, C)
         elif len(x.shape) == 2:  # If input is (B, C)
             x = x.unsqueeze(1)  # (B, 1, C)
             
+        # Convert to model dtype
+        x = x.to(model_dtype)
+            
         # Ensure input dimension matches cls_vector_dim
         if x.size(-1) != self.cls_vector_dim:
-            x = F.linear(x, torch.eye(self.cls_vector_dim, device=x.device)[:x.size(-1)])
+            # Project to correct dimension if needed: slice identity by columns
+            weight = torch.eye(self.cls_vector_dim, device=x.device, dtype=model_dtype)[:, :x.size(-1)]
+            x = F.linear(x, weight)
+            
+        # Ensure to_kv layer's weight is in correct dtype
+        self.to_kv.weight.data = self.to_kv.weight.data.to(model_dtype)
+        if self.to_kv.bias is not None:
+            self.to_kv.bias.data = self.to_kv.bias.data.to(model_dtype)
             
         # Project to key-value pairs
         kv = self.to_kv(x)  # (B, N, 2*D)
@@ -214,8 +261,8 @@ class PatchBasedMFViT(nn.Module):
         k = rearrange(k, 'b n (h d) -> b h n d', h=self.heads)
         v = rearrange(v, 'b n (h d) -> b h n d', h=self.heads)
         
-        # Expand aggregator to match batch size
-        aggregator = self.patch_aggregator.expand(x.size(0), -1, -1, -1)
+        # Expand aggregator to match batch size and dtype
+        aggregator = self.patch_aggregator.expand(x.size(0), -1, -1, -1).to(model_dtype)
         
         # Compute attention
         dots = torch.matmul(aggregator, k.transpose(-1, -2)) * self.scale
@@ -234,65 +281,64 @@ class PatchBasedMFViT(nn.Module):
             return x
 
     def forward_batch(self, x: torch.Tensor) -> torch.Tensor:
-        # Make sure x is float32
-        x = x.float()
+        x = x.float()  # Ensure input is FP32 for consistency
+        low_freq, hi_freq = filters.filter_image_frequencies(x, self.mfvit.frequencies_mask)
+        low_freq = low_freq.float()
+        hi_freq = hi_freq.float()
         
-        # Get patches
-        B, C, H, W = x.shape
-        # Reshape to (B, H*W, C) for attention
-        x = x.flatten(2).transpose(1, 2)  # (B, H*W, C)
+        # Normalize all components according to ImageNet
+        low_norm = self.mfvit.backbone_norm(low_freq)
+        hi_norm = self.mfvit.backbone_norm(hi_freq)
+        x_norm = self.mfvit.backbone_norm(x)
         
-        # Ensure input dimensions match the model's expected dimensions
-        if x.size(-1) != self.cls_vector_dim:
-            # Project to correct dimension if needed
-            x = F.linear(x, torch.eye(self.cls_vector_dim, device=x.device)[:x.size(-1)])
+        # Extract features and convert to FP32 initially
+        sem_feats, low_feats, hi_feats = self.mfvit._extract_features(x_norm, low_norm, hi_norm)
+        print(f"🔍 Extracted feature shapes - sem: {sem_feats.shape}, low: {low_feats.shape}, hi: {hi_feats.shape}")
         
-        # Process each patch
-        patch_embeddings = []
-        for i in range(x.size(1)):  # Iterate over patches
-            patch = x[:, i, :]  # Get current patch (B, D)
-            
-            # Normalize patch
-            patch_norm = F.normalize(patch, dim=1)
-            patch_norm_fp32 = patch_norm.float()
-            
-            # Get patch tokens using DINOv2
-            patch_tokens = self.mfvit.vit(patch_norm_fp32.unsqueeze(0))  # Add batch dimension
-            patch_tokens = patch_tokens.squeeze(0)  # Remove batch dimension
-            
-            # Get low and high frequency components
-            low_freq, high_freq = self.mfvit.features_processor(patch_norm_fp32)
-            
-            # Fuse patch-level information
-            fused = self.patch_fusion(low_freq, high_freq, patch_tokens)
-            fused = self.norm(fused)
-            
-            # Get classification output
-            out = self.cls_head(fused)
-            patch_embeddings.append(out)
-            
-        # Stack all patch embeddings
-        patch_embeddings = torch.stack(patch_embeddings, dim=0)
+        sem_feats = sem_feats.float()
+        low_feats = low_feats.float()
+        hi_feats = hi_feats.float()
         
-        return patch_embeddings
+        # Collapse intermediate layers by averaging
+        sem = sem_feats.mean(dim=1)
+        low = low_feats.mean(dim=1)
+        hi = hi_feats.mean(dim=1)
+        print(f"📊 Averaged feature shapes - sem: {sem.shape}, low: {low.shape}, hi: {hi.shape}")
+        
+        # Get model dtype for consistency
+        model_dtype = next(self.patch_fusion.parameters()).dtype
+        print(f"🔧 Model dtype: {model_dtype}")
+        
+        # Project all features to the same dimension before fusion
+        feature_dim = self.patch_fusion.feature_dim
+        sem = self.patch_fusion.input_proj(sem.to(model_dtype))
+        low = self.patch_fusion.input_proj(low.to(model_dtype))
+        hi = self.patch_fusion.input_proj(hi.to(model_dtype))
+        print(f"🔧 Projected feature shapes - sem: {sem.shape}, low: {low.shape}, hi: {hi.shape}")
+        
+        # Fuse spectral and semantic features via multi-head cross-attention
+        fused = self.patch_fusion(low, hi, sem)
+        return fused
 
     def forward_arbitrary_resolution_batch(
         self,
         x: list[torch.Tensor],
         feature_extraction_batch_size: int
     ) -> torch.Tensor:
-        """Forward pass of a batch of images of different resolutions.
-
-        Batch size on the tensors should equal one.
-
-        :param x: list of 1 x C x H_i x W_i tensors, where i denote the i-th image in the list.
-        :param feature_extraction_batch_size:
-
-        :returns: A B x 1 tensor.
-        """
+        """Forward pass of a batch of images of different resolutions."""
+        # Get model dtype for consistency
+        model_dtype = next(self.parameters()).dtype
+        print(f"🔧 Model dtype in forward_arbitrary_resolution_batch: {model_dtype}")
+        
+        # Convert inputs to model dtype and ensure correct shape
+        x = [i.to(model_dtype) for i in x]
+        # Keep original images for semantic fusion
+        orig_images = x
         # Rearrange the patches from all images into a single tensor.
         patched_images: list[torch.Tensor] = []
         for img in x:
+            # Ensure image is in correct dtype before patchifying
+            img = img.to(model_dtype)
             patched: torch.Tensor = utils.patchify_image(
                 img,
                 (self.img_patch_size, self.img_patch_size),
@@ -306,14 +352,7 @@ class PatchBasedMFViT(nn.Module):
             patched_images.append(patched)
         x = patched_images
         del patched_images
-        # x = [
-        #     utils.patchify_image(
-        #         img,
-        #         (self.img_patch_size, self.img_patch_size),
-        #         (self.img_patch_stride, self.img_patch_stride)
-        #     )  # 1 x L_i x C x H x W
-        #     for img in x
-        # ]
+        
         img_patches_num: list[int] = [img.size(1) for img in x]
         x = torch.cat(x, dim=1)  # 1 x SUM(L_i) x C x H x W
         x = x.squeeze(dim=0)  # SUM(L_i) x C x H x W
@@ -329,12 +368,43 @@ class PatchBasedMFViT(nn.Module):
         attended: list[torch.Tensor] = []
         processed_sum: int = 0
         for i in img_patches_num:
-            attended.append(self.patches_attention(x[processed_sum:processed_sum+i].unsqueeze(0)))
+            value = x[processed_sum:processed_sum+i].unsqueeze(0).to(model_dtype)
+            attended.append(self.patches_attention(value))
             processed_sum += i
         x = torch.cat(attended, dim=0)  # B x D
         del attended
 
         x = self.norm(x)  # B x D
+        # Local semantic fusion: cross-attention with semantic patch embeddings
+        # Build semantic patches from original images
+        sem_list: list[torch.Tensor] = []
+        for img in orig_images:
+            # Ensure image is in correct dtype before frequency filtering
+            img = img.to(model_dtype)
+            low_f, hi_f = filters.filter_image_frequencies(img, self.mfvit.frequencies_mask)
+            low_n = self.mfvit.backbone_norm(low_f)
+            hi_n = self.mfvit.backbone_norm(hi_f)
+            img_n = self.mfvit.backbone_norm(img)
+            sem_feats, _, _ = self.mfvit._extract_features(img_n, low_n, hi_n)
+            sem_list.append(sem_feats.mean(dim=1))  # 1 x M x D
+        sem_patches = torch.cat(sem_list, dim=0).to(model_dtype)  # B x M x D
+        
+        # Project semantic patches to the correct dimension
+        sem_patches = self.patch_fusion.input_proj(sem_patches)  # B x M x feature_dim
+        
+        # Ensure semantic_mha layer's parameters are in correct dtype
+        for param in self.semantic_mha.parameters():
+            param.data = param.data.to(model_dtype)
+            
+        # Cross-attend spectral context to semantic patches
+        q = x.unsqueeze(1)  # B x 1 x D
+        # Ensure semantic patches have correct shape for MHA
+        sem_patches = sem_patches.unsqueeze(1)  # B x 1 x feature_dim
+        attn_out, _ = self.semantic_mha(q, sem_patches, sem_patches)
+        sem_out = attn_out.squeeze(1)  # B x D
+        # Fuse and normalize
+        x = self.semantic_ln(x + sem_out)
+
         x = self.cls_head(x)  # B x 1
 
         return x
@@ -506,7 +576,7 @@ class MFViT(nn.Module):
         self,
         vit: Union[vision_transformer.VisionTransformer,
                    backbones.CLIPBackbone,
-                   backbones.DINOv2Backbone],
+                   backbones.DINOv2FeatureEmbedding],
         features_processor: 'FrequencyRestorationEstimator',
         cls_head: Optional[nn.Module],
         masking_radius: int,
@@ -539,7 +609,7 @@ class MFViT(nn.Module):
         )
 
         if (isinstance(self.vit, vision_transformer.VisionTransformer)
-                or isinstance(self.vit, backbones.DINOv2Backbone)):
+                or isinstance(self.vit, backbones.DINOv2FeatureEmbedding)):
             # ImageNet normalization
             self.backbone_norm = transforms.Normalize(
                 mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD
@@ -649,6 +719,9 @@ class MFViT(nn.Module):
         low_freq: torch.Tensor,
         hi_freq: torch.Tensor
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        x = x.float()
+        low_freq = low_freq.float()
+        hi_freq = hi_freq.float()
         x = self.vit(x)
         low_freq = self.vit(low_freq)
         hi_freq = self.vit(hi_freq)
@@ -660,7 +733,7 @@ class MFViT(nn.Module):
             def __init__(self):
                 super().__init__()
                 if (isinstance(outer_instance.vit, vision_transformer.VisionTransformer)
-                        or isinstance(outer_instance.vit, backbones.DINOv2Backbone)):
+                        or isinstance(outer_instance.vit, backbones.DINOv2FeatureEmbedding)):
                     # ImageNet normalization
                     self.backbone_norm = utils.ExportableImageNormalization(
                         mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD
@@ -796,6 +869,7 @@ class ClassificationVisionTransformer(nn.Module):
         self.frozen_backbone: bool = frozen_backbone
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = x.float()
         if self.frozen_backbone:
             with torch.no_grad():
                 x = self.vit(x)
@@ -1058,7 +1132,7 @@ class FeatureImportanceProjector(nn.Module):
         x = x.reshape(B*N, L, D)
         
         x_mean: torch.Tensor = x.mean(dim=1)  # (B*N, D)
-        x_std: torch.Tensor = utils.exportable_std(x, dim=1)  # (B*N, D)
+        x_std: torch.Tensor = x.std(dim=1)  # (B*N, D)
         x = torch.cat([x_mean, x_std], dim=-1)  # (B*N, 2*D)
 
         x = self.proj1(x)  # (B*N, proj_dim)
@@ -1297,10 +1371,10 @@ def build_mf_vit(config) -> MFViT:
         vit: backbones.CLIPBackbone = backbones.CLIPBackbone()
         initialization_scope: str = "local"
     elif config.MODEL_WEIGHTS == "dinov2":
-        vit: backbones.DINOv2Backbone = backbones.DINOv2Backbone()
+        vit: backbones.DINOv2FeatureEmbedding = backbones.DINOv2FeatureEmbedding()
         initialization_scope: str = "local"
     elif config.MODEL_WEIGHTS in ["dinov2_vitl14", "dinov2_vitg14"]:
-        vit: backbones.DINOv2Backbone = backbones.DINOv2Backbone(
+        vit: backbones.DINOv2FeatureEmbedding = backbones.DINOv2FeatureEmbedding(
             dinov2_model=config.MODEL_WEIGHTS,
             intermediate_layers=config.MODEL.VIT.INTERMEDIATE_LAYERS
         )

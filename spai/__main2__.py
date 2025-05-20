@@ -232,12 +232,6 @@ def train(
     logger.info(f"Creating model:{config.MODEL.TYPE}/{config.MODEL.NAME}")
     model = build_cls_model(config)
     model.cuda()
-    # Log backbone type to confirm DINOv2 is used as the backbone
-    try:
-        backbone = model.mfvit.vit
-    except AttributeError:
-        backbone = getattr(model, "vit", None)
-    logger.info(f"🚀 Backbone used: {backbone.__class__.__name__}")
     logger.info(str(model))
 
     # Step 1: Log initial parameter counts
@@ -509,9 +503,170 @@ def test(
 
 
 @cli.command()
-@click.option("--cfg", default="./configs/spai.yaml", show_default=True,
+@click.option("--cfg", required=True,
+              type=click.Path(exists=True, dir_okay=False, path_type=Path))
+@click.option("--batch-size", type=int,
+              help="Batch size for a single GPU.")
+@click.option("--test-csv", multiple=True,
               type=click.Path(exists=True, dir_okay=False, path_type=Path),
-              help="Path to a configuration file for SPAI.")
+              help="Path to a CSV with test data. If this option is provided after the "
+                   "validation of each epoch, a testing will also take place. This option "
+                   "intends to facilitate understanding the progression of the generalization "
+                   "ability of a model among the epochs and should not be used for selecting "
+                   "the final model. This option can be repeated several times. For each provided "
+                   "csv file, a separate testing run is going to take place.")
+@click.option("--test-csv-root-dir", multiple=True,
+              type=click.Path(exists=True, file_okay=False, path_type=Path),
+              help="Root directory for the relative paths included into the test csv files. "
+                   "If this option is omitted, the parent directory of each test csv file will "
+                   "be used as the root dir for the paths it contains. If this option is provided "
+                   "a single time, it will be used as the root dir for all the test csv files. If "
+                   "it is provided multiple times, each value will be matched with a corresponding "
+                   "test csv file. In that case, the number of provided test csv files and the "
+                   "number of provided root directories should match. The order of the provided "
+                   "arguments will be used for the matching.")
+@click.option("--split", type=str, default="test",
+              help="The data split which will be tested. Actually, this value is expected to be "
+                   "present in the `split` column of the provided csv files. Only samples "
+                   "in the csv belonging to the provided split will be tested.")
+@click.option("--lmdb", "lmdb_path",
+              type=click.Path(exists=True, dir_okay=False, path_type=Path),
+              help="Path to an LMDB file storage that contains the files defined in the "
+                   "dataset's CSV file. If this option is not provided, the data will be "
+                   "loaded from the filesystem.")
+@click.option("--model",
+              type=click.Path(exists=True),
+              help="path to pre-trained model")
+@click.option("--output", type=click.Path(file_okay=False, path_type=Path),
+              help="root of output folder, the full path is "
+                   "<output>/<model_name>/<tag> (default: output)")
+@click.option("--tag", type=str,
+              help="tag of experiment")
+@click.option("--resize-to", type=int,
+              help="When this argument is provided the testing images will be resized "
+                   "so that their biggest dimension does not exceed this value.")
+@click.option("--opt", "extra_options", type=(str, str), multiple=True)
+@click.option("--update-csv", is_flag=True,
+              help="When this flag is provided the predicted score for each sample is "
+                   "written to the dataset csv, under a new column named as "
+                   "{tag}_epoch_{epoch_num}_{crop_approach}.")
+def test(
+    cfg: Path,
+    batch_size: Optional[int],
+    test_csv: list[Path],
+    test_csv_root_dir: list[Path],
+    split: str,
+    lmdb_path: Optional[Path],
+    model: Path,
+    output: Path,
+    tag: str,
+    resize_to: Optional[int],
+    extra_options: tuple[str, str],
+    update_csv: bool
+) -> None:
+    config = get_config({
+        "cfg": str(cfg),
+        "batch_size": batch_size,
+        "test_csv": [str(p) for p in test_csv],
+        "test_csv_root": [str(p) for p in test_csv_root_dir],
+        "lmdb_path": str(lmdb_path) if lmdb_path is not None else None,
+        "output": str(output),
+        "tag": tag,
+        "pretrained": str(model),
+        "resize_to": resize_to,
+        "opts": extra_options
+    })
+
+    pathlib.Path(config.OUTPUT).mkdir(exist_ok=True, parents=True)
+    global logger
+    logger = create_logger(output_dir=config.OUTPUT, dist_rank=0, name=f"{config.MODEL.NAME}")
+
+    # Export current config.
+    path = os.path.join(config.OUTPUT, "config.json")
+    with open(path, "w") as f:
+        f.write(config.dump())
+    logger.info(f"Full config saved to {path}")
+    log_writer = SummaryWriter(log_dir=config.OUTPUT)
+    # print config
+    logger.info(config.dump())
+
+    neptune_tags: list[str] = ["mfm", "test"]
+    neptune_tags.extend([p.stem for p in test_csv])
+    neptune_run = neptune.init_run(
+        name=config.TAG,
+        tags=neptune_tags
+    )
+
+    test_datasets_names, test_datasets, test_loaders = build_loader_test(config, logger,
+                                                                         split=split)
+    model_checkpoints: list[pathlib.Path] = find_pretrained_checkpoints(config)
+    criterion = losses.build_loss(config)
+
+    for i, model_ckpt in enumerate(model_checkpoints):
+        if i == 0:
+            logger.info(f"Creating model:{config.MODEL.TYPE}/{config.MODEL.NAME}")
+        model = build_cls_model(config)
+        model.cuda()
+        if i == 0:
+            logger.info(str(model))
+            n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
+            logger.info(f"Number of Params: {n_parameters}")
+            if hasattr(model, "flops"):
+                flops = model.flops()
+                logger.info(f"Number of GFLOPs: {flops / 1e9}")
+
+        checkpoint_epoch: int = load_pretrained(config, model, logger,
+                                                checkpoint_path=model_ckpt, verbose=i==0)
+
+        # Test the model.
+        for test_data_loader, test_dataset, test_data_name in zip(test_loaders,
+                                                                  test_datasets,
+                                                                  test_datasets_names):
+            predictions: Optional[dict[int, tuple[float, Optional[AttentionMask]]]] = None
+            if update_csv:
+                acc, ap, auc, loss, predictions = validate(
+                    config, test_data_loader, model, criterion, neptune_run,
+                    return_predictions=True
+                )
+            else:
+                acc, ap, auc, loss = validate(config, test_data_loader,
+                                              model, criterion, neptune_run)
+            logger.info(f"Test | {test_data_name} | Epoch {checkpoint_epoch} | "
+                        f"Images: {len(test_dataset)} | loss: {loss:.4f}")
+            logger.info(f"Test | {test_data_name} | Epoch {checkpoint_epoch}  | "
+                        f"Images: {len(test_dataset)} | ACC: {acc:.3f}")
+            logger.info(f"Test | {test_data_name} | Epoch {checkpoint_epoch}  | "
+                        f"Images: {len(test_dataset)} | AP: {ap:.3f}")
+            logger.info(f"Test | {test_data_name} | Epoch {checkpoint_epoch}  | "
+                        f"Images: {len(test_dataset)} | AUC: {auc:.3f}")
+            neptune_run[f"test/{test_data_name}/acc"].append(acc, step=checkpoint_epoch)
+            neptune_run[f"test/{test_data_name}/ap"].append(ap, step=checkpoint_epoch)
+            neptune_run[f"test/{test_data_name}/auc"].append(auc, step=checkpoint_epoch)
+            neptune_run[f"test/{test_data_name}/loss"].append(loss, step=checkpoint_epoch)
+
+            if predictions is not None:
+                column_name: str = f"{tag}_epoch_{checkpoint_epoch}"
+                scores: dict[int, float] = {i: t[0] for i, t in predictions.items()}
+                attention_masks: dict[int, pathlib.Path] = {
+                    i: t[1].mask for i, t in predictions.items() if t[1] is not None
+                }
+                test_dataset.update_dataset_csv(
+                    column_name, scores, export_dir=Path(config.OUTPUT)
+                )
+                if len(attention_masks) == len(scores):
+                    test_dataset.update_dataset_csv(
+                        f"{column_name}_mask", attention_masks, export_dir=Path(config.OUTPUT)
+                    )
+
+        if log_writer is not None:
+            log_writer.flush()
+        if neptune_run is not None:
+            neptune_run.sync()
+
+
+@cli.command()
+@click.option("--cfg", required=True,
+              type=click.Path(exists=True, dir_okay=False, path_type=Path))
 @click.option("--batch-size", type=int, default=1, show_default=True,
               help="Inference batch size.")
 @click.option("--input", "input_paths", multiple=True, required=True,
@@ -634,116 +789,6 @@ def infer(
 @cli.command()
 @click.option("--cfg", required=True,
               type=click.Path(exists=True, dir_okay=False, path_type=Path))
-@click.option("--test-csv", multiple=True,
-              type=click.Path(exists=True, dir_okay=False, path_type=Path),
-              help="Path to a CSV with test data. If this option is provided after the "
-                   "validation of each epoch, a testing will also take place. This option "
-                   "intends to facilitate understanding the progression of the generalization "
-                   "ability of a model among the epochs and should not be used for selecting "
-                   "the final model. This option can be repeated several times. For each provided "
-                   "csv file, a separate testing run is going to take place.")
-@click.option("--test-csv-root-dir", multiple=True,
-              type=click.Path(exists=True, file_okay=False, path_type=Path),
-              help="Root directory for the relative paths included into the test csv files. "
-                   "If this option is omitted, the parent directory of each test csv file will "
-                   "be used as the root dir for the paths it contains. If this option is provided "
-                   "a single time, it will be used as the root dir for all the test csv files. If "
-                   "it is provided multiple times, each value will be matched with a corresponding "
-                   "test csv file. In that case, the number of provided test csv files and the "
-                   "number of provided root directories should match. The order of the provided "
-                   "arguments will be used for the matching.")
-@click.option("--lmdb", "lmdb_path",
-              type=click.Path(exists=True, dir_okay=False, path_type=Path),
-              help="Path to an LMDB file storage that contains the files defined in the "
-                   "dataset's CSV file. If this option is not provided, the data will be "
-                   "loaded from the filesystem.")
-@click.option("--model",
-              type=click.Path(exists=True),
-              help="path to pre-trained model")
-@click.option("--output", type=click.Path(file_okay=False, path_type=Path),
-              help="root of output folder, the full path is "
-                   "<output>/<model_name>/<tag> (default: output)")
-@click.option("--tag", type=str,
-              help="tag of experiment")
-@click.option("--resize-to", type=int,
-              help="When this argument is provided the testing images will be resized "
-                   "so that their biggest dimension does not exceed this value.")
-@click.option("--opt", "extra_options", type=(str, str), multiple=True)
-def tsne(
-    cfg: Path,
-    test_csv: list[Path],
-    test_csv_root_dir: list[Path],
-    lmdb_path: Optional[Path],
-    model: Path,
-    output: Path,
-    tag: str,
-    resize_to: Optional[int],
-    extra_options: tuple[str, str],
-) -> None:
-    config = get_config({
-        "cfg": str(cfg),
-        "batch_size": 1,  # Currently, required to be 1 for correctly distinguishing embeddings.
-        "test_csv": [str(p) for p in test_csv],
-        "test_csv_root": [str(p) for p in test_csv_root_dir],
-        "lmdb_path": str(lmdb_path) if lmdb_path is not None else None,
-        "output": str(output),
-        "tag": tag,
-        "pretrained": str(model),
-        "resize_to": resize_to,
-        "opts": extra_options
-    })
-    from spai import tsne as tsne_utils
-
-    pathlib.Path(config.OUTPUT).mkdir(exist_ok=True, parents=True)
-    global logger
-    logger = create_logger(output_dir=config.OUTPUT, dist_rank=0, name=f"{config.MODEL.NAME}")
-
-    # Export current config.
-    path = os.path.join(config.OUTPUT, "config.json")
-    with open(path, "w") as f:
-        f.write(config.dump())
-    logger.info(f"Full config saved to {path}")
-    log_writer = SummaryWriter(log_dir=config.OUTPUT)
-    # print config
-    logger.info(config.dump())
-
-    neptune_tags: list[str] = ["mfm", "tsne"]
-    neptune_tags.extend([p.stem for p in test_csv])
-    neptune_run = neptune.init_run(
-        name=config.TAG,
-        tags=neptune_tags
-    )
-
-    test_datasets_names, test_datasets, test_loaders = build_loader_test(config, logger)
-    model_ckpt: pathlib.Path = find_pretrained_checkpoints(config)[0]
-
-    logger.info(f"Creating model:{config.MODEL.TYPE}/{config.MODEL.NAME}")
-    model = build_cls_model(config)
-    model.cuda()
-    logger.info(str(model))
-    n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    logger.info(f"Number of Params: {n_parameters}")
-    if hasattr(model, "flops"):
-        flops = model.flops()
-        logger.info(f"Number of GFLOPs: {flops / 1e9}")
-
-    checkpoint_epoch: int = load_pretrained(config, model, logger, checkpoint_path=model_ckpt)
-
-    # Test the model.
-    for test_data_loader, test_dataset, test_data_name in zip(test_loaders,
-                                                              test_datasets,
-                                                              test_datasets_names):
-        tsne_utils.visualize_tsne(config, test_data_loader, test_data_name, model, neptune_run)
-
-        if log_writer is not None:
-            log_writer.flush()
-        if neptune_run is not None:
-            neptune_run.sync()
-
-
-@cli.command()
-@click.option("--cfg", required=True,
-              type=click.Path(exists=True, dir_okay=False, path_type=Path))
 @click.option("--model",
               type=click.Path(exists=True),
               help="path to pre-trained model")
@@ -809,34 +854,6 @@ def export_onnx(
 @cli.command()
 @click.option("--cfg", required=True,
               type=click.Path(exists=True, dir_okay=False, path_type=Path))
-@click.option("--batch-size", type=int, help="Batch size.")
-@click.option("--test-csv", multiple=True,
-              type=click.Path(exists=True, dir_okay=False, path_type=Path),
-              help="Path to a CSV with test data. If this option is provided after the "
-                   "validation of each epoch, a testing will also take place. This option "
-                   "intends to facilitate understanding the progression of the generalization "
-                   "ability of a model among the epochs and should not be used for selecting "
-                   "the final model. This option can be repeated several times. For each provided "
-                   "csv file, a separate testing run is going to take place.")
-@click.option("--test-csv-root-dir", multiple=True,
-              type=click.Path(exists=True, file_okay=False, path_type=Path),
-              help="Root directory for the relative paths included into the test csv files. "
-                   "If this option is omitted, the parent directory of each test csv file will "
-                   "be used as the root dir for the paths it contains. If this option is provided "
-                   "a single time, it will be used as the root dir for all the test csv files. If "
-                   "it is provided multiple times, each value will be matched with a corresponding "
-                   "test csv file. In that case, the number of provided test csv files and the "
-                   "number of provided root directories should match. The order of the provided "
-                   "arguments will be used for the matching.")
-@click.option("--split", type=str, default="test",
-              help="The data split which will be tested. Actually, this value is expected to be "
-                   "present in the `split` column of the provided csv files. Only samples "
-                   "in the csv belonging to the provided split will be tested.")
-@click.option("--lmdb", "lmdb_path",
-              type=click.Path(exists=True, dir_okay=False, path_type=Path),
-              help="Path to an LMDB file storage that contains the files defined in the "
-                   "dataset's CSV file. If this option is not provided, the data will be "
-                   "loaded from the filesystem.")
 @click.option("--model",
               type=click.Path(exists=True),
               help="path to pre-trained model")
@@ -849,11 +866,6 @@ def export_onnx(
 @click.option("--exclude-preprocessing", is_flag=True)
 def validate_onnx(
     cfg: Path,
-    batch_size: Optional[int],
-    test_csv: list[Path],
-    test_csv_root_dir: list[Path],
-    split: str,
-    lmdb_path: Optional[Path],
     model: Path,
     output: Path,
     tag: str,
@@ -863,10 +875,6 @@ def validate_onnx(
 ) -> None:
     config = get_config({
         "cfg": str(cfg),
-        "batch_size": batch_size,
-        "test_csv": [str(p) for p in test_csv],
-        "test_csv_root": [str(p) for p in test_csv_root_dir],
-        "lmdb_path": str(lmdb_path) if lmdb_path is not None else None,
         "output": str(output),
         "tag": tag,
         "pretrained": str(model),
@@ -942,9 +950,7 @@ def train_model(
     val_auc_per_epoch: list[float] = []
     val_loss_per_epoch: list[float] = []
 
-    #for epoch in range(config.TRAIN.START_EPOCH, config.TRAIN.EPOCHS):
-    for epoch in range(2):
-        logger.info(f"🔄 (only 2 epochs) Epoch {epoch}")
+    for epoch in range(config.TRAIN.START_EPOCH, config.TRAIN.EPOCHS):
         epoch_start_time: float = time.time()
 
         # Stage 1: Train semantic components (first 5 epochs)
@@ -1068,10 +1074,6 @@ def train_one_epoch(
     criterion.train()
     optimizer.zero_grad()
     
-    # Get model dtype for consistency
-    model_dtype = next(model.parameters()).dtype
-    logger.info(f"🔧 Model dtype: {model_dtype}")
-    
     logger.info(
         "📈 Current learning rate for different parameter groups: "
         f"{[it['lr'] for it in optimizer.param_groups]}"
@@ -1088,22 +1090,24 @@ def train_one_epoch(
         if isinstance(criterion, TripletMarginLoss):
             anchor, positive, negative = batch
             batch_size: int = anchor.size(0)
-            anchor = anchor.cuda(non_blocking=True).to(model_dtype)
-            positive = positive.cuda(non_blocking=True).to(model_dtype)
-            negative = negative.cuda(non_blocking=True).to(model_dtype)
+            anchor = anchor.cuda(non_blocking=True)
+            positive = positive.cuda(non_blocking=True)
+            negative = negative.cuda(non_blocking=True)
             anchor_outputs = model(anchor)
             positive_outputs = model(positive)
             negative_outputs = model(negative)
         else:
             samples, targets, _ = batch
             batch_size: int = samples.size(0)
-            samples = samples.cuda(non_blocking=True).to(model_dtype)
+            samples = samples.cuda(non_blocking=True)
             targets = targets.cuda(non_blocking=True)
             
             # Forward pass each augmented view of the batch separately
             outputs_views: list[torch.Tensor] = []
             for i in range(samples.size(1)):
-                view = samples[:, i, :, :, :]
+                view = samples[:, i, :, :, :].float()
+                # Ensure input is in correct format for DINOv2
+                view = view.to(torch.float32)  # DINOv2 expects float32
                 output = model(view)
                 outputs_views.append(output)
             outputs: torch.Tensor = torch.stack(outputs_views, dim=1)
@@ -1191,9 +1195,6 @@ def validate(
 ):
     model.eval()
     criterion.eval()
-    
-    # Get model dtype for consistency
-    model_dtype = next(model.parameters()).dtype
 
     batch_time = AverageMeter()
     loss_meter = AverageMeter()
@@ -1205,11 +1206,11 @@ def validate(
     for idx, (images, target, dataset_idx) in enumerate(data_loader):
         if isinstance(images, list):
             # In case of arbitrary resolution models the batch is provided as a list of tensors.
-            images = [img.cuda(non_blocking=True).to(model_dtype) for img in images]
+            images = [img.cuda(non_blocking=True) for img in images]
             # Remove views dimension. Always 1 during inference.
             images = [img.squeeze(dim=1) for img in images]
         else:
-            images = images.cuda(non_blocking=True).to(model_dtype)
+            images = images.cuda(non_blocking=True)
         target = target.cuda(non_blocking=True)
 
         # Compute output.
@@ -1282,5 +1283,20 @@ def validate(
         return acc, ap, auc, loss_meter.avg
 
 
-if __name__ == '__main__':
-    cli()
+def forward_batch(self, x):
+    # ...existing code...
+    
+    # Replace the problematic line:
+    # x = F.linear(x, torch.eye(self.cls_vector_dim, device=x.device)[:x.size(-1)])
+    
+    # Create a compatible weight matrix with correct dimensions
+    input_dim = x.size(-1)
+    weight = torch.zeros(input_dim, input_dim, device=x.device)
+    # Set diagonal elements to 1 to create identity-like behavior
+    for i in range(input_dim):
+        weight[i, i] = 1.0
+    
+    # Apply the linear transformation with properly sized weight matrix
+    x = F.linear(x, weight)
+    
+    # ...existing code...

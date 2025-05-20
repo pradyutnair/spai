@@ -19,6 +19,7 @@ from typing import Optional
 import torch
 from torch import fft
 from torch import linalg
+from torch.nn import functional as F
 
 
 __author__: str = "Dimitrios Karageorgiou"
@@ -31,46 +32,39 @@ def filter_image_frequencies(
     image: torch.Tensor,
     mask: torch.Tensor
 ) -> tuple[torch.Tensor, torch.Tensor]:
-    """Filters the frequencies of an image according to the provided mask.
+    """Filter the image frequencies using the provided mask.
 
-    Dimensionalities:
-        - B is the batch size.
-        - C is the number of image channels.
-        - H is the height of the image.
-        - W is the width of the image.
-
-    :param image: The images to filter. Dimensionality: [[B] x C] x H x W
-    :param mask: The mask that indicates the frequencies in the 2D DFT spectrum to be
-        filtered out. Values of 1 in the mask indicate that the corresponding frequency will
-        be allowed, while values of 0 indicate that the corresponding frequency will be
-        filtered out. The mask is multiplied with the center-shifted spectrum of the image.
-        Thus, it should follow this format. Dimensionality: [[B] x C] x H x W.
-
-    :return: A tuple that includes:
-        - The filtered image. Dimensionality: [[B] x C] x H x W
-        - The residual of the filtered image (filtered with the inverse mask).
-            Dimensionality: [[B] x C] x H x W
+    :param image: B x C x H x W
+    :param mask: H x W
+    :returns: A tuple containing the low and high frequency components of the image.
     """
-    # Always cast to float32 for FFT to avoid cuFFT float16 limitations
-    orig_dtype = image.dtype
-    image = image.float()
-    image = fft.fft2(image)
-    image = fft.fftshift(image)
+    # Ensure image and mask are in the same dtype
+    image = image.to(mask.dtype)
+    
+    # Get image dimensions
+    B, C, H, W = image.shape
+    
+    # Convert mask to float before interpolation
+    mask = mask.float()
+    
+    # Resize mask to match image dimensions if needed
+    if mask.shape != (H, W):
+        mask = F.interpolate(mask.unsqueeze(0).unsqueeze(0), size=(H, W), mode='nearest').squeeze(0).squeeze(0)
+    
+    # Apply FFT
+    fft_image: torch.Tensor = torch.fft.fft2(image)
+    fft_image = torch.fft.fftshift(fft_image, dim=(-2, -1))
 
-    # Filter image.
-    filtered_image: torch.Tensor = image * mask
-    residual_filtered_image: torch.Tensor = image * (1 - mask)
+    # Filter frequencies
+    filtered_image: torch.Tensor = fft_image * mask.unsqueeze(0).unsqueeze(0)
+    filtered_image = torch.fft.ifftshift(filtered_image, dim=(-2, -1))
+    filtered_image = torch.fft.ifft2(filtered_image)
+    filtered_image = torch.real(filtered_image)
 
-    # Compute IFFT.
-    filtered_image = fft.ifftshift(filtered_image)
-    filtered_image = fft.ifft2(filtered_image).real
-    residual_filtered_image = fft.ifftshift(residual_filtered_image)
-    residual_filtered_image = fft.ifft2(residual_filtered_image).real
+    # Get high frequency component
+    high_freq: torch.Tensor = image - filtered_image
 
-    # Cast back to original dtype if needed
-    filtered_image = filtered_image.to(orig_dtype)
-    residual_filtered_image = residual_filtered_image.to(orig_dtype)
-    return filtered_image, residual_filtered_image
+    return filtered_image, high_freq
 
 
 def generate_circular_mask(

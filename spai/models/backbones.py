@@ -18,6 +18,7 @@ import torch
 from torch import nn
 import clip
 import logging
+from torchvision.transforms import Compose, Resize, Normalize
 
 logger = logging.getLogger(__name__)
 
@@ -132,35 +133,71 @@ class CLIPBackbone(nn.Module):
         return x
 
 
-class DINOv2Backbone(nn.Module):
-    def __init__(
-        self,
-        dinov2_model: str = "dinov2_vitb14",
-        intermediate_layers: tuple[int, ...] = tuple((i for i in range(12)))
-    ) -> None:
+class DINOv2FeatureEmbedding(nn.Module):
+    """Projector that embeds DINOv2 features into a lower-dimensional space."""
+    def __init__(self, model_name="dinov2_vitg14", 
+                 device='cuda' if torch.cuda.is_available() else 'cpu', 
+                 proj_dim=512):
         super().__init__()
+        self.device = device
         
-        logger.info(f"Initializing DINOv2 model: {dinov2_model}")
-        try:
-            # Initialize DINOv2 pretrained model.
-            self.dino = torch.hub.load("facebookresearch/dinov2", dinov2_model)
-            logger.info(f"Successfully loaded DINOv2 model: {dinov2_model}")
-            self.intermediate_layers: tuple[int, ...] = intermediate_layers
-            logger.info(f"Using intermediate layers: {intermediate_layers}")
-        except Exception as e:
-            logger.error(f"Failed to load DINOv2 model: {str(e)}")
-            raise
+        # Load DINOv2 model
+        if model_name == "dinov2_vitl14":
+            self.dino_model = torch.hub.load('facebookresearch/dinov2', 'dinov2_vitl14')
+            self.output_dim = 1024
+        elif model_name == "dinov2_vitg14":
+            self.dino_model = torch.hub.load('facebookresearch/dinov2', 'dinov2_vitg14')
+            self.output_dim = 1536
+        elif model_name == "dinov2_vitb14":
+            self.dino_model = torch.hub.load('facebookresearch/dinov2', 'dinov2_vitb14')
+            self.output_dim = 768
+        elif model_name == "dinov2_vits14":
+            self.dino_model = torch.hub.load('facebookresearch/dinov2', 'dinov2_vits14')
+            self.output_dim = 384
+        else:
+            raise ValueError(f"Unknown DINOv2 model: {model_name}")
+            
+        self.dino_model.to(device)
+        self.dino_model.eval()  # Freeze model
+        
+        for param in self.dino_model.parameters():
+            param.requires_grad = False
+            
+        # Print model info for debugging
+        logger.info(f"Loaded DINOv2 model {model_name} with output dim {self.output_dim}")
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        input_dtype = x.dtype
-        logger.debug(f"Forward pass input shape: {x.shape}, dtype: {input_dtype}")
-        try:
-            x: tuple[torch.Tensor] = self.dino.get_intermediate_layers(x, self.intermediate_layers)
-            x: torch.Tensor = torch.stack(x, dim=1)
-            x = x.to(input_dtype)
-            logger.debug(f"Forward pass output shape: {x.shape}, dtype: {x.dtype}")
-            return x
-        except Exception as e:
-            logger.error(f"Error in DINOv2 forward pass: {str(e)}")
-            raise
+    def forward(self, images):
+        # Handle input types: list of tensors vs 4D tensor
+        if isinstance(images, list):
+            processed_images = torch.stack([
+                self.preprocess_image(img).to(self.device) for img in images
+            ])
+        else:
+            processed_images = torch.stack([
+                self.preprocess_image(img).to(self.device) for img in images
+            ])
+
+        # Match input dtype with model parameters
+        model_dtype = next(self.dino_model.parameters()).dtype
+        processed_images = processed_images.to(model_dtype)
+
+        # Extract features using DINOv2
+        with torch.no_grad():
+            # Get intermediate layer outputs
+            outputs = self.dino_model.get_intermediate_layers(processed_images, n=1)
+            features = outputs[0]  # Get the last layer output
+
+        # Convert features to float32 for downstream processing
+        features = features.float()
+        
+        return features
+
+    def preprocess_image(self, image_tensor):
+        # DINOv2 expects images normalized with ImageNet stats
+        preprocess = Compose([
+            Resize((224, 224)),
+            Normalize(mean=(0.485, 0.456, 0.406),
+                     std=(0.229, 0.224, 0.225))
+        ])
+        return preprocess(image_tensor)
     
