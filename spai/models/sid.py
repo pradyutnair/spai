@@ -1276,15 +1276,19 @@ def _init_weights(m: nn.Module) -> None:
 
 class SemanticContextModel(nn.Module):
     """
-    Combines SPAI's spectral features with ConvNeXt semantic features using residual connections
-    to structurally bias the model toward spectral features.
+    Combines SPAI's spectral features with ConvNeXt semantic features using a gated fusion
+    to structurally bias the model toward spectral features, but allow semantic cues to help.
     """
     def __init__(
         self,
         spai_model_path: str,
         semantic_output_dim: int = 1096,
+        ### ATTENTION ###
+        fusion_dim: int = 512,
+        num_heads:int = 4,
+        ### END ATTENTION ###
         projection_dim: int = 256,
-        hidden_dims: List[int] = [512, 256],
+        hidden_dims: List[int] = [512, 512],
         dropout: float = 0.5,
     ):
         super().__init__()
@@ -1318,39 +1322,37 @@ class SemanticContextModel(nn.Module):
             param.requires_grad = False
         self.semantic_backbone.eval()
 
-        # === Projections (raw -> aligned dimensions) ===
-        self.semantic_projection = nn.Sequential(
-            nn.LayerNorm(3072),
-            nn.Linear(3072, projection_dim),
-            nn.GELU(),
-            nn.Dropout(dropout)
+        # === Projections to shared fusion space ===
+        self.spai_proj = nn.Linear(spectral_features_dim,fusion_dim)
+        self.semantic_proj = nn.Linear(3072,fusion_dim) # 3072 is convext
+        
+        # === Attention Fusion ===
+        self.attention = nn.MultiheadAttention(
+            embed_dim=fusion_dim,
+            num_heads=num_heads,
+            batch_first=True
         )
 
-        # === Added: fusion layer to process combined features ===
-        self.fusion_layer = nn.Sequential(
-            nn.Linear(1096 + projection_dim, 512),
-            nn.GELU(),
-            nn.Dropout(dropout)
-        )
-        
-        # === Modified: classifier with residual connection ===
-        # Takes both spectral features directly and fusion output
-        self.classifier = nn.Sequential(
-            nn.Linear(1096 + 512, 512),  # spectral features + fusion features
+        # === Classifier Head ===
+        self.classifier  = nn.Sequential(
+            nn.LayerNorm(fusion_dim),
+            nn.Linear(fusion_dim, hidden_dims[0]),
             nn.GELU(),
             nn.Dropout(dropout),
-            nn.Linear(512, 1)
-        )
-
-        # === Initialization ===
-        self.semantic_projection.apply(_init_weights)
-        self.fusion_layer.apply(_init_weights)
+            nn.Linear(hidden_dims[0],1))
+        
+        # === Initialize new layers ===
+        self.spai_proj.apply(_init_weights)
+        self.semantic_proj.apply(_init_weights)
         self.classifier.apply(_init_weights)
+        self.attention._reset_parameters()
+
+
 
     def forward(self, x: Union[torch.Tensor, List[torch.Tensor]], feature_extraction_batch_size: Optional[int] = None
     ) -> torch.Tensor:
         """
-        Forward pass with residual connection for spectral features.
+        Forward pass with gated connection for spectral features.
         """
         device = next(self.parameters()).device
         normalize = transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD)
@@ -1393,19 +1395,24 @@ class SemanticContextModel(nn.Module):
             semantic_features = self.semantic_backbone(x_convnext)
             semantic_features = self.global_pool(semantic_features).flatten(1)
 
-        # === Semantic projection ===
-        semantic_proj = self.semantic_projection(semantic_features)  # e.g. 3072 → 256
+        # === Project to fusion space ===
+        spai_fusion = self.spai_proj(spectral_features)        # [B, fusion_dim]
+        semantic_fusion = self.semantic_proj(semantic_features)  # [B, fusion_dim]
 
-        # === Combined features with weighting ===
-        combined = torch.cat([spectral_features, semantic_proj], dim=1)
-        # === Process combined features ===
-        fused_features = self.fusion_layer(combined)
-        
-        # === RESIDUAL CONNECTION: concatenate raw spectral features with fusion output ===
-        final_features = torch.cat([spectral_features, fused_features], dim=1)
-        
-        # === Final classification ===
-        output = self.classifier(final_features)
+        # === Stack as sequence for attention ===
+        tokens = torch.stack([spai_fusion, semantic_fusion], dim=1)  # [B, 2, fusion_dim]
+
+        # === Attention-based fusion ===
+        attn_out, attn_weights = self.attention(tokens, tokens, tokens)  # [B, 2, fusion_dim]
+
+        # === Pool (mean, or you could try sum/max) ===
+        fused_vec = attn_out.mean(dim=1)  # [B, fusion_dim]
+
+        # === Classifier ===
+        output = self.classifier(fused_vec)  # [B, 1]
+
+        # (Optional: log or save attn_weights for interpretability)
+        self.last_attn_weights = attn_weights.detach()  # shape [B, num_heads, 2, 2]
 
         if not self.training:
             torch.cuda.empty_cache()

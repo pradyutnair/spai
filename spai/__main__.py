@@ -1051,6 +1051,12 @@ def train_one_epoch(
                 loss = criterion(anchor_outputs, positive_outputs, negative_outputs)
             else:
                 loss = criterion(outputs.squeeze(), targets)
+                # Add gate regularization
+                #print("Correct selection")
+                # if hasattr(model, "last_gate"):
+                #     lambda_gate = 1  # Tune this value as needed
+                #     gate_reg = (1.0 - model.last_gate).mean()
+                #     loss = loss + lambda_gate * gate_reg
             optimizer.zero_grad()
             if config.AMP_OPT_LEVEL != "O0":
                 with amp.scale_loss(loss, optimizer) as scaled_loss:
