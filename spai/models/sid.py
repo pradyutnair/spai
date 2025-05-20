@@ -249,7 +249,7 @@ class PatchBasedMFViT(nn.Module):
                 )
                 # Project global image encoding to match the cross-attention query dimension
                 global_image_encoding = self.semantic_projection(
-                    global_image_encoding.to(self.semantic_projection.weight.dtype)
+                    global_image_encoding.float()
                 )  # B x D
             # ConvNeXt
             else:
