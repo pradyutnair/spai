@@ -131,7 +131,8 @@ def cli() -> None:
 @click.option("--disable-pin-memory", is_flag=True)
 @click.option("--data-prefetch-factor", type=int)
 @click.option("--save-all", is_flag=True)
-@click.option("--with_semantics", is_flag=False,)
+@click.option("--training-data-percentage", type=float,
+              help="Percentage of training data to be used for training.")
 @click.option("--opt", "extra_options", type=(str, str), multiple=True)
 def train(
     cfg: Path,
@@ -154,7 +155,7 @@ def train(
     disable_pin_memory: bool,
     data_prefetch_factor: Optional[int],
     save_all: bool,
-    with_semantics: bool,
+    training_data_percentage: float,
     extra_options: tuple[str, str]
 ) -> None:
     if csv_root_dir is None:
@@ -231,23 +232,25 @@ def train(
         config, logger, is_pretrain=False, is_test=False
     )
 
-    # full_dataset = data_loader_train.dataset
-    # total_len = len(full_dataset)
-    # sample_len = int(0.15 * total_len)
-    # logger.info(f"THe number of training samples - {sample_len}")
+    if training_data_percentage != 1.0:
 
-    # # Optionally shuffle indices
-    # subset, _ = random_split(full_dataset, [sample_len, total_len - sample_len])
+        full_dataset = data_loader_train.dataset
+        total_len = len(full_dataset)
+        sample_len = int(training_data_percentage * total_len)
+        logger.info(f"THe number of training samples - {sample_len}")
 
-    # # Re-create a new DataLoader with the subset
-    # data_loader_train = DataLoader(
-    #    subset,
-    #    batch_size=data_loader_train.batch_size,
-    #    shuffle=True,
-    #    num_workers=data_loader_train.num_workers,
-    #    pin_memory=True,
-    #    drop_last=data_loader_train.drop_last,
-    # )
+        # Optionally shuffle indices
+        subset, _ = random_split(full_dataset, [sample_len, total_len - sample_len])
+
+        # Re-create a new DataLoader with the subset
+        data_loader_train = DataLoader(
+        subset,
+        batch_size=data_loader_train.batch_size,
+        shuffle=True,
+        num_workers=data_loader_train.num_workers,
+        pin_memory=True,
+        drop_last=data_loader_train.drop_last,
+        )
 
     neptune_run = neptune.init_run(
         name=config.TAG,

@@ -185,7 +185,9 @@ class PatchBasedMFViT(nn.Module):
         x = self.cls_head(x)  # B x 1
 
         x = torch.cat([x, x_context], dim=1) if x_context is not None else x
-        # x = torch.cat([torch.zeros_like(x), x_context], dim=1) if x_context is not None else x
+        # x = torch.cat([torch.zeros_like(x), x_context], dim=1) if x_context is not None else x # <-- I was meeeega lazy when it came to cutting off
+                                                                                                 # SPAI component in 2stage training :)
+
         
 
 
@@ -254,11 +256,11 @@ class PatchBasedMFViT(nn.Module):
 
         x = self.norm(x)  # B x D
 
-        
         x = self.cls_head(x)  # B x 1F
 
         x = torch.cat([x, x_context], dim=1) if x_context is not None else x
-        # x = torch.cat([torch.zeros_like(x), x_context], dim=1) if x_context is not None else x
+        # x = torch.cat([torch.zeros_like(x), x_context], dim=1) if x_context is not None else x # <-- I was meeeega lazy when it came to cutting off
+                                                                                                 # SPAI component in 2stage training :)
 
 
         x = self.semantics_head(x) if self.semantics_head is not None else x
@@ -937,58 +939,75 @@ import clip
 import open_clip
 from torchvision.transforms import Resize, Compose, Normalize, ToTensor
 
-# class SemanticFeatureEmbedding(nn.Module):
-#     """Projector that embeds the CLIP features into a lower-dimensional space."""
-#     def __init__(self, model_name="ViT-B/32", device='cuda' if torch.cuda.is_available() else 'cpu', proj_dim=256):
-#         super().__init__()
-#         self.device = device
-#         self.clip_model, _ = clip.load(model_name, device=device)
-#         self.clip_model.eval()  # Freeze CLIP
-#         for param in self.clip_model.parameters():
-#             param.requires_grad = False
+class DINOv2FeatureEmbedding(nn.Module): # CURRENTLY USED SEMANTIC BACKBONE, can use SemanticFeatureEmbedding as alternative
+    """Projector that embeds DINOv2 features into a lower-dimensional space."""
+    def __init__(self, model_name="dinov2_vitg14", 
+                 device='cuda' if torch.cuda.is_available() else 'cpu', 
+                 proj_dim=512):
+        super().__init__()
+        self.device = device
+        
+        # Load DINOv2 model
+        if model_name == "dinov2_vitl14":
+            self.dino_model = torch.hub.load('facebookresearch/dinov2', 'dinov2_vitl14')
+            self.output_dim = 1024
+        elif model_name == "dinov2_vitg14":
+            self.dino_model = torch.hub.load('facebookresearch/dinov2', 'dinov2_vitg14')
+            self.output_dim = 1536
+        elif model_name == "dinov2_vitb14":
+            self.dino_model = torch.hub.load('facebookresearch/dinov2', 'dinov2_vitb14')
+            self.output_dim = 768
+        elif model_name == "dinov2_vits14":
+            self.dino_model = torch.hub.load('facebookresearch/dinov2', 'dinov2_vits14')
+            self.output_dim = 384
+        else:
+            raise ValueError(f"Unknown DINOv2 model: {model_name}")
+            
+        self.dino_model.to(device)
+        self.dino_model.eval()  # Freeze model
+        
+        for param in self.dino_model.parameters():
+            param.requires_grad = False
+            
+        # # Project to desired dimension
+        # self.projection = nn.Linear(self.output_dim, proj_dim)
+        
+        # Print model info for debugging
+        print(f"Loaded DINOv2 model {model_name} with output dim {self.output_dim}")
 
-#         self.projection = nn.Linear(self.clip_model.visual.output_dim, proj_dim)
+    def forward(self, images):
+        # Handle input types: list of tensors vs 4D tensor
+        if isinstance(images, list):
+            processed_images = torch.stack([
+                self.preprocess_image(img).to(self.device).squeeze(0) for img in images
+            ])
+        else:
+            processed_images = torch.stack([
+                self.preprocess_image(img).to(self.device).squeeze(0) for img in images
+            ])
 
-#     def forward(self, images):
-#         # Handle input types: list of tensors vs 4D tensor
-#         if isinstance(images, list):
-#             # Assume list of 3D tensors: [C, H, W]
-#             # print(f"Shape of imageL {images[0].shape}")
-#             processed_images = torch.stack([
-#                 self.preprocess_image(img).to(self.device).squeeze(0) for img in images
-#             ])
-#             # print(f"Shape of processed imagesList: {processed_images.shape}")
-#         else: 
-#             # Assume 4D tensor: [B, C, H, W]
-#             # processed_images = images.to(self.device)
-#             # print(f"Shape of imageL {images[0].shape}")
-#             processed_images = torch.stack([
-#                 self.preprocess_image(img).to(self.device).squeeze(0) for img in images
-#             ])
-#             # print(f"Shape of processed imagesTensor: {processed_images.shape}")
+        # Extract features using DINOv2
+        with torch.no_grad():
+            # DINOv2 returns the [CLS] token features by default
+            features = self.dino_model(processed_images)
 
-#         # print(f"Shape of processed images: {processed_images.shape}")
-#         # Extract CLIP features
-#         with torch.no_grad():
-#             features = self.clip_model.encode_image(processed_images)
+        # Project to desired dimension
+        features = features.float()
+        # features = self.projection(features)
+        
+        return features # output dimention should match semantic_dim in build_mf_vit
 
-#         # Project to lower dimension
-#         features = features.float()
-#         embedded = self.projection(features)
-#         return embedded
-
-#     def preprocess_image(self, image_tensor):
-#         # Manually define CLIP's preprocessing pipeline (default 224x224)
-#         preprocess = Compose([
-#             Resize((224, 224)),
-#             Normalize(mean=(0.4815, 0.4578, 0.4082),
-#                       std=(0.2686, 0.2613, 0.2758))
-#         ])
-#         return preprocess(image_tensor)
-import logging
+    def preprocess_image(self, image_tensor):
+        # DINOv2 expects images normalized with ImageNet stats
+        preprocess = Compose([
+            Resize((224, 224)),
+            Normalize(mean=(0.485, 0.456, 0.406),
+                     std=(0.229, 0.224, 0.225))
+        ])
+        return preprocess(image_tensor)
 
 
-class SemanticFeatureEmbedding(nn.Module):
+class SemanticFeatureEmbedding(nn.Module):  # NOT USED CURRENTLY, to use --> substitute this class for DiNOv2FeatureEmbedding in PatchBasedMFViT of build_mf_vit
     """Projector that embeds the CLIP features into a lower-dimensional space."""
     def __init__(self, model_name="convnext_xxlarge", pretrained="laion2b_s34b_b82k_augreg", 
                  device='cuda' if torch.cuda.is_available() else 'cpu', proj_dim=512):
@@ -1024,7 +1043,8 @@ class SemanticFeatureEmbedding(nn.Module):
 
         # Project to lower dimension
         features = features.float()
-        return features
+
+        return features # output dimention should match semantic_dim in build_mf_vit
 
     def preprocess_image(self, image_tensor):
         # For OpenCLIP, we'll use its normalization values 
@@ -1036,8 +1056,8 @@ class SemanticFeatureEmbedding(nn.Module):
         ])
         return preprocess(image_tensor)
 
-class ClassificationHead(nn.Module):
-
+class ClassificationHead(nn.Module): # This head is only used to process SPAI features, final head is ClassificationHeadSemantics
+                                     # Output of this head is concatenated with the semantic embedding and given to ClassificationHeadSemantics
     def __init__(
         self,
         input_dim: int,
@@ -1069,28 +1089,7 @@ class ClassificationHead(nn.Module):
         ])
         return preprocess(image_tensor)
 
-# class ClassificationHeadSemantics(nn.Module):
-#     def __init__(
-#         self,
-#         input_dim: int,
-#         num_classes: int,
-#         mlp_ratio: int = 1,
-#         dropout: float = 1,
-#         semantic_dim: int = 0,
-#     ):
-#         super().__init__()
-
-#         self.head = nn.Sequential(
-#             nn.Linear(input_dim*mlp_ratio + semantic_dim, 512),
-#             nn.ReLU(),
-#             nn.Dropout(dropout),
-#             nn.Linear(512, num_classes)
-#         )
-    
-#     def forward(self, x: torch.Tensor) -> torch.Tensor:
-#         return self.head(x)
-
-class ClassificationHeadSemantics(nn.Module):
+class ClassificationHeadSemantics(nn.Module): # The actual head of the model lol
     def __init__(
         self,
         input_dim: int,
@@ -1483,12 +1482,13 @@ def build_mf_vit(config) -> MFViT:
             num_classes=config.MODEL.NUM_CLASSES if config.MODEL.NUM_CLASSES > 2 else 1,
             mlp_ratio=config.MODEL.CLS_HEAD.MLP_RATIO,
             dropout=config.MODEL.SID_DROPOUT,
-            semantic_dim=1024
+            semantic_dim=1536
         )
     else:
         raise RuntimeError(f"Unsupported train mode: {config.TRAIN.MODE}")
 
     if config.MODEL.RESOLUTION_MODE == "fixed":
+        assert False
 
         model = MFViT(
             vit,
@@ -1510,7 +1510,7 @@ def build_mf_vit(config) -> MFViT:
             img_patch_stride=config.MODEL.PATCH_VIT.PATCH_STRIDE,
             cls_vector_dim=cls_vector_dim,
             attn_embed_dim=config.MODEL.PATCH_VIT.ATTN_EMBED_DIM,
-            context_backbone=SemanticFeatureEmbedding(),
+            context_backbone=DINOv2FeatureEmbedding(),
             num_heads=config.MODEL.PATCH_VIT.NUM_HEADS,
             dropout=config.MODEL.SID_DROPOUT,
             minimum_patches=config.MODEL.PATCH_VIT.MINIMUM_PATCHES,

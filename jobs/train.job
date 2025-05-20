@@ -3,7 +3,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=9
 #SBATCH --gpus=1
-#SBATCH --output="outputs/train_chameleon_gigatransformer_%A.out"
+#SBATCH --output="outputs/train_please_dino_work_%A.out"
 #SBATCH --partition=gpu_h100
 #SBATCH --time=04:00:00
 #SBATCH --mem=180G
@@ -13,7 +13,7 @@ module purge
 module load 2023
 module load Anaconda3/2023.07-2
 
-export NEPTUNE_API_TOKEN="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI4YzJlMmMyYy01YzU4LTQ0MGItODM5Zi1mY2MyYjE4YTYyMmIifQ=="
+export NEPTUNE_API_TOKEN="get your own key! >:("
 
 
 # Setup 
@@ -31,14 +31,14 @@ srun python -m spai train \
   --cfg "./configs/spai.yaml" \
   --batch-size 512 \
   --pretrained "weights/spai.pth" \
-  --output "./output/train" \
+  --output "/scratch-shared/dl2_spai_datasets/weights/train_dinov2" \
   --data-path "/home/scur2620/spai/chameleon_dataset_split.csv" \
-  --tag "spai_chad_transformer" \
+  --tag "spai_dino" \
   --amp-opt-level "O0" \
   --data-workers 8 \
   --save-all \
   --opt "DATA.VAL_BATCH_SIZE" "512" \
   --opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
   --opt "DATA.TEST_PREFETCH_FACTOR" "1" \
-  --with_semantics True 
+
 # --pretrained "./weights/mfm_pretrain_vit_base.pth" \ 
