@@ -36,38 +36,54 @@ from .semantic_fusion import SemanticFusionModule, FUSION_TYPES
 from spai.utils import save_image_with_attention_overlay
 
 
-class PostSCAFusion(nn.Module):
+class PatchFusionModule(nn.Module):
     """
-    Fuses the SCA-aggregated original, low, high frequency vectors and semantic vector using attention.
+    Fuses the low, high frequency vectors and semantic vector using attention.
     """
-    def __init__(self, feature_dim: int, semantic_dim: int, fusion_dim: int = None):
+    def __init__(self, feature_dim: int, num_heads: int, dropout: float):
         super().__init__()
-        self.feature_dim = feature_dim
-        self.semantic_dim = semantic_dim
-        self.fusion_dim = fusion_dim or feature_dim
-        self.query_proj = nn.Linear(feature_dim, self.fusion_dim)
-        self.key_proj = nn.Linear(feature_dim, self.fusion_dim)
-        self.value_proj = nn.Linear(feature_dim, self.fusion_dim)
-        self.semantic_proj = nn.Linear(semantic_dim, self.fusion_dim)
-        self.attn = nn.MultiheadAttention(embed_dim=self.fusion_dim, num_heads=1, batch_first=True)
-        self.out_proj = nn.Linear(self.fusion_dim, self.fusion_dim)
+        # Ensure feature_dim is divisible by num_heads
+        self.feature_dim = (feature_dim // num_heads) * num_heads
+        self.num_heads = num_heads
+        self.head_dim = self.feature_dim // num_heads
+        self.dropout = dropout
+        
+        self.query_proj = nn.Linear(feature_dim, self.feature_dim)
+        self.key_proj = nn.Linear(feature_dim, self.feature_dim)
+        self.value_proj = nn.Linear(feature_dim, self.feature_dim)
+        self.semantic_proj = nn.Linear(feature_dim, self.feature_dim)
+        self.attn = nn.MultiheadAttention(embed_dim=self.feature_dim, num_heads=num_heads, batch_first=True)
+        self.out_proj = nn.Linear(self.feature_dim, feature_dim)
+        
+        self.norm = nn.LayerNorm(feature_dim)
+        self.residual = nn.Identity()
+        self.feed_forward = nn.Sequential(
+            nn.Linear(feature_dim, feature_dim * 4),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.Linear(feature_dim * 4, feature_dim),
+            nn.Dropout(dropout)
+        )
 
-    def forward(self, orig, low, high, semantic):
-        # orig, low, high: (B, D), semantic: (B, semantic_dim)
-        B = orig.size(0)
+    def forward(self, low, high, semantic):
+        # low, high, semantic: (B, D)
+        B = low.size(0)
         # Stack features: (B, 3, D)
-        feats = torch.stack([orig, low, high], dim=1)
+        feats = torch.stack([low, high, semantic], dim=1)
         # Project features
-        q = self.query_proj(orig).unsqueeze(1)  # (B, 1, D)
+        q = self.query_proj(low).unsqueeze(1)  # (B, 1, D)
         k = self.key_proj(feats)                # (B, 3, D)
         v = self.value_proj(feats)              # (B, 3, D)
         # Project semantic and concatenate as an extra key/value
         sem = self.semantic_proj(semantic).unsqueeze(1)  # (B, 1, D)
         k = torch.cat([k, sem], dim=1)  # (B, 4, D)
         v = torch.cat([v, sem], dim=1)  # (B, 4, D)
-        # Attention: query=orig, key/value=[orig,low,high,semantic]
+        # Attention: query=low, key/value=[low,high,semantic]
         attn_out, _ = self.attn(q, k, v)  # (B, 1, D)
         out = self.out_proj(attn_out.squeeze(1))  # (B, D)
+        out = self.norm(out)
+        out = self.residual(out) + out
+        out = out + self.feed_forward(out)
         return out
 
 
@@ -119,8 +135,14 @@ class PatchBasedMFViT(nn.Module):
         )
         self.norm = nn.LayerNorm(cls_vector_dim)
         self.cls_head = cls_head
-        # Add post-SCA fusion
-        self.post_sca_fusion = PostSCAFusion(cls_vector_dim, semantic_dim=semantic_dim)
+        
+        # Add patch-level fusion module
+        self.patch_fusion = PatchFusionModule(
+            feature_dim=cls_vector_dim,
+            num_heads=num_heads,
+            dropout=dropout
+        )
+        
         if initialization_scope == "all":
             self.apply(_init_weights)
         elif initialization_scope == "local":
@@ -147,6 +169,8 @@ class PatchBasedMFViT(nn.Module):
         :param feature_extraction_batch_size:
         :param export_dirs:
         """
+        x = x.float()
+        print(f"Input type: {type(x)}")
         if isinstance(x, torch.Tensor):
             x =  self.forward_batch(x)
         elif isinstance(x, list):
@@ -171,78 +195,86 @@ class PatchBasedMFViT(nn.Module):
         drop_top: bool = False
     ) -> torch.Tensor:
         """Perform cross attention between a learnable vector and the patches of an image."""
-        aggregator: torch.Tensor = self.patch_aggregator.expand(x.size(0), -1, -1, -1)
-        kv = self.to_kv(x).chunk(2, dim=-1)
-        k, v = map(lambda t: rearrange(t, 'b n (h d) -> b h n d', h=self.heads), kv)
+        # Ensure input is in correct shape (B, N, D)
+        if len(x.shape) == 4:  # If input is (B, C, H, W)
+            B, C, H, W = x.shape
+            x = x.flatten(2).transpose(1, 2)  # (B, H*W, C)
+        elif len(x.shape) == 2:  # If input is (B, C)
+            x = x.unsqueeze(1)  # (B, 1, C)
+            
+        # Ensure input dimension matches cls_vector_dim
+        if x.size(-1) != self.cls_vector_dim:
+            x = F.linear(x, torch.eye(self.cls_vector_dim, device=x.device)[:x.size(-1)])
+            
+        # Project to key-value pairs
+        kv = self.to_kv(x)  # (B, N, 2*D)
+        k, v = kv.chunk(2, dim=-1)  # Each is (B, N, D)
+        
+        # Reshape for multi-head attention
+        k = rearrange(k, 'b n (h d) -> b h n d', h=self.heads)
+        v = rearrange(v, 'b n (h d) -> b h n d', h=self.heads)
+        
+        # Expand aggregator to match batch size
+        aggregator = self.patch_aggregator.expand(x.size(0), -1, -1, -1)
+        
+        # Compute attention
         dots = torch.matmul(aggregator, k.transpose(-1, -2)) * self.scale
         attn = self.attend(dots)
         attn = self.dropout(attn)
+        
+        # Apply attention
         x = torch.matmul(attn, v)
         x = rearrange(x, 'b h n d -> b n (h d)')
         x = self.to_out(x)
         x = x.squeeze(dim=1)
+        
         if return_attn:
             return x, attn
         else:
             return x
 
     def forward_batch(self, x: torch.Tensor) -> torch.Tensor:
-        # Patchify
-        x_patches = utils.patchify_image(
-            x,
-            (self.img_patch_size, self.img_patch_size),
-            (self.img_patch_stride, self.img_patch_stride)
-        )  # B x L x C x H x W
-        B, L, C, H, W = x_patches.shape
-        # Get patch features for original, low, high freq
-        orig_feats, low_feats, high_feats = [], [], []
-        semantic_vec = None
-        for i in range(L):
-            # Get patch features (B, C, H, W) -> (B, N, D)
-            patch = x_patches[:, i]
-            # Use MFViT to get features for this patch
-            patch_low, patch_high = filters.filter_image_frequencies(patch.float(), self.mfvit.frequencies_mask)
-            patch_low = torch.clamp(patch_low, min=0., max=1.).to(patch.dtype)
-            patch_high = torch.clamp(patch_high, min=0., max=1.).to(patch.dtype)
-            # Normalize
-            patch_norm = self.mfvit.backbone_norm(patch)
-            patch_low_norm = self.mfvit.backbone_norm(patch_low)
-            patch_high_norm = self.mfvit.backbone_norm(patch_high)
-            # Extract features
-            if isinstance(self.mfvit.vit, backbones.CLIPBackbone):
-                if semantic_vec is None:
-                    semantic_vec = self.mfvit.vit.get_image_embedding(patch_norm)
-                patch_sem = self.mfvit.vit.get_image_embedding(patch_norm)
-            else:
-                patch_sem = None
-            if self.mfvit.frozen_backbone:
-                with torch.no_grad():
-                    orig_f = self.mfvit.vit(patch_norm)
-                    low_f = self.mfvit.vit(patch_low_norm)
-                    high_f = self.mfvit.vit(patch_high_norm)
-            else:
-                orig_f = self.mfvit.vit(patch_norm)
-                low_f = self.mfvit.vit(patch_low_norm)
-                high_f = self.mfvit.vit(patch_high_norm)
-            orig_feats.append(orig_f)
-            low_feats.append(low_f)
-            high_feats.append(high_f)
-        # Stack: (B, L, D)
-        orig_feats = torch.stack(orig_feats, dim=1)
-        low_feats = torch.stack(low_feats, dim=1)
-        high_feats = torch.stack(high_feats, dim=1)
-        # SCA for each
-        orig_vec = self.patches_attention(orig_feats)  # (B, D)
-        low_vec = self.patches_attention(low_feats)    # (B, D)
-        high_vec = self.patches_attention(high_feats)  # (B, D)
-        # Use semantic_vec from first patch if available, else zeros
-        if semantic_vec is None:
-            semantic_vec = torch.zeros((x.shape[0], 512), device=x.device)
-        # Post-SCA fusion
-        fused = self.post_sca_fusion(orig_vec, low_vec, high_vec, semantic_vec)
-        fused = self.norm(fused)
-        out = self.cls_head(fused)
-        return out
+        # Make sure x is float32
+        x = x.float()
+        
+        # Get patches
+        B, C, H, W = x.shape
+        # Reshape to (B, H*W, C) for attention
+        x = x.flatten(2).transpose(1, 2)  # (B, H*W, C)
+        
+        # Ensure input dimensions match the model's expected dimensions
+        if x.size(-1) != self.cls_vector_dim:
+            # Project to correct dimension if needed
+            x = F.linear(x, torch.eye(self.cls_vector_dim, device=x.device)[:x.size(-1)])
+        
+        # Process each patch
+        patch_embeddings = []
+        for i in range(x.size(1)):  # Iterate over patches
+            patch = x[:, i, :]  # Get current patch (B, D)
+            
+            # Normalize patch
+            patch_norm = F.normalize(patch, dim=1)
+            patch_norm_fp32 = patch_norm.float()
+            
+            # Get patch tokens using DINOv2
+            patch_tokens = self.mfvit.vit(patch_norm_fp32.unsqueeze(0))  # Add batch dimension
+            patch_tokens = patch_tokens.squeeze(0)  # Remove batch dimension
+            
+            # Get low and high frequency components
+            low_freq, high_freq = self.mfvit.features_processor(patch_norm_fp32)
+            
+            # Fuse patch-level information
+            fused = self.patch_fusion(low_freq, high_freq, patch_tokens)
+            fused = self.norm(fused)
+            
+            # Get classification output
+            out = self.cls_head(fused)
+            patch_embeddings.append(out)
+            
+        # Stack all patch embeddings
+        patch_embeddings = torch.stack(patch_embeddings, dim=0)
+        
+        return patch_embeddings
 
     def forward_arbitrary_resolution_batch(
         self,
@@ -734,7 +766,7 @@ class MFViT(nn.Module):
         )
         onnx_program = torch.onnx.export(ep, dynamo=True, report=True, verify=True)
         # onnx_program: torch.onnx.ONNXProgram = torch.onnx.export(
-        #     model, (x, x_low, x_hi), export_file, dynamo=True,
+        #     model, (x, x_low, x_high), export_file, dynamo=True,
         #     # input_names=["x", "x_low", "x_high"], output_names=["y"],
         #     # dynamic_axes={
         #     #     "x": {0: "batch_size"},

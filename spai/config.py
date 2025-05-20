@@ -109,7 +109,7 @@ _C.MODEL = CN()
 # Model type
 _C.MODEL.TYPE = 'vit'
 # Type of weights that will be used to initialize the backbone. Supported "mfm", "clip", "dinov2".
-_C.MODEL_WEIGHTS = "clip"
+_C.MODEL_WEIGHTS = "dinov2"
 # Model name
 _C.MODEL.NAME = 'pretrain'
 # Checkpoint to resume, could be overwritten by command line argument
