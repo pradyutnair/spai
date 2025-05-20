@@ -40,5 +40,6 @@ srun python -m spai train \
   --opt "DATA.VAL_BATCH_SIZE" "512" \
   --opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
   --opt "DATA.TEST_PREFETCH_FACTOR" "1" \
+  --training-data-percentage 0.15
 
 # --pretrained "./weights/mfm_pretrain_vit_base.pth" \ 
