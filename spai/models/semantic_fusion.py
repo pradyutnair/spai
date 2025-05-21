@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from typing import Optional, List, Union
+from einops import rearrange
 
 # Utility for user selection
 FUSION_TYPES = ['concat', 'gated', 'attention']
@@ -152,92 +153,149 @@ class SemanticFusionModule(nn.Module):
 
 class SemanticSpectralFusion(nn.Module):
     """
-    Fuses semantic and spectral features using cross-attention.
-    
-    Expects:
-    - spectral_features: [batch_size, seq_len, spectral_dim]
-    - semantic_features: [batch_size, seq_len, semantic_dim]
-    
-    Returns:
-    - fused_features: [batch_size, fusion_dim]
+    Fusion module for combining semantic and spectral features
     """
-    def __init__(self, semantic_dim=768, spectral_dim=1024, fusion_dim=1024, num_heads=8, dropout=0.1):
+    def __init__(
+        self,
+        semantic_dim=768,
+        spectral_dim=1024,
+        fusion_dim=1024,
+        num_heads=8,
+        dropout=0.1,
+        use_layer_norm=True  # Make this parameter optional with a default value
+    ):
         super().__init__()
         self.semantic_dim = semantic_dim
         self.spectral_dim = spectral_dim
         self.fusion_dim = fusion_dim
         
-        # Projection layers to align dimensions
-        self.semantic_proj = nn.Linear(semantic_dim, fusion_dim)
-        self.spectral_proj = nn.Linear(spectral_dim, fusion_dim)
+        # Linear projections with proper initialization
+        self.semantic_proj = nn.Linear(semantic_dim, fusion_dim, bias=True)
+        self.spectral_proj = nn.Linear(spectral_dim, fusion_dim, bias=True)
         
-        # Cross-attention mechanism
+        # Cross-attention with proper initialization
         self.cross_attention = nn.MultiheadAttention(
-            embed_dim=fusion_dim,
+            embed_dim=fusion_dim, 
             num_heads=num_heads,
             dropout=dropout,
-            batch_first=True  # Important: use batch_first=True for [B, S, D] format
+            bias=True,
+            batch_first=True
         )
         
-        # Optional: learnable modality weights
-        self.modality_weights = nn.Parameter(torch.ones(2))
+        # Normalization layers for stability (optional)
+        if use_layer_norm:
+            self.semantic_norm = nn.LayerNorm(fusion_dim)
+            self.spectral_norm = nn.LayerNorm(fusion_dim)
+            self.cross_attn_norm = nn.LayerNorm(fusion_dim)
+        else:
+            self.semantic_norm = nn.Identity()
+            self.spectral_norm = nn.Identity()
+            self.cross_attn_norm = nn.Identity()
         
-        # Final projection layer 
+        # Final projection with normalization
         self.final_proj = nn.Sequential(
-            nn.LayerNorm(fusion_dim),
-            nn.Linear(fusion_dim, fusion_dim),
+            nn.LayerNorm(fusion_dim) if use_layer_norm else nn.Identity(),
+            nn.Linear(fusion_dim, fusion_dim, bias=True),
             nn.GELU(),
             nn.Dropout(dropout)
         )
+        
+        # Trainable weights for modality importance
+        self.modality_weights = nn.Parameter(torch.ones(2))
+        
+        # Initialize weights
+        self._init_weights()
     
+    def _init_weights(self):
+        """Initialize weights with values that prevent gradient explosion"""
+        nn.init.xavier_uniform_(self.semantic_proj.weight, gain=0.02)
+        nn.init.xavier_uniform_(self.spectral_proj.weight, gain=0.02)
+        
+        if self.semantic_proj.bias is not None:
+            nn.init.constant_(self.semantic_proj.bias, 0.01)
+        if self.spectral_proj.bias is not None:
+            nn.init.constant_(self.spectral_proj.bias, 0.01)
+
     def forward(self, spectral_features, semantic_features):
         """
-        Forward pass for semantic-spectral fusion
-        
-        Args:
-            spectral_features (torch.Tensor): Shape [B, S, D_spec] or [B, D_spec]
-            semantic_features (torch.Tensor): Shape [B, S, D_sem] or [B, D_sem]
-            
-        Returns:
-            torch.Tensor: Fused features with shape [B, D_fusion]
+        Forward pass for combining spectral and semantic features.
+        spectral_features: (B, L_spec, D_spec) or (B, D_spec)
+        semantic_features: (B, L_sem, D_sem) or (B, D_sem)
         """
-        # Handle 2D inputs (no sequence dimension)
-        if len(spectral_features.shape) == 2:
-            spectral_features = spectral_features.unsqueeze(1)  # [B, 1, D]
-        if len(semantic_features.shape) == 2:
-            semantic_features = semantic_features.unsqueeze(1)  # [B, 1, D]
-            
-        # Make sure we have 3D tensors: [batch_size, seq_len, dim]
-        assert len(spectral_features.shape) == 3, f"Spectral features must be 3D, got shape {spectral_features.shape}"
-        assert len(semantic_features.shape) == 3, f"Semantic features must be 3D, got shape {semantic_features.shape}"
-        
-        # Project features to common dimension
-        spectral_proj = self.spectral_proj(spectral_features)  # [B, S, D_fusion]
-        semantic_proj = self.semantic_proj(semantic_features)  # [B, S, D_fusion]
-        
-        # Cross attention: spectral attends to semantic
-        # For MultiheadAttention with batch_first=True:
-        # - query: [B, T, D] - target sequence
-        # - key, value: [B, S, D] - source sequence
-        attn_output, attn_weights = self.cross_attention(
-            query=spectral_proj,       # [B, S_q, D]
-            key=semantic_proj,         # [B, S_k, D]
-            value=semantic_proj,       # [B, S_v, D]
-            need_weights=True,
-            average_attn_weights=True
-        )
-        
-        # Weighted fusion
-        weights = F.softmax(self.modality_weights, dim=0)
-        fused = weights[0] * spectral_proj + weights[1] * attn_output
-        
-        # Apply final projection
-        fused = self.final_proj(fused)
-        
-        # Average pooling along sequence dimension if needed
-        if fused.size(1) > 1:
-            fused = fused.mean(dim=1)  # [B, D]
+        batch_size_spec = spectral_features.shape[0]
+        batch_size_sem = semantic_features.shape[0]
+
+        if batch_size_spec != batch_size_sem:
+            raise ValueError(
+                f"Batch size mismatch: spectral_features ({batch_size_spec}) vs semantic_features ({batch_size_sem})"
+            )
+        batch_size = batch_size_spec
+
+        # Commented out debug prints, uncomment if needed
+        # print(f"Input shapes - Spectral: {spectral_features.shape}, Semantic: {semantic_features.shape}")
+        # print(f"Configured dimensions - Spectral: {self.spectral_dim}, Semantic: {self.semantic_dim}, Fusion: {self.fusion_dim}")
+
+        spectral_features = torch.nan_to_num(spectral_features, nan=0.0)
+        semantic_features = torch.nan_to_num(semantic_features, nan=0.0)
+
+        # Store original sequence lengths and reshape for projection if 3D
+        spec_is_3d = len(spectral_features.shape) == 3
+        sem_is_3d = len(semantic_features.shape) == 3
+
+        spec_seq_len = spectral_features.shape[1] if spec_is_3d else 1
+        sem_seq_len = semantic_features.shape[1] if sem_is_3d else 1
+
+        if spec_is_3d:
+            spectral_features_proj_input = spectral_features.reshape(batch_size * spec_seq_len, -1)
         else:
-            fused = fused.squeeze(1)   # [B, D]
+            spectral_features_proj_input = spectral_features
+
+        if sem_is_3d:
+            semantic_features_proj_input = semantic_features.reshape(batch_size * sem_seq_len, -1)
+        else:
+            semantic_features_proj_input = semantic_features
             
-        return fused
+        # Project features
+        spectral_proj_flat = self.spectral_proj(spectral_features_proj_input)
+        semantic_proj_flat = self.semantic_proj(semantic_features_proj_input)
+
+        # Reshape back to 3D for attention
+        if spec_is_3d:
+            spectral_proj = spectral_proj_flat.reshape(batch_size, spec_seq_len, self.fusion_dim)
+        else:
+            spectral_proj = spectral_proj_flat.unsqueeze(1) # Unsqueeze to (B, 1, fusion_dim)
+        
+        if sem_is_3d:
+            semantic_proj = semantic_proj_flat.reshape(batch_size, sem_seq_len, self.fusion_dim)
+        else:
+            semantic_proj = semantic_proj_flat.unsqueeze(1) # Unsqueeze to (B, 1, fusion_dim)
+
+        # Normalize projected features
+        spectral_proj = self.spectral_norm(spectral_proj)
+        semantic_proj = self.semantic_norm(semantic_proj)
+        
+        # Cross-attention: semantic queries spectral
+        attn_output, _ = self.cross_attention(
+            query=semantic_proj, # (B, L_sem, fusion_dim)
+            key=spectral_proj,   # (B, L_spec, fusion_dim)
+            value=spectral_proj  # (B, L_spec, fusion_dim)
+        ) # attn_output: (B, L_sem, fusion_dim)
+        
+        # Residual connection
+        fused_features = semantic_proj + attn_output # (B, L_sem, fusion_dim)
+        
+        # Normalize and final project
+        fused_features = self.cross_attn_norm(fused_features)
+        fused_features = self.final_proj(fused_features) # (B, L_sem, fusion_dim)
+        
+        if torch.isnan(fused_features).any():
+            # print("WARNING: NaN detected in fusion output!")
+            fused_features = torch.nan_to_num(fused_features, nan=0.0)
+            
+        # Modality weighting
+        norm_weights = F.softmax(self.modality_weights, dim=0)
+        
+        # Weighted combination of fused (semantic-queried-spectral) and original semantic projection
+        output = norm_weights[0] * fused_features + norm_weights[1] * semantic_proj
+        
+        return output

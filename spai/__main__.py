@@ -1089,11 +1089,9 @@ def train_one_epoch(
             targets = targets.cuda(non_blocking=True)
             
             # Forward pass each augmented view of the batch separately
-            #logger.info("🔄 Processing batch views...")
             outputs_views: list[torch.Tensor] = []
             for i in range(samples.size(1)):
                 view = samples[:, i, :, :, :].float()
-                print(f"🔄 Processing batch view {i} of shape {view.shape}")
                 output = model(view)
                 outputs_views.append(output)
             outputs: torch.Tensor = torch.stack(outputs_views, dim=1)
@@ -1105,8 +1103,6 @@ def train_one_epoch(
         else:
             loss = criterion(outputs.squeeze(), targets)
             
-        #logger.info(f"📊 Batch {idx}/{num_steps} | Loss: {loss.item():.4f}")
-
         # Backward pass
         if config.TRAIN.ACCUMULATION_STEPS > 1:
             loss = loss / config.TRAIN.ACCUMULATION_STEPS

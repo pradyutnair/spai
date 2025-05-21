@@ -198,7 +198,7 @@ _C.MODEL.FRE.EARLY_FUSION_LAYERS = [3, 6]
 _C.MODEL.FRE.DROPOUT = 0.5
 _C.MODEL.FRE.ATTN_DROPOUT = 0.1  # Added for semantic-spectral fusion
 _C.MODEL.FRE.FUSION_DIM = 1024  # Added for semantic-spectral fusion
-
+_C.MODEL.FRE.USE_LAYER_NORM = True
 # PatchBasedMFViT related parameters
 _C.MODEL.PATCH_VIT = CN()
 _C.MODEL.PATCH_VIT.PATCH_STRIDE = 224
@@ -235,7 +235,7 @@ _C.TRAIN.START_EPOCH = 0
 _C.TRAIN.EPOCHS = 300
 _C.TRAIN.WARMUP_EPOCHS = 20
 _C.TRAIN.WEIGHT_DECAY = 0.05
-_C.TRAIN.BASE_LR = 3e-4
+_C.TRAIN.BASE_LR = 1e-4
 _C.TRAIN.WARMUP_LR = 2.5e-7
 _C.TRAIN.MIN_LR = 2.5e-6
 # Clip gradient norm

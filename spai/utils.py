@@ -510,10 +510,19 @@ def save_image_with_attention_overlay(
         Image.fromarray((colormapped_overlay*255).astype(np.uint8)).save(overlay_path)
 
 
-def inf_nan_to_num(value, nan_value, inf_value):
-    if np.isinf(value):
-        return inf_value
-    elif np.isnan(value):
-        return nan_value
-    else:
-        return value
+def inf_nan_to_num(x, replace_nan=0.0, replace_inf=1e5):
+    """
+    Replace NaN and Inf values with specified numbers
+    """
+    if torch.is_tensor(x):
+        is_nan = torch.isnan(x)
+        is_inf = torch.isinf(x)
+        
+        if is_nan.any() or is_inf.any():
+            x_new = x.clone()
+            if is_nan.any():
+                x_new[is_nan] = replace_nan
+            if is_inf.any():
+                x_new[is_inf] = replace_inf
+            return x_new
+    return x

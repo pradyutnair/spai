@@ -186,7 +186,12 @@ class PatchBasedMFViT(nn.Module):
 
         # Project features if dimensions mismatch before patches_attention
         if self.input_feature_projector is not None:
+            x = x.to(self.input_feature_projector.weight.dtype)
             x = self.input_feature_projector(x)
+
+        # Squeeze the middle dimension of size 1 to make x [B_orig, L, 1096]
+        if x.dim() == 4 and x.shape[2] == 1:
+            x = x.squeeze(2)
 
         x = self.patches_attention(x)  # B x D
         x = self.norm(x)  # B x D
@@ -243,11 +248,28 @@ class PatchBasedMFViT(nn.Module):
         x = torch.cat(features, dim=0)  # SUM(L_i) x D
         del features
 
+        # Project features if dimensions mismatch before patches_attention
+        if self.input_feature_projector is not None:
+            x = x.to(self.input_feature_projector.weight.dtype)
+            x = self.input_feature_projector(x)
+
         # Attend to patches according to the image they belong to.
         attended: list[torch.Tensor] = []
         processed_sum: int = 0
         for i in img_patches_num:
-            attended.append(self.patches_attention(x[processed_sum:processed_sum+i].unsqueeze(0)))
+            patch_group = x[processed_sum:processed_sum+i] # Shape: [num_patches_for_this_image, 1, ClsVectorDim]
+            # Unsqueeze to add batch dimension for patches_attention
+            patch_group_batched = patch_group.unsqueeze(0) # Shape: [1, num_patches_for_this_image, 1, ClsVectorDim]
+            
+            # Squeeze the redundant middle dimension (of size 1, originally from MFViT's sequence length)
+            # before passing to patches_attention, which expects [Batch, NumPatches, FeatureDim]
+            if patch_group_batched.dim() == 4 and patch_group_batched.shape[2] == 1:
+                patch_group_batched_squeezed = patch_group_batched.squeeze(2) # Shape: [1, num_patches_for_this_image, ClsVectorDim]
+            else:
+                # This path should ideally not be taken if MFViT output and projector are consistent
+                patch_group_batched_squeezed = patch_group_batched
+
+            attended.append(self.patches_attention(patch_group_batched_squeezed))
             processed_sum += i
         x = torch.cat(attended, dim=0)  # B x D
         del attended
@@ -318,6 +340,11 @@ class PatchBasedMFViT(nn.Module):
                     features.append(self.mfvit(patched[0, i:i+feature_extraction_batch_size]))
             x = torch.cat(features, dim=0)  # SUM(L_i) x D
             del features
+
+            # Project features if dimensions mismatch before patches_attention
+            if self.input_feature_projector is not None:
+                x = x.to(self.input_feature_projector.weight.dtype)
+                x = self.input_feature_projector(x)
 
             # Attend to patches.
             x, attn = self.patches_attention(x.unsqueeze(0), return_attn=True)  # 1 x D, 1 x L_i
@@ -493,8 +520,6 @@ class MFViT(nn.Module):
 
         :param x: B x C x H x W
         """
-        print("🚀 Starting MFViT forward pass")
-
         with torch.cuda.amp.autocast():
             # Spectral branch
             low_freq: torch.Tensor
@@ -512,9 +537,7 @@ class MFViT(nn.Module):
             # Semantic branch
             semantic_vec = None
             if isinstance(self.vit, (backbones.DINOv2Backbone, DINOv2FeatureEmbedding)):
-                print("🎯 Extracting semantic features with DINOv2")
                 semantic_vec = self.vit(x)
-                #print(f"📊 Semantic vector shape: {semantic_vec.shape}")
 
             if self.frozen_backbone:
                 with torch.no_grad():
@@ -527,13 +550,9 @@ class MFViT(nn.Module):
                 )
 
             spectral_features = self.features_processor(x_feats, low_feats, hi_feats)
-            #print(f"📊 Spectral features shape: {spectral_features.shape}")
             
             # Apply semantic-spectral fusion if semantic vector is available
             if semantic_vec is not None and hasattr(self, 'semantic_fusion'):
-                #print("🔄 Applying semantic-spectral fusion")
-                #print(f"Input shapes - Spectral: {spectral_features.shape}, Semantic: {semantic_vec.shape}")
-                
                 # Always ensure semantic_vec is properly shaped for attention: [batch_size, seq_len, dim]
                 if len(semantic_vec.shape) == 4:  # If shape is [B, 1, 1, D]
                     semantic_vec = semantic_vec.squeeze(2).squeeze(1)  # Convert to [B, D]
@@ -541,28 +560,20 @@ class MFViT(nn.Module):
                 if len(semantic_vec.shape) == 2:  # If shape is [B, D]
                     semantic_vec = semantic_vec.unsqueeze(1)  # Make it [B, 1, D] for attention
                 
-                #print(f"Reshaped semantic vector: {semantic_vec.shape}")
-                
                 # Ensure spectral_features is also 3D if needed: [batch_size, seq_len, dim]
                 if len(spectral_features.shape) == 2:
-                    #print(f"Using 2D input with shape: {spectral_features.shape}")
                     # Reshape to [B, 1, D] format for attention
                     batch_size = spectral_features.size(0)
                     feat_dim = spectral_features.size(1)
-                    #print(f"🔄 Spectral flat shape: {spectral_features.shape}")
                     
                     # Check if semantic fusion module expects a specific dimension
                     if hasattr(self.semantic_fusion, 'spectral_proj'):
                         spectral_dim = self.semantic_fusion.spectral_proj.in_features
-                        #print(f"🔄 Spectral projection layer: {self.semantic_fusion.spectral_proj}")
                         
                         # Handle dimension mismatch with dynamic projection if needed
                         if feat_dim != spectral_dim:
-                            #print(f"⚠️ Dimension mismatch! Expected {spectral_dim}, got {feat_dim}.")
-                            #print(f"Creating new dynamic projection layer: {feat_dim} → {spectral_dim}")
                             temp_proj = nn.Linear(feat_dim, spectral_dim).to(spectral_features.device)
                             spectral_features = temp_proj(spectral_features)
-                            #print(f"Used dynamic projection, output shape: {spectral_features.shape}")
                     
                     # Now reshape to 3D for attention
                     spectral_features = spectral_features.unsqueeze(1)  # [B, 1, D]
@@ -571,14 +582,13 @@ class MFViT(nn.Module):
                 spectral_dim = spectral_features.size(-1)
                 fusion_dim = getattr(self.semantic_fusion, 'fusion_dim', spectral_dim)
                 
-                print(f"Input shapes - Spectral: {spectral_features.shape}, Semantic: {semantic_vec.shape}")
-                print(f"Configured dimensions - Spectral: {spectral_dim}, Semantic: {semantic_dim}, Fusion: {fusion_dim}")
+                # print(f"Input shapes - Spectral: {spectral_features.shape}, Semantic: {semantic_vec.shape}")
+                # print(f"Configured dimensions - Spectral: {spectral_dim}, Semantic: {semantic_dim}, Fusion: {fusion_dim}")
                 
                 fused_features = self.semantic_fusion(spectral_features, semantic_vec)
             else:
                 fused_features = spectral_features
 
-        #print("✅ MFViT forward pass complete")
         return fused_features
 
     def forward_with_export(self, x: torch.Tensor, export_file: pathlib.Path) -> torch.Tensor:
