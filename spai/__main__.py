@@ -1093,6 +1093,7 @@ def train_one_epoch(
             outputs_views: list[torch.Tensor] = []
             for i in range(samples.size(1)):
                 view = samples[:, i, :, :, :].float()
+                print(f"🔄 Processing batch view {i} of shape {view.shape}")
                 output = model(view)
                 outputs_views.append(output)
             outputs: torch.Tensor = torch.stack(outputs_views, dim=1)

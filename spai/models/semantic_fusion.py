@@ -1,8 +1,10 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Optional, List
+from typing import Optional, List, Union
 
+# Utility for user selection
+FUSION_TYPES = ['concat', 'gated', 'attention']
 class MultiScaleSemanticFusion(nn.Module):
     """
     Enhanced semantic fusion module that incorporates multi-scale features and frequency-specific attention.
@@ -148,5 +150,94 @@ class SemanticFusionModule(nn.Module):
             raise ValueError(f"Unknown fusion_type: {self.fusion_type}")
         return fused
 
-# Utility for user selection
-FUSION_TYPES = ['concat', 'gated', 'attention']
+class SemanticSpectralFusion(nn.Module):
+    """
+    Fuses semantic and spectral features using cross-attention.
+    
+    Expects:
+    - spectral_features: [batch_size, seq_len, spectral_dim]
+    - semantic_features: [batch_size, seq_len, semantic_dim]
+    
+    Returns:
+    - fused_features: [batch_size, fusion_dim]
+    """
+    def __init__(self, semantic_dim=768, spectral_dim=1024, fusion_dim=1024, num_heads=8, dropout=0.1):
+        super().__init__()
+        self.semantic_dim = semantic_dim
+        self.spectral_dim = spectral_dim
+        self.fusion_dim = fusion_dim
+        
+        # Projection layers to align dimensions
+        self.semantic_proj = nn.Linear(semantic_dim, fusion_dim)
+        self.spectral_proj = nn.Linear(spectral_dim, fusion_dim)
+        
+        # Cross-attention mechanism
+        self.cross_attention = nn.MultiheadAttention(
+            embed_dim=fusion_dim,
+            num_heads=num_heads,
+            dropout=dropout,
+            batch_first=True  # Important: use batch_first=True for [B, S, D] format
+        )
+        
+        # Optional: learnable modality weights
+        self.modality_weights = nn.Parameter(torch.ones(2))
+        
+        # Final projection layer 
+        self.final_proj = nn.Sequential(
+            nn.LayerNorm(fusion_dim),
+            nn.Linear(fusion_dim, fusion_dim),
+            nn.GELU(),
+            nn.Dropout(dropout)
+        )
+    
+    def forward(self, spectral_features, semantic_features):
+        """
+        Forward pass for semantic-spectral fusion
+        
+        Args:
+            spectral_features (torch.Tensor): Shape [B, S, D_spec] or [B, D_spec]
+            semantic_features (torch.Tensor): Shape [B, S, D_sem] or [B, D_sem]
+            
+        Returns:
+            torch.Tensor: Fused features with shape [B, D_fusion]
+        """
+        # Handle 2D inputs (no sequence dimension)
+        if len(spectral_features.shape) == 2:
+            spectral_features = spectral_features.unsqueeze(1)  # [B, 1, D]
+        if len(semantic_features.shape) == 2:
+            semantic_features = semantic_features.unsqueeze(1)  # [B, 1, D]
+            
+        # Make sure we have 3D tensors: [batch_size, seq_len, dim]
+        assert len(spectral_features.shape) == 3, f"Spectral features must be 3D, got shape {spectral_features.shape}"
+        assert len(semantic_features.shape) == 3, f"Semantic features must be 3D, got shape {semantic_features.shape}"
+        
+        # Project features to common dimension
+        spectral_proj = self.spectral_proj(spectral_features)  # [B, S, D_fusion]
+        semantic_proj = self.semantic_proj(semantic_features)  # [B, S, D_fusion]
+        
+        # Cross attention: spectral attends to semantic
+        # For MultiheadAttention with batch_first=True:
+        # - query: [B, T, D] - target sequence
+        # - key, value: [B, S, D] - source sequence
+        attn_output, attn_weights = self.cross_attention(
+            query=spectral_proj,       # [B, S_q, D]
+            key=semantic_proj,         # [B, S_k, D]
+            value=semantic_proj,       # [B, S_v, D]
+            need_weights=True,
+            average_attn_weights=True
+        )
+        
+        # Weighted fusion
+        weights = F.softmax(self.modality_weights, dim=0)
+        fused = weights[0] * spectral_proj + weights[1] * attn_output
+        
+        # Apply final projection
+        fused = self.final_proj(fused)
+        
+        # Average pooling along sequence dimension if needed
+        if fused.size(1) > 1:
+            fused = fused.mean(dim=1)  # [B, D]
+        else:
+            fused = fused.squeeze(1)   # [B, D]
+            
+        return fused

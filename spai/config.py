@@ -109,7 +109,7 @@ _C.MODEL = CN()
 # Model type
 _C.MODEL.TYPE = 'vit'
 # Type of weights that will be used to initialize the backbone. Supported "mfm", "clip", "dinov2".
-_C.MODEL_WEIGHTS = "clip"
+_C.MODEL_WEIGHTS = "dinov2"
 # Model name
 _C.MODEL.NAME = 'pretrain'
 # Checkpoint to resume, could be overwritten by command line argument
@@ -192,10 +192,12 @@ _C.MODEL.FRE.MASKING_RADIUS = 16
 _C.MODEL.FRE.PROJECTOR_LAST_LAYER_ACTIVATION_TYPE = "gelu"
 _C.MODEL.FRE.ORIGINAL_IMAGE_FEATURES_BRANCH = False
 _C.MODEL.FRE.DISABLE_RECONSTRUCTION_SIMILARITY = False
-_C.MODEL.FRE.SEMANTIC_DIM = 512
+_C.MODEL.FRE.SEMANTIC_DIM = 768  # DINOv2 ViT-B/14 dimension
 _C.MODEL.FRE.NUM_HEADS = 8
 _C.MODEL.FRE.EARLY_FUSION_LAYERS = [3, 6]
 _C.MODEL.FRE.DROPOUT = 0.5
+_C.MODEL.FRE.ATTN_DROPOUT = 0.1  # Added for semantic-spectral fusion
+_C.MODEL.FRE.FUSION_DIM = 1024  # Added for semantic-spectral fusion
 
 # PatchBasedMFViT related parameters
 _C.MODEL.PATCH_VIT = CN()
@@ -203,7 +205,7 @@ _C.MODEL.PATCH_VIT.PATCH_STRIDE = 224
 _C.MODEL.PATCH_VIT.NUM_HEADS = 12
 _C.MODEL.PATCH_VIT.ATTN_EMBED_DIM = 1536
 _C.MODEL.PATCH_VIT.MINIMUM_PATCHES = 1
-
+_C.MODEL.PATCH_VIT.CLS_VECTOR_DIM = 1096
 # Classification head parameters
 _C.MODEL.CLS_HEAD = CN()
 _C.MODEL.CLS_HEAD.MLP_RATIO = 4

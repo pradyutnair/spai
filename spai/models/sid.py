@@ -32,33 +32,35 @@ from . import vision_transformer
 from . import filters
 from . import utils
 from . import backbones
-from .semantic_fusion import SemanticFusionModule, FUSION_TYPES, MultiScaleSemanticFusion
+from .semantic_fusion import SemanticSpectralFusion
 from spai.utils import save_image_with_attention_overlay
 
 
 class PatchBasedMFViT(nn.Module):
     def __init__(
         self,
-        vit: Union[vision_transformer.VisionTransformer,
-                   backbones.CLIPBackbone,
-                   backbones.DINOv2Backbone],
+        vit_backbone: Union[vision_transformer.VisionTransformer,
+                       backbones.CLIPBackbone,
+                       backbones.DINOv2Backbone,
+                       'DINOv2FeatureEmbedding'],
         features_processor: 'FrequencyRestorationEstimator',
         cls_head: Optional[nn.Module],
         masking_radius: int,
         img_patch_size: int,
         img_patch_stride: int,
         cls_vector_dim: int,
-        num_heads: int,
         attn_embed_dim: int,
+        num_heads: int,
         dropout: float = .0,
         frozen_backbone: bool = True,
         minimum_patches: int = 0,
-        initialization_scope: str = "all"
+        initialization_scope: str = "all",
+        mfvit_output_dim_actual: int = 0
     ) -> None:
         super().__init__()
 
         self.mfvit = MFViT(
-            vit,
+            vit_backbone,
             features_processor,
             None,
             masking_radius,
@@ -71,10 +73,18 @@ class PatchBasedMFViT(nn.Module):
         self.img_patch_stride: int = img_patch_stride
         self.minimum_patches: int = minimum_patches
         self.cls_vector_dim: int = cls_vector_dim
+        self.attn_embed_dim: int = attn_embed_dim
+        self.num_heads: int = num_heads
+        self.mfvit_output_dim_actual: int = mfvit_output_dim_actual
+
+        # Projector if mfvit output dim doesn't match this module's expected cls_vector_dim
+        self.input_feature_projector = None
+        if self.mfvit_output_dim_actual > 0 and self.mfvit_output_dim_actual != self.cls_vector_dim:
+            print(f"✨ PatchBasedMFViT: Adding projector to map MFViT output {self.mfvit_output_dim_actual} -> expected {self.cls_vector_dim}")
+            self.input_feature_projector = nn.Linear(self.mfvit_output_dim_actual, self.cls_vector_dim)
 
         # Cross-Attention with a learnable vector layers.
         dim_head: int = attn_embed_dim // num_heads
-        self.heads = num_heads
         self.scale = dim_head ** -0.5
         self.attend = nn.Softmax(dim=-1)
         self.dropout = nn.Dropout(dropout)
@@ -94,10 +104,13 @@ class PatchBasedMFViT(nn.Module):
         elif initialization_scope == "local":
             # Initialize only the newly added components, by excluding mfvit.
             for m_name, m in self._modules.items():
-                if m_name == "mfvit":
+                if m_name == "mfvit" or m_name == "input_feature_projector":
                     continue
                 else:
                     m.apply(_init_weights)
+            # Initialize projector separately if it exists
+            if self.input_feature_projector is not None:
+                 self.input_feature_projector.apply(_init_weights)
         else:
             raise TypeError(f"Non-supported weight initialization type: {initialization_scope}")
 
@@ -144,7 +157,7 @@ class PatchBasedMFViT(nn.Module):
         x = x.to(self.to_kv.weight.dtype)
         aggregator: torch.Tensor = self.patch_aggregator.expand(x.size(0), -1, -1, -1)
         kv = self.to_kv(x).chunk(2, dim=-1)
-        k, v = map(lambda t: rearrange(t, 'b n (h d) -> b h n d', h=self.heads), kv)
+        k, v = map(lambda t: rearrange(t, 'b n (h d) -> b h n d', h=self.num_heads), kv)
         dots = torch.matmul(aggregator, k.transpose(-1, -2)) * self.scale
         attn = self.attend(dots)
         attn = self.dropout(attn)
@@ -170,6 +183,10 @@ class PatchBasedMFViT(nn.Module):
             patch_features.append(features)
         x = torch.stack(patch_features, dim=1)  # B x L x D
         del patch_features
+
+        # Project features if dimensions mismatch before patches_attention
+        if self.input_feature_projector is not None:
+            x = self.input_feature_projector(x)
 
         x = self.patches_attention(x)  # B x D
         x = self.norm(x)  # B x D
@@ -407,7 +424,8 @@ class MFViT(nn.Module):
         self,
         vit: Union[vision_transformer.VisionTransformer,
                    backbones.CLIPBackbone,
-                   backbones.DINOv2Backbone],
+                   backbones.DINOv2Backbone,
+                   'DINOv2FeatureEmbedding'],
         features_processor: 'FrequencyRestorationEstimator',
         cls_head: Optional[nn.Module],
         masking_radius: int,
@@ -439,8 +457,22 @@ class MFViT(nn.Module):
             requires_grad=False
         )
 
+        # Initialize semantic-spectral fusion
+        if isinstance(self.vit, (backbones.DINOv2Backbone, DINOv2FeatureEmbedding)):
+            print("🚀 Using DINOv2 backbone for semantic features")
+            self.semantic_fusion = SemanticSpectralFusion(
+                spectral_dim=features_processor.proj_dim,
+                semantic_dim=768,  # DINOv2 ViT-B/14 dimension
+                fusion_dim=features_processor.proj_dim,
+                num_heads=8,
+                dropout=0.1
+            )
+        else:
+            print("⚠️ Warning: Using non-DINOv2 backbone, semantic fusion disabled")
+            self.semantic_fusion = None
+
         if (isinstance(self.vit, vision_transformer.VisionTransformer)
-                or isinstance(self.vit, backbones.DINOv2Backbone)):
+                or isinstance(self.vit, (backbones.DINOv2Backbone, DINOv2FeatureEmbedding))):
             # ImageNet normalization
             self.backbone_norm = transforms.Normalize(
                 mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD
@@ -461,47 +493,93 @@ class MFViT(nn.Module):
 
         :param x: B x C x H x W
         """
-        #print("🚀 Starting MFViT forward pass")
+        print("🚀 Starting MFViT forward pass")
 
         with torch.cuda.amp.autocast():
+            # Spectral branch
             low_freq: torch.Tensor
             hi_freq: torch.Tensor
-            low_freq, hi_freq = filters.filter_image_frequencies(x, self.frequencies_mask)
+            low_freq, hi_freq = filters.filter_image_frequencies(x.float(), self.frequencies_mask)
 
-            low_freq = torch.clamp(low_freq, min=0., max=1.)
-            hi_freq = torch.clamp(hi_freq, min=0., max=1.)
+            low_freq = torch.clamp(low_freq, min=0., max=1.).to(x.dtype)
+            hi_freq = torch.clamp(hi_freq, min=0., max=1.).to(x.dtype)
 
             # Normalize all components according to ImageNet.
-            x = self.backbone_norm(x)
-            low_freq = self.backbone_norm(low_freq)
-            hi_freq = self.backbone_norm(hi_freq)
+            x_norm = self.backbone_norm(x)
+            low_freq_norm = self.backbone_norm(low_freq)
+            hi_freq_norm = self.backbone_norm(hi_freq)
 
-            # Always use CLIP backbone for semantic features
-            if not isinstance(self.vit, backbones.CLIPBackbone):
-                raise ValueError("Model must use CLIP backbone for semantic features")
-            
-            #print("🎯 Using CLIP backbone for semantic features")
-            semantic_vec = self.vit.get_image_embedding(x)
-            #print(f"📊 Semantic vector shape: {semantic_vec.shape}")
+            # Semantic branch
+            semantic_vec = None
+            if isinstance(self.vit, (backbones.DINOv2Backbone, DINOv2FeatureEmbedding)):
+                print("🎯 Extracting semantic features with DINOv2")
+                semantic_vec = self.vit(x)
+                #print(f"📊 Semantic vector shape: {semantic_vec.shape}")
 
             if self.frozen_backbone:
                 with torch.no_grad():
-                    x, low_freq, hi_freq = self._extract_features(x, low_freq, hi_freq)
-                # ------------------------------------------------------------
-                # 2⃣  Immediately after the block, break the view tie
-                x        = x.clone()
-                low_freq = low_freq.clone()
-                hi_freq  = hi_freq.clone()
+                    x_feats, low_feats, hi_feats = self._extract_features(
+                        x_norm, low_freq_norm, hi_freq_norm
+                    )
             else:
-                x, low_freq, hi_freq = self._extract_features(x, low_freq, hi_freq)
+                x_feats, low_feats, hi_feats = self._extract_features(
+                    x_norm, low_freq_norm, hi_freq_norm
+                )
 
-            #print("🔄 Passing features to FrequencyRestorationEstimator")
-            x = self.features_processor(x, low_freq, hi_freq, semantic_vec)
-            if self.cls_head is not None:
-                x = self.cls_head(x)
+            spectral_features = self.features_processor(x_feats, low_feats, hi_feats)
+            #print(f"📊 Spectral features shape: {spectral_features.shape}")
+            
+            # Apply semantic-spectral fusion if semantic vector is available
+            if semantic_vec is not None and hasattr(self, 'semantic_fusion'):
+                #print("🔄 Applying semantic-spectral fusion")
+                #print(f"Input shapes - Spectral: {spectral_features.shape}, Semantic: {semantic_vec.shape}")
+                
+                # Always ensure semantic_vec is properly shaped for attention: [batch_size, seq_len, dim]
+                if len(semantic_vec.shape) == 4:  # If shape is [B, 1, 1, D]
+                    semantic_vec = semantic_vec.squeeze(2).squeeze(1)  # Convert to [B, D]
+                
+                if len(semantic_vec.shape) == 2:  # If shape is [B, D]
+                    semantic_vec = semantic_vec.unsqueeze(1)  # Make it [B, 1, D] for attention
+                
+                #print(f"Reshaped semantic vector: {semantic_vec.shape}")
+                
+                # Ensure spectral_features is also 3D if needed: [batch_size, seq_len, dim]
+                if len(spectral_features.shape) == 2:
+                    #print(f"Using 2D input with shape: {spectral_features.shape}")
+                    # Reshape to [B, 1, D] format for attention
+                    batch_size = spectral_features.size(0)
+                    feat_dim = spectral_features.size(1)
+                    #print(f"🔄 Spectral flat shape: {spectral_features.shape}")
+                    
+                    # Check if semantic fusion module expects a specific dimension
+                    if hasattr(self.semantic_fusion, 'spectral_proj'):
+                        spectral_dim = self.semantic_fusion.spectral_proj.in_features
+                        #print(f"🔄 Spectral projection layer: {self.semantic_fusion.spectral_proj}")
+                        
+                        # Handle dimension mismatch with dynamic projection if needed
+                        if feat_dim != spectral_dim:
+                            #print(f"⚠️ Dimension mismatch! Expected {spectral_dim}, got {feat_dim}.")
+                            #print(f"Creating new dynamic projection layer: {feat_dim} → {spectral_dim}")
+                            temp_proj = nn.Linear(feat_dim, spectral_dim).to(spectral_features.device)
+                            spectral_features = temp_proj(spectral_features)
+                            #print(f"Used dynamic projection, output shape: {spectral_features.shape}")
+                    
+                    # Now reshape to 3D for attention
+                    spectral_features = spectral_features.unsqueeze(1)  # [B, 1, D]
+                
+                semantic_dim = semantic_vec.size(-1)
+                spectral_dim = spectral_features.size(-1)
+                fusion_dim = getattr(self.semantic_fusion, 'fusion_dim', spectral_dim)
+                
+                print(f"Input shapes - Spectral: {spectral_features.shape}, Semantic: {semantic_vec.shape}")
+                print(f"Configured dimensions - Spectral: {spectral_dim}, Semantic: {semantic_dim}, Fusion: {fusion_dim}")
+                
+                fused_features = self.semantic_fusion(spectral_features, semantic_vec)
+            else:
+                fused_features = spectral_features
 
         #print("✅ MFViT forward pass complete")
-        return x
+        return fused_features
 
     def forward_with_export(self, x: torch.Tensor, export_file: pathlib.Path) -> torch.Tensor:
         """Forward pass of a batch of images.
@@ -564,9 +642,14 @@ class MFViT(nn.Module):
         hi_freq: torch.Tensor
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         with torch.cuda.amp.autocast():
-            x = self.vit(x)
-            low_freq = self.vit(low_freq)
-            hi_freq = self.vit(hi_freq)
+            if isinstance(self.vit, DINOv2FeatureEmbedding):
+                x = self.vit(x)
+                low_freq = self.vit(low_freq)
+                hi_freq = self.vit(hi_freq)
+            else:
+                x = self.vit(x)
+                low_freq = self.vit(low_freq)
+                hi_freq = self.vit(hi_freq)
         return x, low_freq, hi_freq
 
     def export_onnx(self, export_file: pathlib.Path) -> None:
@@ -732,10 +815,8 @@ class ClassificationVisionTransformer(nn.Module):
 
 
 class FrequencyRestorationEstimator(nn.Module):
-    """
-    Enhanced FrequencyRestorationEstimator with dual-branch early-to-late cross-attention.
-    Uses semantic guidance throughout the network via gated fusion and cross-attention.
-    """
+    """Estimates the ability to restore missing frequencies from low frequencies."""
+
     def __init__(
         self,
         features_num: int,
@@ -748,256 +829,125 @@ class FrequencyRestorationEstimator(nn.Module):
         original_image_features_branch: bool = False,
         dropout: float = 0.5,
         disable_reconstruction_similarity: bool = False,
-        semantic_dim: int = 512,  # Default CLIP ViT-B/16 dim
-        num_heads: int = 8,
-        early_fusion_layers: List[int] = [3, 6]  # Layers for early gated fusion
     ):
         super().__init__()
-        self.input_dim = input_dim
+        
+        # Store parameters
+        self.features_num = features_num
         self.proj_dim = proj_dim
-        self.semantic_dim = semantic_dim
-        self.early_fusion_layers = early_fusion_layers
-        self.semantic_proj = nn.Linear(semantic_dim, input_dim, bias=False)
-        
-        # Add projection for cross attention (from semantic_dim to proj_dim)
-        self.cross_attn_proj = nn.Linear(semantic_dim, proj_dim, bias=False)
-        
-        # Early fusion gates - create one for each layer in early_fusion_layers
-        self.early_fusion_gates = nn.ModuleList([
-            nn.Sequential(
-                nn.Linear(input_dim + semantic_dim, input_dim),
-                nn.Sigmoid()
-            ) for _ in range(len(early_fusion_layers))
-        ])
 
-        # Mid-level cross attention
-        self.cross_attention = nn.MultiheadAttention(
-            embed_dim=proj_dim,
-            num_heads=num_heads,
-            dropout=dropout,
-            batch_first=True
-        )
-        self.cross_attention_norm = nn.LayerNorm(proj_dim)
-
-        # Rest of initialization remains same
         if proj_last_layer_activation_type == "gelu":
             proj_last_layer_activation = nn.GELU
         elif proj_last_layer_activation_type is None:
             proj_last_layer_activation = nn.Identity
         else:
-            raise RuntimeError("Unsupported activation type for the "
-                               f"last projection layer: {proj_last_layer_activation_type}")
+            raise RuntimeError(
+                "Unsupported activation type for the "
+                f"last projection layer: {proj_last_layer_activation_type}"
+            )
 
         if patch_projection and patch_projection_per_feature:
             self.patch_projector: nn.Module = FeatureSpecificProjector(
-                features_num, proj_layers, input_dim, proj_dim, proj_last_layer_activation,
-                dropout=dropout
+                features_num,
+                proj_layers,
+                input_dim,
+                proj_dim,
+                proj_last_layer_activation,
+                dropout=dropout,
             )
         elif patch_projection:
             self.patch_projector: nn.Module = Projector(
-                proj_layers, input_dim, proj_dim, proj_last_layer_activation, dropout=dropout
+                proj_layers,
+                input_dim,
+                proj_dim,
+                proj_last_layer_activation,
+                dropout=dropout,
             )
         else:
             self.patch_projector: nn.Module = nn.Identity()
 
         self.original_features_processor = None
-        if patch_projection:
-            dim_after_patch_projector = proj_dim
-        else:
-            dim_after_patch_projector = input_dim
-
         if original_image_features_branch:
             self.original_features_processor = FeatureImportanceProjector(
-                features_num, dim_after_patch_projector, proj_dim, proj_layers, dropout=dropout
+                features_num, proj_dim, proj_dim, proj_layers, dropout=dropout
             )
 
+        # A flag that when set stops the computation of reconstruction similarity scores.
+        # Useful for performing ablation studies.
         self.disable_reconstruction_similarity: bool = disable_reconstruction_similarity
         if self.disable_reconstruction_similarity:
-            assert self.original_features_processor is not None, \
-                ("Frequency Reconstruction Similarity cannot be disabled without "
-                 "Original Features Processor.")
+            assert self.original_features_processor is not None, (
+                "Frequency Reconstruction Similarity cannot be disabled without "
+                "Original Features Processor."
+            )
 
-    def early_gated_fusion(self, spectral_feat: torch.Tensor,
-                           semantic_feat: torch.Tensor,
-                           layer_idx: int) -> torch.Tensor:
-        try:
-            gate_idx = self.early_fusion_layers.index(layer_idx)
-        except ValueError:
-            return spectral_feat                    # nothing to fuse
-
-        B, L, _ = spectral_feat.shape
-        semantic_feat = semantic_feat.view(B, L, -1)          # (B,L,768)
-
-        # 1️⃣ projection used only for the blending term
-        semantic_mapped = self.semantic_proj(semantic_feat)   # (B,L,512)
-
-        # 2️⃣ gate still sees the *un-projected* vector (512+768 = 1280 dims)
-        gate = self.early_fusion_gates[gate_idx](
-            torch.cat([spectral_feat, semantic_feat], dim=-1)  # (B,L,1280)
-        )
-
-        # 3️⃣ fuse
-        return gate * spectral_feat + (1.0 - gate) * semantic_mapped
     def forward(
-        self,
-        x: torch.Tensor,
-        low_freq: torch.Tensor,
-        hi_freq: torch.Tensor,
-        semantic_vec: Optional[torch.Tensor] = None
+        self, x: torch.Tensor, low_freq: torch.Tensor, hi_freq: torch.Tensor
     ) -> torch.Tensor:
         """
         :param x: Dimensionality B x N x L x D where N the number of intermediate layers.
-        :param low_freq: Low frequency components
-        :param hi_freq: High frequency components
-        :param semantic_vec: (B, semantic_dim) global semantic context vector
-        :returns: Dimensionality B x (6 * N) or (proj_dim + 6*N) if original_features_processor is used
+        :param low_freq:
+        :param hi_freq:
+
+        :returns: Dimensionality B x (6 * N)
         """
-        #print("🎨 Starting FrequencyRestorationEstimator forward pass")
-        
-        with torch.cuda.amp.autocast():
-            if semantic_vec is None:
-                #print("⚠️ Warning: semantic_vec is None - early fusion and cross-attention will be disabled")
-                # Skip early fusion and cross attention when semantic_vec is None
-                pass
-            else:
-                #print(f"✨ Using semantic vector with shape: {semantic_vec.shape}")
-                # Early fusion at specified layers
-                x_new = []
-                low_freq_new = []
-                hi_freq_new = []
-                for layer_idx in range(x.size(1)):
-                    semantic_expanded = semantic_vec.unsqueeze(1).unsqueeze(1)  # B x 1 x 1 x D
-                    semantic_expanded = semantic_expanded.expand(-1, 1, x.size(2), -1)  # B x 1 x L x D
-                    if layer_idx in self.early_fusion_layers:
-                        x_new.append(self.early_gated_fusion(x[:, layer_idx], semantic_expanded.squeeze(1), layer_idx))
-                        low_freq_new.append(self.early_gated_fusion(low_freq[:, layer_idx], semantic_expanded.squeeze(1), layer_idx))
-                        hi_freq_new.append(self.early_gated_fusion(hi_freq[:, layer_idx], semantic_expanded.squeeze(1), layer_idx))
-                    else:
-                        x_new.append(x[:, layer_idx])
-                        low_freq_new.append(low_freq[:, layer_idx])
-                        hi_freq_new.append(hi_freq[:, layer_idx])
-                x = torch.stack(x_new, dim=1)
-                low_freq = torch.stack(low_freq_new, dim=1)
-                hi_freq = torch.stack(hi_freq_new, dim=1)
+        # Handle both 2D and 4D inputs
+        if len(x.shape) == 2:  # B x D
+            x = x.unsqueeze(1).unsqueeze(1)  # B x 1 x 1 x D
+        if len(low_freq.shape) == 2:
+            low_freq = low_freq.unsqueeze(1).unsqueeze(1)
+        if len(hi_freq.shape) == 2:
+            hi_freq = hi_freq.unsqueeze(1).unsqueeze(1)
 
-            # Project features
-            #print("📊 Projecting features")
-            orig = self.patch_projector(x)  # B x N x L x D
-            low_freq = self.patch_projector(low_freq)  # B x N x L x D
-            hi_freq = self.patch_projector(hi_freq)  # B x N x L x D
+        # For single feature case (N=1), expand to match expected dimensions
+        if x.shape[1] == 1:
+            x = x.expand(-1, self.features_num, -1, -1)
+            low_freq = low_freq.expand(-1, self.features_num, -1, -1)
+            hi_freq = hi_freq.expand(-1, self.features_num, -1, -1)
 
-            # Mid-level cross attention
-            if semantic_vec is not None:
-                #print("🎯 Applying cross attention")
-                # Get shapes
-                B, N, L, D = orig.shape
-                #print(f"Shapes - B: {B}, N: {N}, L: {L}, D: {D}")
-                #print(f"Semantic vec shape: {semantic_vec.shape}")
-                
-                # Reshape tensors for cross attention
-                orig_reshaped = orig.reshape(B*N, L, D)  # (B*N) x L x D
-                low_freq_reshaped = low_freq.reshape(B*N, L, D)  # (B*N) x L x D
-                hi_freq_reshaped = hi_freq.reshape(B*N, L, D)  # (B*N) x L x D
-                
-                # Project semantic context to match feature dimensions
-                semantic_context = self.cross_attn_proj(semantic_vec)  # B x proj_dim
-                semantic_context = semantic_context.unsqueeze(1)  # B x 1 x proj_dim
-                semantic_context = semantic_context.repeat(N, 1, 1)  # (B*N) x 1 x proj_dim
-                
-                #print(f"Shapes after reshaping:")
-                #print(f"orig_reshaped: {orig_reshaped.shape}")
-                #print(f"semantic_context: {semantic_context.shape}")
-                
-                # Apply cross attention
-                orig_attn = self.cross_attention(orig_reshaped, semantic_context, semantic_context)[0]
-                orig = self.cross_attention_norm(orig_reshaped + orig_attn)
-                orig = orig.reshape(B, N, L, D)  # Reshape back to original dimensions
-                
-                low_freq_attn = self.cross_attention(low_freq_reshaped, semantic_context, semantic_context)[0]
-                low_freq = self.cross_attention_norm(low_freq_reshaped + low_freq_attn)
-                low_freq = low_freq.reshape(B, N, L, D)
-                
-                hi_freq_attn = self.cross_attention(hi_freq_reshaped, semantic_context, semantic_context)[0]
-                hi_freq = self.cross_attention_norm(hi_freq_reshaped + hi_freq_attn)
-                hi_freq = hi_freq.reshape(B, N, L, D)
+        orig = self.patch_projector(x)  # B x N x L x D
+        low_freq = self.patch_projector(low_freq)  # B x N x L x D
+        hi_freq = self.patch_projector(hi_freq)  # B x N x L x D
 
-            if self.disable_reconstruction_similarity:
-                #print("🔄 Using original features processor only")
-                x = self.original_features_processor(orig)  # B x proj_dim
-            else:
-                #print("🔄 Computing reconstruction similarities")
-                sim_x_low_freq: torch.Tensor = F.cosine_similarity(orig, low_freq, dim=-1)  # B x N x L
-                sim_x_hi_freq: torch.Tensor = F.cosine_similarity(orig, hi_freq, dim=-1)  # B x N x L
-                sim_low_freq_hi_freq: torch.Tensor = F.cosine_similarity(low_freq, hi_freq, dim=-1)  # B x N x L
+        if self.disable_reconstruction_similarity:
+            x = self.original_features_processor(orig)  # B x proj_dim
+        else:
+            sim_x_low_freq: torch.Tensor = F.cosine_similarity(
+                orig, low_freq, dim=-1
+            )  # B x N x L
+            sim_x_hi_freq: torch.Tensor = F.cosine_similarity(
+                orig, hi_freq, dim=-1
+            )  # B x N x L
+            sim_low_freq_hi_freq: torch.Tensor = F.cosine_similarity(
+                low_freq, hi_freq, dim=-1
+            )  # B x N x L
 
-                sim_x_low_freq_mean: torch.Tensor = sim_x_low_freq.mean(dim=-1)  # B x N
-                sim_x_low_freq_std: torch.Tensor = sim_x_low_freq.std(dim=-1)  # B x N
-                sim_x_hi_freq_mean: torch.Tensor = sim_x_hi_freq.mean(dim=-1)  # B x N
-                sim_x_hi_freq_std: torch.Tensor = sim_x_hi_freq.std(dim=-1)  # B x N
-                sim_low_freq_hi_freq_mean: torch.Tensor = sim_low_freq_hi_freq.mean(dim=-1)  # B x N
-                sim_low_freq_hi_freq_std: torch.Tensor = sim_low_freq_hi_freq.std(dim=-1)  # B x N
+            sim_x_low_freq_mean: torch.Tensor = sim_x_low_freq.mean(dim=-1)  # B x N
+            sim_x_low_freq_std: torch.Tensor = sim_x_low_freq.std(dim=-1)  # B x N
+            sim_x_hi_freq_mean: torch.Tensor = sim_x_hi_freq.mean(dim=-1)  # B x N
+            sim_x_hi_freq_std: torch.Tensor = sim_x_hi_freq.std(dim=-1)  # B x N
+            sim_low_freq_hi_freq_mean: torch.Tensor = sim_low_freq_hi_freq.mean(
+                dim=-1
+            )  # B x N
+            sim_low_freq_hi_freq_std: torch.Tensor = sim_low_freq_hi_freq.std(
+                dim=-1
+            )  # B x N
 
-                x: torch.Tensor = torch.cat([
+            x: torch.Tensor = torch.cat(
+                [
                     sim_x_low_freq_mean,
                     sim_x_low_freq_std,
                     sim_x_hi_freq_mean,
                     sim_x_hi_freq_std,
                     sim_low_freq_hi_freq_mean,
-                    sim_low_freq_hi_freq_std
-                ], dim=1)  # B x (6 * N)
+                    sim_low_freq_hi_freq_std,
+                ],
+                dim=1,
+            )  # B x (6 * N)
 
-                if self.original_features_processor is not None:
-                    #print("🔄 Adding original features")
-                    orig = self.original_features_processor(orig)  # B x proj_dim
-                    x = torch.cat([x, orig], dim=1)  # B x (proj_dim + 6 * N)
-
-        #print("✅ FrequencyRestorationEstimator forward pass complete")
-        return x
-
-    def exportable_forward(
-        self,
-        x: torch.Tensor,
-        low_freq: torch.Tensor,
-        hi_freq: torch.Tensor,
-        semantic_vec: Optional[torch.Tensor] = None
-    ) -> torch.Tensor:
-        orig = self.patch_projector(x)  # B x N x L x D
-        low_freq = self.patch_projector(low_freq)  # B x N x L x D
-        hi_freq = self.patch_projector(hi_freq)  # B x N x L x D
-
-        # Semantic fusion at every patch
-        if semantic_vec is not None:
-            if semantic_vec.dim() != 2 or semantic_vec.size(0) != orig.size(0):
-                raise ValueError(f"semantic_vec must have shape (B, semantic_dim), got {semantic_vec.shape}")
-            orig = self.semantic_fusion(orig, semantic_vec)  # B x N x L x D' or D'+semantic_dim
-            low_freq = self.semantic_fusion(low_freq, semantic_vec)
-            hi_freq = self.semantic_fusion(hi_freq, semantic_vec)
-
-        sim_x_low_freq: torch.Tensor = F.cosine_similarity(orig, low_freq, dim=-1)  # B x N x L
-        sim_x_hi_freq: torch.Tensor = F.cosine_similarity(orig, hi_freq, dim=-1)  # B x N x L
-        sim_low_freq_hi_freq: torch.Tensor = F.cosine_similarity(low_freq, hi_freq,
-                                                                 dim=-1)  # B x N x L
-
-        sim_x_low_freq_mean: torch.Tensor = sim_x_low_freq.mean(dim=-1)  # B x N
-        sim_x_low_freq_std: torch.Tensor = utils.exportable_std(sim_x_low_freq, dim=-1)  # B x N
-        sim_x_hi_freq_mean: torch.Tensor = sim_x_hi_freq.mean(dim=-1)  # B x N
-        sim_x_hi_freq_std: torch.Tensor = utils.exportable_std(sim_x_hi_freq, dim=-1)  # B x N
-        sim_low_freq_hi_freq_mean: torch.Tensor = sim_low_freq_hi_freq.mean(dim=-1)  # B x N
-        sim_low_freq_hi_freq_std: torch.Tensor = utils.exportable_std(
-            sim_low_freq_hi_freq, dim=-1
-        )  # B x N
-
-        x: torch.Tensor = torch.cat([
-            sim_x_low_freq_mean,
-            sim_x_low_freq_std,
-            sim_x_hi_freq_mean,
-            sim_x_hi_freq_std,
-            sim_low_freq_hi_freq_mean,
-            sim_low_freq_hi_freq_std
-        ], dim=1)  # B x (6 * N)
-
-        orig = self.original_features_processor.exportable_forward(orig)  # B x proj_dim
-        x = torch.cat([x, orig], dim=1)  # B x (proj_dim + 6 * N)
+            if self.original_features_processor is not None:
+                orig = self.original_features_processor(orig)  # B x proj_dim
+                x = torch.cat([x, orig], dim=1)  # B x (proj_dim + 6 * N)
 
         return x
 
@@ -1296,6 +1246,8 @@ class NormMaxDenseIntermediateFeaturesProcessor(nn.Module):
         return x
 
 
+
+
 @dataclasses.dataclass
 class AttentionMask:
     mask: Optional[pathlib.Path] = None
@@ -1351,17 +1303,84 @@ def build_cls_vit(config) -> ClassificationVisionTransformer:
     return ClassificationVisionTransformer(vit, features_processor, cls_head)
 
 
+class DINOv2FeatureEmbedding(nn.Module):
+    """Projector that embeds DINOv2 features into a lower-dimensional space."""
+    def __init__(self, model_name="dinov2_vitb14", 
+                 device='cuda' if torch.cuda.is_available() else 'cpu', 
+                 proj_dim=512):
+        super().__init__()
+        self.device = device
+        
+        # Load DINOv2 model
+        if model_name == "dinov2_vitl14":
+            self.dino_model = torch.hub.load('facebookresearch/dinov2', 'dinov2_vitl14')
+            self.output_dim = 1024
+        elif model_name == "dinov2_vitg14":
+            self.dino_model = torch.hub.load('facebookresearch/dinov2', 'dinov2_vitg14')
+            self.output_dim = 1536
+        elif model_name == "dinov2_vitb14":
+            self.dino_model = torch.hub.load('facebookresearch/dinov2', 'dinov2_vitb14')
+            self.output_dim = 768
+        elif model_name == "dinov2_vits14":
+            self.dino_model = torch.hub.load('facebookresearch/dinov2', 'dinov2_vits14')
+            self.output_dim = 384
+        else:
+            raise ValueError(f"Unknown DINOv2 model: {model_name}")
+            
+        self.dino_model.to(device)
+        self.dino_model.eval()  # Freeze model
+        
+        for param in self.dino_model.parameters():
+            param.requires_grad = False
+            
+        print(f"Loaded DINOv2 model {model_name} with output dim {self.output_dim}")
+
+    def forward(self, images):
+        # Handle input types: list of tensors vs 4D tensor
+        if isinstance(images, list):
+            processed_images = torch.stack([
+                self.preprocess_image(img).to(self.device) for img in images
+            ])
+        else:
+            processed_images = torch.stack([
+                self.preprocess_image(img).to(self.device) for img in images
+            ])
+
+        # Extract features using DINOv2
+        with torch.no_grad():
+            # Get features from DINOv2
+            features = self.dino_model(processed_images)
+            
+            # DINOv2 returns features in shape (B, D)
+            # Reshape to match expected format: B x 1 x 1 x D
+            B, D = features.shape
+            # Add sequence length dimension (L=1) and feature dimension (N=1)
+            patch_tokens = features.unsqueeze(1).unsqueeze(1)  # B x 1 x 1 x D
+
+        return patch_tokens.float()
+
+    def preprocess_image(self, image_tensor):
+        # DINOv2 expects images normalized with ImageNet stats
+        preprocess = transforms.Compose([
+            transforms.Resize((224, 224)),
+            transforms.Normalize(mean=(0.485, 0.456, 0.406),
+                     std=(0.229, 0.224, 0.225))
+        ])
+        return preprocess(image_tensor)
+
+
 def build_mf_vit(config) -> MFViT:
     # Build features extractor.
-    if config.MODEL_WEIGHTS != "clip":
-        raise ValueError("MODEL_WEIGHTS must be set to 'clip' to use semantic features")
+    if config.MODEL_WEIGHTS != "dinov2":
+        raise ValueError("MODEL_WEIGHTS must be set to 'dinov2' to use semantic features")
         
-    # Initialize CLIP model with CUDA device
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    vit: backbones.CLIPBackbone = backbones.CLIPBackbone(device=device)
+    vit: DINOv2FeatureEmbedding = DINOv2FeatureEmbedding(
+        model_name="dinov2_vitb14",
+        device=device
+    )
     initialization_scope: str = "local"
 
-    # Build features processor.
     fre: FrequencyRestorationEstimator = FrequencyRestorationEstimator(
         features_num=len(config.MODEL.VIT.INTERMEDIATE_LAYERS),
         input_dim=config.MODEL.VIT.EMBED_DIM,
@@ -1371,76 +1390,96 @@ def build_mf_vit(config) -> MFViT:
         patch_projection_per_feature=config.MODEL.VIT.PATCH_PROJECTION_PER_FEATURE,
         proj_last_layer_activation_type=config.MODEL.FRE.PROJECTOR_LAST_LAYER_ACTIVATION_TYPE,
         original_image_features_branch=config.MODEL.FRE.ORIGINAL_IMAGE_FEATURES_BRANCH,
-        dropout=config.MODEL.SID_DROPOUT,
         disable_reconstruction_similarity=config.MODEL.FRE.DISABLE_RECONSTRUCTION_SIMILARITY,
-        semantic_dim=config.MODEL.FRE.SEMANTIC_DIM,
-        num_heads=config.MODEL.FRE.NUM_HEADS,
-        early_fusion_layers=config.MODEL.FRE.EARLY_FUSION_LAYERS
     )
 
-    cls_vector_dim: int = 6 * len(config.MODEL.VIT.INTERMEDIATE_LAYERS)
-    if (config.MODEL.FRE.ORIGINAL_IMAGE_FEATURES_BRANCH
-            and config.MODEL.FRE.DISABLE_RECONSTRUCTION_SIMILARITY):
-        cls_vector_dim = config.MODEL.VIT.PROJECTION_DIM
-    elif config.MODEL.FRE.ORIGINAL_IMAGE_FEATURES_BRANCH:
-        cls_vector_dim += config.MODEL.VIT.PROJECTION_DIM
+    # Output dimension of the internal MFViT module (after potential fusion)
+    # If DINOv2 is used, MFViT's semantic_fusion module will output features of fusion_dim,
+    # which is initialized with features_processor.proj_dim (i.e., config.MODEL.VIT.PROJECTION_DIM).
+    mfvit_actual_output_dim = config.MODEL.VIT.PROJECTION_DIM if config.MODEL_WEIGHTS == "dinov2" else (6 * len(config.MODEL.VIT.INTERMEDIATE_LAYERS) + (config.MODEL.VIT.PROJECTION_DIM if config.MODEL.FRE.ORIGINAL_IMAGE_FEATURES_BRANCH else 0))
+    if config.MODEL_WEIGHTS != "dinov2" and config.MODEL.FRE.ORIGINAL_IMAGE_FEATURES_BRANCH and config.MODEL.FRE.DISABLE_RECONSTRUCTION_SIMILARITY:
+         mfvit_actual_output_dim = config.MODEL.VIT.PROJECTION_DIM
 
-    cls_head: Optional[ClassificationHead]
-    if config.TRAIN.MODE == "contrastive":
-        cls_head = None
-    elif config.TRAIN.MODE == "supervised":
-        # Build classification head.
-        cls_head = ClassificationHead(
-            input_dim=cls_vector_dim,
+    # For PatchBasedMFViT, its *own* layers (to_kv, norm, cls_head) expect dimensions from the checkpoint.
+    # Use config values that would correspond to the checkpoint's structure for these specific layers.
+    # The error log indicates: to_kv input 1096, attn_embed_dim 1536. cls_head input 1096.
+    # These should ideally come from config if they were fixed at checkpoint creation.
+    # Let's use the values from the error log as a guide for now if not directly in config.
+    # For example, if PATCH_VIT.CLS_VECTOR_DIM and PATCH_VIT.ATTN_EMBED_DIM from the config
+    # are expected to match the checkpoint.
+
+    cls_head_for_fixed_resolution: Optional[ClassificationHead] = None
+    if config.TRAIN.MODE == "supervised" and config.MODEL.RESOLUTION_MODE == "fixed":
+        cls_head_for_fixed_resolution = ClassificationHead(
+            input_dim=mfvit_actual_output_dim, # MFViT (fixed) directly uses its own output
             num_classes=config.MODEL.NUM_CLASSES if config.MODEL.NUM_CLASSES > 2 else 1,
             mlp_ratio=config.MODEL.CLS_HEAD.MLP_RATIO,
             dropout=config.MODEL.SID_DROPOUT
         )
-    else:
-        raise RuntimeError(f"Unsupported train mode: {config.TRAIN.MODE}")
 
     if config.MODEL.RESOLUTION_MODE == "fixed":
         model = MFViT(
             vit,
             fre,
-            cls_head,
+            cls_head_for_fixed_resolution,
             masking_radius=config.MODEL.FRE.MASKING_RADIUS,
-            img_size=config.DATA.IMG_SIZE
+            img_size=config.DATA.IMG_SIZE,
+            initialization_scope=initialization_scope
         )
     elif config.MODEL.RESOLUTION_MODE == "arbitrary":
+        # These are the dimensions PatchBasedMFViT's *internal layers* expect, based on the checkpoint.
+        # The error log implies: cls_vector_dim_for_patch_vit_layers = 1096
+        #                        attn_embed_dim_for_patch_vit_layers = 1536 (since to_kv output is 3072)
+        # We should use config values that reflect these checkpoint dimensions.
+        # Assuming config.MODEL.PATCH_VIT.CLS_VECTOR_DIM and config.MODEL.PATCH_VIT.ATTN_EMBED_DIM
+        # are set to these checkpoint-compatible values (1096 and 1536 respectively).
+        cls_vector_dim_for_patch_vit_layers = config.MODEL.PATCH_VIT.CLS_VECTOR_DIM 
+        attn_embed_dim_for_patch_vit_layers = config.MODEL.PATCH_VIT.ATTN_EMBED_DIM
+
+        cls_head_for_patch_based: Optional[ClassificationHead] = None
+        if config.TRAIN.MODE == "supervised":
+            cls_head_for_patch_based = ClassificationHead(
+                input_dim=cls_vector_dim_for_patch_vit_layers, # Head expects the checkpoint's vector dim
+                num_classes=config.MODEL.NUM_CLASSES if config.MODEL.NUM_CLASSES > 2 else 1,
+                mlp_ratio=config.MODEL.CLS_HEAD.MLP_RATIO,
+                dropout=config.MODEL.SID_DROPOUT
+            )
+
         model = PatchBasedMFViT(
             vit,
             fre,
-            cls_head,
+            cls_head_for_patch_based,
             masking_radius=config.MODEL.FRE.MASKING_RADIUS,
             img_patch_size=config.DATA.IMG_SIZE,
             img_patch_stride=config.MODEL.PATCH_VIT.PATCH_STRIDE,
-            cls_vector_dim=cls_vector_dim,
-            attn_embed_dim=config.MODEL.PATCH_VIT.ATTN_EMBED_DIM,
+            cls_vector_dim=cls_vector_dim_for_patch_vit_layers,
+            attn_embed_dim=attn_embed_dim_for_patch_vit_layers,
             num_heads=config.MODEL.PATCH_VIT.NUM_HEADS,
             dropout=config.MODEL.SID_DROPOUT,
             minimum_patches=config.MODEL.PATCH_VIT.MINIMUM_PATCHES,
-            initialization_scope=initialization_scope
+            initialization_scope=initialization_scope,
+            mfvit_output_dim_actual=mfvit_actual_output_dim
         )
     else:
         raise RuntimeError(f"Unsupported resolution mode: {config.MODEL.RESOLUTION_MODE}")
 
-    # Move model to device
     model = model.to(device)
 
-    # Verify model is properly configured for semantic features
-    if isinstance(model, MFViT):
-        backbone = model.vit
+    if isinstance(model, MFViT) and not isinstance(model, PatchBasedMFViT):
+        backbone_test = model.vit
     elif isinstance(model, PatchBasedMFViT):
-        backbone = model.mfvit.vit
+        backbone_test = model.mfvit.vit 
     else:
-        raise RuntimeError(f"Unsupported model type: {type(model)}")
+        raise RuntimeError(f"Unsupported model type for DINOv2 test: {type(model)}")
 
-    # Test semantic feature extraction
-    test_input = torch.randn(1, 3, config.DATA.IMG_SIZE, config.DATA.IMG_SIZE).to(device)
-    semantic_vec = backbone.get_image_embedding(test_input)
-    if semantic_vec is None or semantic_vec.shape[-1] != config.MODEL.FRE.SEMANTIC_DIM:
-        raise ValueError(f"Semantic feature extraction failed or dimension mismatch. Expected {config.MODEL.FRE.SEMANTIC_DIM}, got {semantic_vec.shape[-1] if semantic_vec is not None else None}")
+    if isinstance(backbone_test, DINOv2FeatureEmbedding):
+        test_input = torch.randn(1, 3, config.DATA.IMG_SIZE, config.DATA.IMG_SIZE).to(device)
+        with torch.no_grad():
+            semantic_vec = backbone_test(test_input)
+        if semantic_vec is None or semantic_vec.shape[-1] != 768:
+            raise ValueError(f"Semantic feature extraction failed or dim mismatch. Expected 768, got {semantic_vec.shape[-1] if semantic_vec is not None else None}")
+    else:
+        print(f"⚠️ Skipping DINOv2 semantic feature extraction test for backbone type: {type(backbone_test)}")
 
     return model
 

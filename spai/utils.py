@@ -324,22 +324,41 @@ def remap_pretrained_keys_vit(model, checkpoint_model, logger):
                 new_table = torch.cat(all_bias, dim=-1)
                 checkpoint_model[key] = torch.cat([new_table, extra_tokens], dim=0)
 
-    # 3) ——— Stretch any mismatched LayerNorm parameters ———
+    # 3) --- Stretch any mismatched LayerNorm parameters ---
     model_state = model.state_dict()
     for name in ("norm.weight", "norm.bias"):
-        if name in checkpoint_model and name in model_state:
-            old = checkpoint_model[name]
-            new = model_state[name]
-            if old.shape != new.shape:
-                # LayerNorm defaults: weights = 1.0, biases = 0.0
-                init = torch.ones if name.endswith("weight") else torch.zeros
-                adapted = init(new.shape, dtype=old.dtype, device=old.device)
-                adapted[:old.shape[0]] = old
-                checkpoint_model[name] = adapted
-                logger.info(f"Expanded `{name}` from {tuple(old.shape)} → {tuple(new.shape)}")
+        # Check if the key exists with the mfvit. prefix (for PatchBasedMFViT)
+        prefixed_name = f"mfvit.{name}"
+        current_name_to_check = name
+        if prefixed_name in model_state and prefixed_name in checkpoint_model:
+            current_name_to_check = prefixed_name
+        elif name not in model_state or name not in checkpoint_model:
+            # Also check for cls_head.head.0.norm type names if PatchBasedMFViT
+            # This is a common pattern for Norm layers within Sequential in cls_head
+            # Example: cls_head.head.x.weight/bias for Linear, not norm directly in PatchBasedMFViT
+            # The direct norm layers are usually mfvit.norm.weight/bias or norm.weight/bias
+            # For PatchBasedMFViT, the relevant norm is self.norm = nn.LayerNorm(cls_vector_dim)
+            # which appears as "norm.weight" or "norm.bias" in the state_dict if the model
+            # IS a PatchBasedMFViT. If it's MFViT, it could be "cls_head.norm..." or similar.
+            # The current loop for "norm.weight" and "norm.bias" should cover the main cases.
+            continue # Skip if the exact name or prefixed name isn't in both
+
+        old = checkpoint_model[current_name_to_check]
+        new = model_state[current_name_to_check]
+
+        if old.shape != new.shape:
+            logger.info(f"LayerNorm shape mismatch for '{current_name_to_check}': ckpt {old.shape} vs model {new.shape}")
+            init = torch.ones if current_name_to_check.endswith("weight") else torch.zeros
+            adapted = init(new.shape, dtype=old.dtype, device=old.device)
+            
+            # Handle both expansion and truncation
+            common_size = min(old.shape[0], new.shape[0])
+            adapted[:common_size] = old[:common_size]
+            
+            checkpoint_model[current_name_to_check] = adapted
+            logger.info(f"Adapted '{current_name_to_check}' from {tuple(old.shape)} to {tuple(new.shape)}")
 
     return checkpoint_model
-
 
 
 def remove_imagenet_norm(image: np.ndarray) -> np.ndarray:
