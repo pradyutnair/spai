@@ -198,7 +198,9 @@ _C.MODEL.FRE.EARLY_FUSION_LAYERS = [3, 6]
 _C.MODEL.FRE.DROPOUT = 0.5
 _C.MODEL.FRE.ATTN_DROPOUT = 0.1  # Added for semantic-spectral fusion
 _C.MODEL.FRE.FUSION_DIM = 1024  # Added for semantic-spectral fusion
+_C.MODEL.FRE.NUM_FREQUENCY_BANDS = 5  # Added - number of frequency bands for fusion
 _C.MODEL.FRE.USE_LAYER_NORM = True
+_C.MODEL.FRE.FFN_RATIO = 4  # Added - ratio for feed-forward networks in fusion
 # PatchBasedMFViT related parameters
 _C.MODEL.PATCH_VIT = CN()
 _C.MODEL.PATCH_VIT.PATCH_STRIDE = 224
@@ -208,7 +210,7 @@ _C.MODEL.PATCH_VIT.MINIMUM_PATCHES = 1
 _C.MODEL.PATCH_VIT.CLS_VECTOR_DIM = 1096
 # Classification head parameters
 _C.MODEL.CLS_HEAD = CN()
-_C.MODEL.CLS_HEAD.MLP_RATIO = 4
+_C.MODEL.CLS_HEAD.MLP_RATIO = 3
 
 # ResNet parameters
 _C.MODEL.RESNET = CN()
@@ -547,6 +549,11 @@ def get_cfg_defaults():
     _C.MODEL.FRE.NUM_HEADS = 8
     _C.MODEL.FRE.EARLY_FUSION_LAYERS = [3, 6]
     _C.MODEL.FRE.DROPOUT = 0.5
+    _C.MODEL.FRE.ATTN_DROPOUT = 0.1
+    _C.MODEL.FRE.FUSION_DIM = 1024
+    _C.MODEL.FRE.NUM_FREQUENCY_BANDS = 5
+    _C.MODEL.FRE.USE_LAYER_NORM = True
+    _C.MODEL.FRE.FFN_RATIO = 4  # Added parameter
 
     # Model - CLS Head
     _C.MODEL.CLS_HEAD = CN()

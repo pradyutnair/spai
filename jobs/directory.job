@@ -46,7 +46,7 @@ python -m spai train \
   --cfg "/home/pnair/spai/configs/spai.yaml" \
   --batch-size 256 \
   --pretrained "/home/pnair/spai/weights/spai.pth" \
-  --output "/home/pnair/spai/output/train_patch_after_sca_fusion" \
+  --output "/home/pnair/spai/output/train_patch" \
   --data-path "/home/pnair/spai/datasets/ldm_lsun_train_val_subset.csv" \
   --tag "spai" \
   --amp-opt-level "O2" \

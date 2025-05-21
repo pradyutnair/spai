@@ -526,3 +526,67 @@ def inf_nan_to_num(x, replace_nan=0.0, replace_inf=1e5):
                 x_new[is_inf] = replace_inf
             return x_new
     return x
+
+
+def save_fusion_attention_visualization(attention_weights, output_path, cmap='viridis'):
+    """
+    Save visualization of the semantic-spectral fusion attention weights
+    
+    Args:
+        attention_weights: Dictionary containing attention maps and weights
+        output_path: Path where to save visualization images
+        cmap: Matplotlib colormap to use for visualization
+    """
+    import matplotlib.pyplot as plt
+    import numpy as np
+    from pathlib import Path
+    
+    output_path = Path(output_path)
+    output_path.mkdir(exist_ok=True, parents=True)
+    
+    # 1. Save attention heatmap
+    if 'attention_map' in attention_weights and attention_weights['attention_map'] is not None:
+        attn_map = attention_weights['attention_map']
+        if isinstance(attn_map, torch.Tensor):
+            attn_map = attn_map.numpy()
+            
+        plt.figure(figsize=(10, 8))
+        plt.imshow(attn_map, cmap=cmap)
+        plt.colorbar(label='Attention Weight')
+        plt.title('Semantic → Spectral Attention Map')
+        plt.tight_layout()
+        plt.savefig(output_path / 'attention_map.png', dpi=300)
+        plt.close()
+    
+    # 2. Save frequency band weights bar chart
+    if 'frequency_weights' in attention_weights and attention_weights['frequency_weights'] is not None:
+        freq_weights = attention_weights['frequency_weights']
+        if isinstance(freq_weights, torch.Tensor):
+            freq_weights = freq_weights.numpy()
+            
+        num_bands = len(freq_weights)
+        band_labels = ['Low', 'Mid', 'High'] if num_bands == 3 else [f'Band {i+1}' for i in range(num_bands)]
+        
+        plt.figure(figsize=(8, 6))
+        plt.bar(band_labels, freq_weights, color='skyblue')
+        plt.ylim(0, 1.0)
+        plt.ylabel('Weight')
+        plt.title('Frequency Band Importance')
+        plt.tight_layout()
+        plt.savefig(output_path / 'frequency_weights.png', dpi=300)
+        plt.close()
+    
+    # 3. Save modality contribution pie chart
+    if 'modality_contribution' in attention_weights and attention_weights['modality_contribution'] is not None:
+        mod_weights = attention_weights['modality_contribution']
+        if isinstance(mod_weights, torch.Tensor):
+            mod_weights = mod_weights.numpy()
+            
+        plt.figure(figsize=(8, 8))
+        plt.pie(mod_weights, labels=['Semantic', 'Spectral'], 
+                autopct='%1.1f%%', startangle=90, colors=['#ff9999', '#66b3ff'])
+        plt.axis('equal')
+        plt.title('Modality Contribution')
+        plt.tight_layout()
+        plt.savefig(output_path / 'modality_contribution.png', dpi=300)
+        plt.close()

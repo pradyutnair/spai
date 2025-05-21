@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+The goal of this project is to improve AUC of a synethetic image detector. We want to combine semantic and spectral information in a way that improves the original classifier that only uses spectral information. Your goal is to provide changes that are error free (always check shapes and dtypes) and improve classifier AUC such that the AUC is improved on images on benchmarks such as FLUX, DALLE, GIGAGAN, ARTIFACT, etc. The method needs to infuse spectral and semantic image information to improve deepfake/synthetic image detection especially on compressed images.

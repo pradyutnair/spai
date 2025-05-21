@@ -44,6 +44,7 @@ from spai.models import build_cls_model
 from spai.data import build_loader, build_loader_test
 from spai.lr_scheduler import build_scheduler
 from spai.models.sid import AttentionMask
+from spai.models.semantic_fusion import AdaptiveSemanticSpectralFusion
 from spai.onnx import compare_pytorch_onnx_models
 from spai.optimizer import build_optimizer
 from spai.logger import create_logger
@@ -941,7 +942,26 @@ def train_model(
 
         # Stage 1: Train semantic components (first 5 epochs)
         if epoch < 5:
-            logger.info(f"🎯 Stage 1: Training semantic components (Epoch {epoch})")
+            logger.info(f"🎯 Stage 1: Training adaptive fusion components (Epoch {epoch})")
+            
+            # Focus on training the semantic fusion module by setting larger learning rate
+            if hasattr(model, 'mfvit') and hasattr(model.mfvit, 'semantic_fusion') and \
+               isinstance(model.mfvit.semantic_fusion, AdaptiveSemanticSpectralFusion):
+                
+                # Boost learning rate for fusion module parameters
+                for param_group in optimizer.param_groups:
+                    if any(name in param_group.get('names', []) for name in ['semantic_fusion', 'early_fusion_gates', 'frequency_band']):
+                        original_lr = param_group['lr']
+                        param_group['lr'] = original_lr * 2.0  # Boost learning rate for fusion parameters
+                        logger.info(f"🔺 Increasing learning rate for fusion parameters: {original_lr:.6f} -> {param_group['lr']:.6f}")
+                
+                # Verify trainable status of key components
+                fusion_module = model.mfvit.semantic_fusion
+                logger.info(f"✅ Trainable status of fusion components:")
+                logger.info(f"  • frequency_band_weights: {fusion_module.frequency_band_weights.requires_grad}")
+                logger.info(f"  • early_fusion_gates: {[p.requires_grad for p in fusion_module.early_fusion_gates.parameters()]}")
+                logger.info(f"  • modality_contribution: {fusion_module.modality_contribution.requires_grad}")
+            
             train_one_epoch(
                 config,
                 model,
@@ -954,6 +974,15 @@ def train_model(
                 neptune_run,
                 stage="semantic"
             )
+            
+            # Restore original learning rates after training
+            if hasattr(model, 'mfvit') and hasattr(model.mfvit, 'semantic_fusion'):
+                # Reset any boosted learning rates
+                for param_group in optimizer.param_groups:
+                    if 'original_lr' in param_group:
+                        param_group['lr'] = param_group['original_lr']
+                        logger.info(f"🔽 Reset learning rate to original: {param_group['lr']:.6f}")
+                
         # Stage 2: Joint training (after 5 epochs)
         else:
             logger.info(f"🔄 Stage 2: Joint training (Epoch {epoch})")
@@ -975,7 +1004,17 @@ def train_model(
 
         # Validate the model
         logger.info("📊 Validating model...")
-        acc, ap, auc, loss = validate(config, data_loader_val, model, criterion, neptune_run)
+        
+        # Export attention visualizations on a regular basis (every 5 epochs)
+        export_attn = (epoch % 5 == 0)
+        if export_attn:
+            logger.info("📷 Exporting attention visualizations during validation")
+            
+        acc, ap, auc, loss = validate(
+            config, data_loader_val, model, criterion, neptune_run, 
+            export_attention=export_attn
+        )
+        
         logger.info(f"✅ Val | Epoch {epoch} | Images: {len(dataset_val)} | loss: {loss:.4f}")
         logger.info(f"✅ Val | Epoch {epoch} | Images: {len(dataset_val)} | ACC: {acc:.3f}")
         logger.info(f"✅ Val | Epoch {epoch} | Images: {len(dataset_val)} | AP: {ap:.3f}")
@@ -1012,8 +1051,13 @@ def train_model(
                                                                   datasets_test,
                                                                   datasets_test_names):
             logger.info(f"🧪 Testing on {test_data_name}...")
-            acc, ap, auc, loss = validate(config, test_data_loader, model,
-                                          criterion, neptune_run)
+            
+            # Export attention visualizations on the same schedule as validation
+            acc, ap, auc, loss = validate(
+                config, test_data_loader, model, criterion, neptune_run,
+                export_attention=export_attn
+            )
+            
             logger.info(f"📊 Test | {test_data_name} | Epoch {epoch} | Images: {len(test_dataset)} "
                         f"| loss: {loss:.4f}")
             logger.info(f"📊 Test | {test_data_name} | Epoch {epoch} | Images: {len(test_dataset)} "
@@ -1069,6 +1113,10 @@ def train_one_epoch(
     batch_time = AverageMeter()
     loss_meter = AverageMeter()
     norm_meter = AverageMeter()
+    
+    # Initialize metrics for fusion module tracking
+    semantic_weight_meter = AverageMeter()
+    spectral_weight_meter = AverageMeter()
 
     start = time.time()
     end = time.time()
@@ -1092,7 +1140,59 @@ def train_one_epoch(
             outputs_views: list[torch.Tensor] = []
             for i in range(samples.size(1)):
                 view = samples[:, i, :, :, :].float()
-                output = model(view)
+                
+                # For logging attention weights (only do this periodically to save time)
+                if idx % config.PRINT_FREQ == 0 and i == 0 and neptune_run is not None and \
+                   hasattr(model, 'mfvit') and hasattr(model.mfvit, 'semantic_fusion') and \
+                   isinstance(model.mfvit.semantic_fusion, AdaptiveSemanticSpectralFusion):
+                    # Export attention for the first view in the batch
+                    attention_dir = pathlib.Path(f"attention_vis/epoch_{epoch}_batch_{idx}")
+                    output = model(view, export_attention=True)
+                    
+                    # Get attention weights if available
+                    fusion_module = model.mfvit.semantic_fusion
+                    attention_data = fusion_module.get_last_attention_weights()
+                    
+                    if attention_data.get('modality_contribution') is not None:
+                        mod_weights = attention_data['modality_contribution'].numpy()
+                        semantic_weight_meter.update(mod_weights[0], 1)  # Semantic weight
+                        spectral_weight_meter.update(mod_weights[1], 1)  # Spectral weight
+                        
+                        # Log to Neptune
+                        neptune_run[f"fusion/semantic_weight"].append(mod_weights[0])
+                        neptune_run[f"fusion/spectral_weight"].append(mod_weights[1])
+                        
+                    if attention_data.get('frequency_weights') is not None:
+                        freq_weights = attention_data['frequency_weights'].numpy()
+                        # Log to Neptune
+                        for i, w in enumerate(freq_weights):
+                            neptune_run[f"fusion/freq_band_{i}_weight"].append(w)
+                            
+                    # Log attention map
+                    if attention_data.get('attention_map') is not None:
+                        import matplotlib.pyplot as plt
+                        import io
+                        from PIL import Image
+                        
+                        # Create and save attention map figure
+                        attn_map = attention_data['attention_map'].numpy()
+                        fig, ax = plt.subplots(figsize=(6, 4))
+                        im = ax.imshow(attn_map, cmap='viridis')
+                        plt.colorbar(im)
+                        plt.title(f"Attention Map (Epoch {epoch})")
+                        
+                        # Save to buffer
+                        buf = io.BytesIO()
+                        plt.savefig(buf, format='png')
+                        buf.seek(0)
+                        
+                        # Log to Neptune
+                        neptune_run[f"fusion/attention_map"].upload(Image.open(buf))
+                        plt.close(fig)
+                else:
+                    # Normal forward pass
+                    output = model(view)
+                    
                 outputs_views.append(output)
             outputs: torch.Tensor = torch.stack(outputs_views, dim=1)
             outputs = outputs if outputs.size(dim=1) > 1 else outputs.squeeze(dim=1)
@@ -1162,9 +1262,22 @@ def train_one_epoch(
                 f'loss {loss_meter.val:.4f} ({loss_meter.avg:.4f})\t'
                 f'grad_norm {norm_meter.val:.4f} ({norm_meter.avg:.4f})\t'
                 f'mem {memory_used:.0f}MB')
+            
+            # Log fusion module stats if available
+            if semantic_weight_meter.count > 0:
+                logger.info(
+                    f'🔀 Fusion: [{epoch}/{config.TRAIN.EPOCHS}][{idx}/{num_steps}]\t'
+                    f'semantic weight {semantic_weight_meter.avg:.4f}\t'
+                    f'spectral weight {spectral_weight_meter.avg:.4f}'
+                )
 
     epoch_time = time.time() - start
     logger.info(f"⏱️ EPOCH {epoch} training takes {datetime.timedelta(seconds=int(epoch_time))}")
+    
+    # Log epoch-level fusion stats to Neptune
+    if semantic_weight_meter.count > 0 and neptune_run is not None:
+        neptune_run[f"fusion/epoch_semantic_weight"].append(semantic_weight_meter.avg, step=epoch)
+        neptune_run[f"fusion/epoch_spectral_weight"].append(spectral_weight_meter.avg, step=epoch)
 
 
 @torch.no_grad()
@@ -1175,7 +1288,8 @@ def validate(
     criterion,
     neptune_run,
     verbose: bool = True,
-    return_predictions: bool = False
+    return_predictions: bool = False,
+    export_attention: bool = False
 ):
     model.eval()
     criterion.eval()
@@ -1185,6 +1299,10 @@ def validate(
     cls_metrics: metrics.Metrics = metrics.Metrics(metrics=("auc", "ap", "accuracy"))
 
     predicted_scores: dict[int, tuple[float, Optional[AttentionMask]]] = {}
+    
+    # Initialize metrics for fusion module tracking
+    semantic_weight_meter = AverageMeter()
+    spectral_weight_meter = AverageMeter()
 
     end = time.time()
     for idx, (images, target, dataset_idx) in enumerate(data_loader):
@@ -1203,17 +1321,54 @@ def validate(
                 pathlib.Path(config.OUTPUT)/"images"/f"{dataset_idx.detach().cpu().tolist()[i]}"
                 for i in range(len(dataset_idx))
             ]
+            
+            # Set up attention export directories if needed
+            attention_dirs = None
+            if export_attention:
+                attention_dirs = [
+                    dir_path / "attention" for dir_path in export_dirs
+                ]
+                for attn_dir in attention_dirs:
+                    attn_dir.mkdir(exist_ok=True, parents=True)
+                    
             output, attention_masks = model(
-                images, config.MODEL.FEATURE_EXTRACTION_BATCH, export_dirs
+                images, config.MODEL.FEATURE_EXTRACTION_BATCH, export_dirs, 
+                export_attention=export_attention
             )
         elif isinstance(images, list):
-            output = model(images, config.MODEL.FEATURE_EXTRACTION_BATCH)
+            output = model(images, config.MODEL.FEATURE_EXTRACTION_BATCH, export_attention=export_attention)
             attention_masks = [None] * len(images)
         else:
             if images.size(dim=1) > 1:
-                predictions: list[torch.Tensor] = [
-                    model(images[:, i]) for i in range(images.size(dim=1))
-                ]
+                predictions: list[torch.Tensor] = []
+                
+                for i in range(images.size(dim=1)):
+                    # Configure attention directory if needed
+                    if export_attention and i == 0 and idx % config.PRINT_FREQ == 0:
+                        attention_dir = pathlib.Path(config.OUTPUT) / f"attention_val/batch_{idx}_view_{i}"
+                        prediction = model(images[:, i], export_attention=True)
+                        
+                        # Log fusion module stats if available
+                        if hasattr(model, 'mfvit') and hasattr(model.mfvit, 'semantic_fusion') and \
+                           isinstance(model.mfvit.semantic_fusion, AdaptiveSemanticSpectralFusion) and \
+                           neptune_run is not None:
+                            
+                            fusion_module = model.mfvit.semantic_fusion
+                            attention_data = fusion_module.get_last_attention_weights()
+                            
+                            if attention_data.get('modality_contribution') is not None:
+                                mod_weights = attention_data['modality_contribution'].numpy()
+                                semantic_weight_meter.update(mod_weights[0], 1)
+                                spectral_weight_meter.update(mod_weights[1], 1)
+                                
+                                # Log to Neptune
+                                neptune_run[f"val/fusion/semantic_weight"].append(mod_weights[0])
+                                neptune_run[f"val/fusion/spectral_weight"].append(mod_weights[1])
+                    else:
+                        prediction = model(images[:, i])
+                        
+                    predictions.append(prediction)
+                    
                 predictions: torch.Tensor = torch.stack(predictions, dim=1)
                 if config.TEST.VIEWS_REDUCTION_APPROACH == "max":
                     output: torch.Tensor = predictions.max(dim=1).values
@@ -1224,7 +1379,31 @@ def validate(
                                     f"supported views reduction approach")
             else:
                 images = images.squeeze(dim=1)  # Remove views dimension.
-                output = model(images)
+                
+                # Configure attention directory if needed
+                if export_attention and idx % config.PRINT_FREQ == 0:
+                    attention_dir = pathlib.Path(config.OUTPUT) / f"attention_val/batch_{idx}"
+                    output = model(images, export_attention=True)
+                    
+                    # Log fusion module stats if available
+                    if hasattr(model, 'mfvit') and hasattr(model.mfvit, 'semantic_fusion') and \
+                       isinstance(model.mfvit.semantic_fusion, AdaptiveSemanticSpectralFusion) and \
+                       neptune_run is not None:
+                        
+                        fusion_module = model.mfvit.semantic_fusion
+                        attention_data = fusion_module.get_last_attention_weights()
+                        
+                        if attention_data.get('modality_contribution') is not None:
+                            mod_weights = attention_data['modality_contribution'].numpy()
+                            semantic_weight_meter.update(mod_weights[0], 1)
+                            spectral_weight_meter.update(mod_weights[1], 1)
+                            
+                            # Log to Neptune
+                            neptune_run[f"val/fusion/semantic_weight"].append(mod_weights[0])
+                            neptune_run[f"val/fusion/spectral_weight"].append(mod_weights[1])
+                else:
+                    output = model(images)
+                    
             attention_masks = [None] * images.size(0)
 
         loss = criterion(output.squeeze(dim=1), target)
@@ -1255,11 +1434,24 @@ def validate(
                 f'Time {batch_time.val:.3f} ({batch_time.avg:.3f}) | '
                 f'Loss {loss_meter.val:.4f} ({loss_meter.avg:.4f}) | '
                 f'Mem {memory_used:.0f}MB')
+                
+            # Log fusion module stats if available
+            if semantic_weight_meter.count > 0 and verbose:
+                logger.info(
+                    f'🔀 Val Fusion: [{idx}/{len(data_loader)}] | '
+                    f'semantic weight {semantic_weight_meter.avg:.4f} | '
+                    f'spectral weight {spectral_weight_meter.avg:.4f}'
+                )
 
     metric_values: dict[str, np.ndarray] = cls_metrics.compute()
     auc: float = metric_values["auc"].item()
     ap: float = metric_values["ap"].item()
     acc: float = metric_values["accuracy"].item()
+    
+    # Log fusion stats to Neptune at the end of validation
+    if semantic_weight_meter.count > 0 and neptune_run is not None:
+        neptune_run[f"val/fusion/avg_semantic_weight"].append(semantic_weight_meter.avg)
+        neptune_run[f"val/fusion/avg_spectral_weight"].append(spectral_weight_meter.avg)
 
     if return_predictions:
         return acc, ap, auc, loss_meter.avg, predicted_scores

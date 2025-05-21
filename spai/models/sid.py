@@ -32,7 +32,7 @@ from . import vision_transformer
 from . import filters
 from . import utils
 from . import backbones
-from .semantic_fusion import SemanticSpectralFusion
+from .semantic_fusion import SemanticSpectralFusion, AdaptiveSemanticSpectralFusion
 from spai.utils import save_image_with_attention_overlay
 
 
@@ -119,6 +119,7 @@ class PatchBasedMFViT(nn.Module):
         x: Union[torch.Tensor, list[torch.Tensor]],
         feature_extraction_batch_size: Optional[int] = None,
         export_dirs: Optional[list[pathlib.Path]] = None,
+        export_attention: bool = False
     ) -> Union[torch.Tensor, tuple[torch.Tensor, list['AttentionMask']]]:
         """Forward pass of a batch of images.
 
@@ -128,18 +129,19 @@ class PatchBasedMFViT(nn.Module):
         :param x: B x C x H x W
         :param feature_extraction_batch_size:
         :param export_dirs:
+        :param export_attention: Whether to export attention visualizations
         """
         if isinstance(x, torch.Tensor):
-            x =  self.forward_batch(x.float())
+            x =  self.forward_batch(x.float(), export_attention=export_attention)
         elif isinstance(x, list):
             if feature_extraction_batch_size is None:
                 feature_extraction_batch_size = len(x)
             if export_dirs is not None:
                 x = self.forward_arbitrary_resolution_batch_with_export(
-                    x, feature_extraction_batch_size, export_dirs
+                    x, feature_extraction_batch_size, export_dirs, export_attention=export_attention
                 )
             else:
-                x = self.forward_arbitrary_resolution_batch(x, feature_extraction_batch_size)
+                x = self.forward_arbitrary_resolution_batch(x, feature_extraction_batch_size, export_attention=export_attention)
         else:
             raise TypeError('x must be a tensor or a list of tensors')
 
@@ -170,7 +172,7 @@ class PatchBasedMFViT(nn.Module):
         else:
             return x
 
-    def forward_batch(self, x: torch.Tensor) -> torch.Tensor:
+    def forward_batch(self, x: torch.Tensor, export_attention: bool = False) -> torch.Tensor:
         x = utils.patchify_image(
             x,
             (self.img_patch_size, self.img_patch_size),
@@ -179,7 +181,10 @@ class PatchBasedMFViT(nn.Module):
 
         patch_features: list[torch.Tensor] = []
         for i in range(x.size(1)):
-            features = self.mfvit(x[:, i].float())  
+            attention_dir = None
+            if export_attention:
+                attention_dir = pathlib.Path(f"attention_vis/patch_{i}")
+            features = self.mfvit(x[:, i].float(), export_attention=export_attention, attention_dir=attention_dir)  
             patch_features.append(features)
         x = torch.stack(patch_features, dim=1)  # B x L x D
         del patch_features
@@ -202,7 +207,8 @@ class PatchBasedMFViT(nn.Module):
     def forward_arbitrary_resolution_batch(
         self,
         x: list[torch.Tensor],
-        feature_extraction_batch_size: int
+        feature_extraction_batch_size: int,
+        export_attention: bool = False
     ) -> torch.Tensor:
         """Forward pass of a batch of images of different resolutions.
 
@@ -210,6 +216,7 @@ class PatchBasedMFViT(nn.Module):
 
         :param x: list of 1 x C x H_i x W_i tensors, where i denote the i-th image in the list.
         :param feature_extraction_batch_size:
+        :param export_attention: Whether to export attention visualizations
 
         :returns: A B x 1 tensor.
         """
@@ -244,7 +251,18 @@ class PatchBasedMFViT(nn.Module):
         # Process the patches in groups of feature_extraction_batch_size.
         features: list[torch.Tensor] = []
         for i in range(0, x.size(0), feature_extraction_batch_size):
-            features.append(self.mfvit(x[i:i+feature_extraction_batch_size]))
+            batch_start = i
+            batch_end = min(i+feature_extraction_batch_size, x.size(0))
+            
+            # Configure attention directory if needed
+            attention_dir = None
+            if export_attention:
+                 attention_dir = pathlib.Path(f"attention_vis/batch_{batch_start}_{batch_end}")
+                
+            features.append(self.mfvit(x[batch_start:batch_end], 
+                                       export_attention=export_attention, 
+                                       attention_dir=attention_dir))
+                                       
         x = torch.cat(features, dim=0)  # SUM(L_i) x D
         del features
 
@@ -284,7 +302,8 @@ class PatchBasedMFViT(nn.Module):
         x: list[torch.Tensor],
         feature_extraction_batch_size: int,
         export_dirs: list[pathlib.Path],
-        export_image_patches: bool = False
+        export_image_patches: bool = False,
+        export_attention: bool = False
     ) -> tuple[torch.Tensor, list['AttentionMask']]:
         """Forward passes any resolution images and exports their spectral context attention masks.
 
@@ -301,6 +320,7 @@ class PatchBasedMFViT(nn.Module):
             by the spectral context attention will be exported in a separate file. Beware
             that when there is overlap among the patches, or on very large images, the
             number of these patches could be very large.
+        :param export_attention: Whether to export attention visualizations
 
         :returns: A tuple containing a B x 1 tensor, where B is the batch size, and a list
             of attention masks for each image in the batch.
@@ -331,13 +351,33 @@ class PatchBasedMFViT(nn.Module):
                 # Process the patches one by one and export them.
                 for i in range(0, patched.size(1)):
                     export_file = export_dir / f"patch_{i}.png"
+                    
+                    # Configure attention directory if needed
+                    attention_dir = None
+                    if export_attention:
+                        attention_dir = export_dir / f"attention/patch_{i}"
+                    
                     features.append(self.mfvit.forward_with_export(
-                        patched[:, i], export_file=export_file
+                        patched[:, i], export_file=export_file, 
+                        export_attention=export_attention, 
+                        attention_dir=attention_dir
                     ))
             else:
                 # Process the patches in groups of feature_extraction_batch_size.
                 for i in range(0, patched.size(1), feature_extraction_batch_size):
-                    features.append(self.mfvit(patched[0, i:i+feature_extraction_batch_size]))
+                    batch_start = i
+                    batch_end = min(i+feature_extraction_batch_size, patched.size(1))
+                    
+                    # Configure attention directory if needed
+                    attention_dir = None
+                    if export_attention:
+                        attention_dir = export_dir / f"attention/batch_{batch_start}_{batch_end}"
+                    
+                    features.append(self.mfvit(
+                        patched[0, batch_start:batch_end], 
+                        export_attention=export_attention, 
+                        attention_dir=attention_dir
+                    ))
             x = torch.cat(features, dim=0)  # SUM(L_i) x D
             del features
 
@@ -487,7 +527,7 @@ class MFViT(nn.Module):
         # Initialize semantic-spectral fusion
         if isinstance(self.vit, (backbones.DINOv2Backbone, DINOv2FeatureEmbedding)):
             print("🚀 Using DINOv2 backbone for semantic features")
-            self.semantic_fusion = SemanticSpectralFusion(
+            self.semantic_fusion = AdaptiveSemanticSpectralFusion(
                 spectral_dim=features_processor.proj_dim,
                 semantic_dim=768,  # DINOv2 ViT-B/14 dimension
                 fusion_dim=features_processor.proj_dim,
@@ -512,13 +552,15 @@ class MFViT(nn.Module):
         else:
             raise TypeError(f"Unsupported backbone type: {type(vit)}")
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, export_attention: bool = False, attention_dir: Optional[pathlib.Path] = None) -> torch.Tensor:
         """Forward pass of a batch of images.
 
         The images should not have been normalized before and the value of each pixel should
         lie in [0, 1].
 
         :param x: B x C x H x W
+        :param export_attention: Whether to export attention visualizations
+        :param attention_dir: Directory to save attention visualizations
         """
         with torch.cuda.amp.autocast():
             # Spectral branch
@@ -582,23 +624,39 @@ class MFViT(nn.Module):
                 spectral_dim = spectral_features.size(-1)
                 fusion_dim = getattr(self.semantic_fusion, 'fusion_dim', spectral_dim)
                 
-                # print(f"Input shapes - Spectral: {spectral_features.shape}, Semantic: {semantic_vec.shape}")
-                # print(f"Configured dimensions - Spectral: {spectral_dim}, Semantic: {semantic_dim}, Fusion: {fusion_dim}")
-                
+                # Apply fusion
                 fused_features = self.semantic_fusion(spectral_features, semantic_vec)
+                
+                # Export attention visualizations if requested
+                if export_attention and isinstance(self.semantic_fusion, AdaptiveSemanticSpectralFusion):
+                    if attention_dir is not None:
+                        attention_dir.mkdir(exist_ok=True, parents=True)
+                        from spai.utils import save_fusion_attention_visualization
+                        
+                        # Get attention weights from the fusion module
+                        attention_weights = self.semantic_fusion.get_last_attention_weights()
+                        
+                        # Save visualizations
+                        save_fusion_attention_visualization(
+                            attention_weights, 
+                            attention_dir
+                        )
             else:
                 fused_features = spectral_features
 
         return fused_features
 
-    def forward_with_export(self, x: torch.Tensor, export_file: pathlib.Path) -> torch.Tensor:
+    def forward_with_export(self, x: torch.Tensor, export_file: pathlib.Path, 
+                       export_attention: bool = False, attention_dir: Optional[pathlib.Path] = None) -> torch.Tensor:
         """Forward pass of a batch of images.
 
         The images should not have been normalized before and the value of each pixel should
         lie in [0, 1].
 
         :param x: B x C x H x W
-        :export_file:
+        :param export_file: Path to export input and filtered images
+        :param export_attention: Whether to export attention visualizations
+        :param attention_dir: Directory to save attention visualizations
         """
 
         low_freq: torch.Tensor
@@ -621,8 +679,8 @@ class MFViT(nn.Module):
         hi_freq = self.backbone_norm(hi_freq)
 
         semantic_vec = None
-        if isinstance(self.vit, backbones.CLIPBackbone):
-            semantic_vec = self.vit.get_image_embedding(x)
+        if isinstance(self.vit, (backbones.DINOv2Backbone, DINOv2FeatureEmbedding)):
+            semantic_vec = self.vit(x)
 
         if self.frozen_backbone:
             with torch.no_grad():
@@ -630,11 +688,45 @@ class MFViT(nn.Module):
         else:
             x, low_freq, hi_freq = self._extract_features(x, low_freq, hi_freq)
 
-        x = self.features_processor(x, low_freq, hi_freq, semantic_vec)
-        if self.cls_head is not None:
-            x = self.cls_head(x)
+        spectral_features = self.features_processor(x, low_freq, hi_freq)
+        
+        # Apply semantic-spectral fusion if semantic vector is available
+        if semantic_vec is not None and hasattr(self, 'semantic_fusion'):
+            # Ensure semantic_vec is properly shaped for attention
+            if len(semantic_vec.shape) == 4:  # If shape is [B, 1, 1, D]
+                semantic_vec = semantic_vec.squeeze(2).squeeze(1)  # Convert to [B, D]
+            
+            if len(semantic_vec.shape) == 2:  # If shape is [B, D]
+                semantic_vec = semantic_vec.unsqueeze(1)  # Make it [B, 1, D] for attention
+            
+            # Ensure spectral_features is 3D for attention
+            if len(spectral_features.shape) == 2:
+                spectral_features = spectral_features.unsqueeze(1)  # [B, 1, D]
+                
+            # Apply fusion
+            fused_features = self.semantic_fusion(spectral_features, semantic_vec)
+            
+            # Export attention visualizations if requested
+            if export_attention and isinstance(self.semantic_fusion, AdaptiveSemanticSpectralFusion):
+                if attention_dir is not None:
+                    attention_dir.mkdir(exist_ok=True, parents=True)
+                    from spai.utils import save_fusion_attention_visualization
+                    
+                    # Get attention weights from the fusion module
+                    attention_weights = self.semantic_fusion.get_last_attention_weights()
+                    
+                    # Save visualizations
+                    save_fusion_attention_visualization(
+                        attention_weights, 
+                        attention_dir
+                    )
+        else:
+            fused_features = spectral_features
 
-        return x
+        if self.cls_head is not None:
+            fused_features = self.cls_head(fused_features)
+
+        return fused_features
 
     def get_vision_transformer(self) -> vision_transformer.VisionTransformer:
         return self.vit
