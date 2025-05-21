@@ -72,3 +72,6 @@ python -m spai train \
   --opt "DATA.VAL_BATCH_SIZE" "256" \
   --opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
   --opt "PRINT_FREQ" "2"
+
+
+  

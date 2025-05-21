@@ -1298,6 +1298,11 @@ class SemanticContextModel(nn.Module):
 
         checkpoint = torch.load(spai_model_path, map_location="cpu", weights_only=False)
         self.spai_model.load_state_dict(checkpoint.get("model", checkpoint))
+        print(f"Loaded SPAI model from {spai_model_path}") 
+        load_result = self.spai_model.load_state_dict(checkpoint.get("model", checkpoint), strict=False)
+        print(f"Loaded SPAI model from {spai_model_path}")
+        print("Missing keys (randomly initialized):", load_result.missing_keys)
+        print("Unexpected keys (in checkpoint, not in model):", load_result.unexpected_keys)
         for param in self.spai_model.parameters():
             param.requires_grad = False
         self.spai_model.eval()
@@ -1354,7 +1359,8 @@ class SemanticContextModel(nn.Module):
         """
         device = next(self.parameters()).device
         normalize = transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD)
-        resize = transforms.Resize((224, 224), antialias=True)
+        spai_resize = transforms.Resize((1024, 1024), antialias=True)  # <-- Set your unified SPAI size here
+        convnext_resize = transforms.Resize((224, 224), antialias=True)
 
         # === Validation/inference mode: list of images ===
         if isinstance(x, list):
@@ -1366,11 +1372,13 @@ class SemanticContextModel(nn.Module):
                     raise ValueError(f"Expected C×H×W or 1×C×H×W, got {img.shape}")
                 if img.max() > 1.0:
                     img = img / 255.0
-                img_resized = resize(img)  # SPAI gets resized, no normalization
-                spai_input.append(img_resized)
-                convnext_input.append(normalize(img_resized))
+                img_spai = spai_resize(img)
+                img_convnext = convnext_resize(img)
+                spai_input.append(img_spai)
+                convnext_input.append(normalize(img_convnext))
             x_spai = torch.stack(spai_input).to(device).float()
             x_convnext = torch.stack(convnext_input).to(device).float()
+
 
         # === Training mode: batched tensor ===
         else:
