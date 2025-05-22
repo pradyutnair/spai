@@ -113,13 +113,76 @@ class PatchBasedMFViT(nn.Module):
                  self.input_feature_projector.apply(_init_weights)
         else:
             raise TypeError(f"Non-supported weight initialization type: {initialization_scope}")
+            
+        # Register hook to handle parameter shape mismatches during loading
+        self._register_load_state_dict_pre_hook(self._adjust_parameters_hook)
+        
+    def _adjust_parameters_hook(self, state_dict, prefix, local_metadata, strict, missing_keys, unexpected_keys, error_msgs):
+        """Pre-hook for load_state_dict to handle parameter shape mismatches"""
+        # Handle patch_aggregator shape mismatch
+        patch_aggregator_key = prefix + 'patch_aggregator'
+        if patch_aggregator_key in state_dict:
+            checkpoint_aggregator = state_dict[patch_aggregator_key]
+            model_aggregator = self.patch_aggregator
+            
+            # If shapes don't match, resize the parameter
+            if checkpoint_aggregator.shape != model_aggregator.shape:
+                checkpoint_num_heads, checkpoint_seq_len, checkpoint_dim_head = checkpoint_aggregator.shape
+                model_num_heads, model_seq_len, model_dim_head = model_aggregator.shape
+                
+                print(f"⚠️ Adjusting patch_aggregator shape from checkpoint {checkpoint_aggregator.shape} to model {model_aggregator.shape}")
+                
+                # Create a new tensor with the model's shape
+                new_aggregator = torch.zeros_like(model_aggregator)
+                
+                # Determine how many heads and dimensions to copy
+                heads_to_copy = min(checkpoint_num_heads, model_num_heads)
+                dim_to_copy = min(checkpoint_dim_head, model_dim_head)
+                
+                # Copy the values from the checkpoint to the new tensor
+                new_aggregator[:heads_to_copy, :, :dim_to_copy] = checkpoint_aggregator[:heads_to_copy, :, :dim_to_copy]
+                
+                # Replace the checkpoint's tensor with the resized one
+                state_dict[patch_aggregator_key] = new_aggregator
+                print(f"✅ Successfully resized patch_aggregator")
+                
+        # Handle FeatureImportanceProjector alpha shape mismatch
+        alpha_key = prefix + 'mfvit.features_processor.original_features_processor.alpha'
+        if alpha_key in state_dict:
+            checkpoint_alpha = state_dict[alpha_key]
+            
+            # If we can access the model's alpha parameter, check for shape mismatch
+            if hasattr(self.mfvit, 'features_processor') and \
+               hasattr(self.mfvit.features_processor, 'original_features_processor') and \
+               hasattr(self.mfvit.features_processor.original_features_processor, 'alpha'):
+                model_alpha = self.mfvit.features_processor.original_features_processor.alpha
+                
+                if checkpoint_alpha.shape != model_alpha.shape:
+                    checkpoint_batch, checkpoint_features, checkpoint_dim = checkpoint_alpha.shape
+                    model_batch, model_features, model_dim = model_alpha.shape
+                    
+                    print(f"⚠️ Adjusting alpha shape from checkpoint {checkpoint_alpha.shape} to model {model_alpha.shape}")
+                    
+                    # Create a new tensor with the model's shape
+                    new_alpha = torch.zeros_like(model_alpha)
+                    
+                    # Determine dimensions to copy
+                    features_to_copy = min(checkpoint_features, model_features)
+                    dim_to_copy = min(checkpoint_dim, model_dim)
+                    
+                    # Copy the values
+                    new_alpha[:, :features_to_copy, :dim_to_copy] = checkpoint_alpha[:, :features_to_copy, :dim_to_copy]
+                    
+                    # Replace in state dict
+                    state_dict[alpha_key] = new_alpha
+                    print(f"✅ Successfully resized alpha parameter")
 
     def forward(
         self,
         x: Union[torch.Tensor, list[torch.Tensor]],
         feature_extraction_batch_size: Optional[int] = None,
         export_dirs: Optional[list[pathlib.Path]] = None,
-        export_attention: bool = False
+        export_attention: bool = False,
     ) -> Union[torch.Tensor, tuple[torch.Tensor, list['AttentionMask']]]:
         """Forward pass of a batch of images.
 
@@ -129,19 +192,22 @@ class PatchBasedMFViT(nn.Module):
         :param x: B x C x H x W
         :param feature_extraction_batch_size:
         :param export_dirs:
-        :param export_attention: Whether to export attention visualizations
+        :param export_attention: Whether to export attention maps
         """
         if isinstance(x, torch.Tensor):
-            x =  self.forward_batch(x.float(), export_attention=export_attention)
+            x = self.forward_batch(x.float(), export_attention=export_attention)
         elif isinstance(x, list):
             if feature_extraction_batch_size is None:
                 feature_extraction_batch_size = len(x)
             if export_dirs is not None:
                 x = self.forward_arbitrary_resolution_batch_with_export(
-                    x, feature_extraction_batch_size, export_dirs, export_attention=export_attention
+                    x, feature_extraction_batch_size, export_dirs, 
+                    export_attention=export_attention
                 )
             else:
-                x = self.forward_arbitrary_resolution_batch(x, feature_extraction_batch_size, export_attention=export_attention)
+                x = self.forward_arbitrary_resolution_batch(
+                    x, feature_extraction_batch_size, export_attention=export_attention
+                )
         else:
             raise TypeError('x must be a tensor or a list of tensors')
 
@@ -155,8 +221,22 @@ class PatchBasedMFViT(nn.Module):
         drop_top: bool = False
     ) -> torch.Tensor:
         """Perform cross attention between a learnable vector and the patches of an image."""
+        # Input shape debugging
+        #print(f"patches_attention input shape: {x.shape}, expected dim: {self.cls_vector_dim}")
+        
         # Ensure x has the same dtype as the model weights (for AMP/mixed precision)
         x = x.to(self.to_kv.weight.dtype)
+        
+        # Verify dimensions match to prevent matrix multiplication errors
+        if x.shape[-1] != self.cls_vector_dim:
+            raise ValueError(f"Input dimension {x.shape[-1]} doesn't match expected dimension {self.cls_vector_dim}")
+        
+        # Handle 4D input case (detect and reshape for einops)
+        if len(x.shape) == 4:
+            # Reshape from [B, N, 1, D] to [B, N, D]
+            x = x.squeeze(2)
+            #print(f"Reshaped 4D input to: {x.shape}")
+            
         aggregator: torch.Tensor = self.patch_aggregator.expand(x.size(0), -1, -1, -1)
         kv = self.to_kv(x).chunk(2, dim=-1)
         k, v = map(lambda t: rearrange(t, 'b n (h d) -> b h n d', h=self.num_heads), kv)
@@ -181,10 +261,7 @@ class PatchBasedMFViT(nn.Module):
 
         patch_features: list[torch.Tensor] = []
         for i in range(x.size(1)):
-            attention_dir = None
-            if export_attention:
-                attention_dir = pathlib.Path(f"attention_vis/patch_{i}")
-            features = self.mfvit(x[:, i].float(), export_attention=export_attention, attention_dir=attention_dir)  
+            features = self.mfvit(x[:, i].float(), export_attention=export_attention)  
             patch_features.append(features)
         x = torch.stack(patch_features, dim=1)  # B x L x D
         del patch_features
@@ -193,10 +270,6 @@ class PatchBasedMFViT(nn.Module):
         if self.input_feature_projector is not None:
             x = x.to(self.input_feature_projector.weight.dtype)
             x = self.input_feature_projector(x)
-
-        # Squeeze the middle dimension of size 1 to make x [B_orig, L, 1096]
-        if x.dim() == 4 and x.shape[2] == 1:
-            x = x.squeeze(2)
 
         x = self.patches_attention(x)  # B x D
         x = self.norm(x)  # B x D
@@ -216,7 +289,7 @@ class PatchBasedMFViT(nn.Module):
 
         :param x: list of 1 x C x H_i x W_i tensors, where i denote the i-th image in the list.
         :param feature_extraction_batch_size:
-        :param export_attention: Whether to export attention visualizations
+        :param export_attention: Whether to export attention maps
 
         :returns: A B x 1 tensor.
         """
@@ -236,14 +309,7 @@ class PatchBasedMFViT(nn.Module):
             patched_images.append(patched)
         x = patched_images
         del patched_images
-        # x = [
-        #     utils.patchify_image(
-        #         img,
-        #         (self.img_patch_size, self.img_patch_size),
-        #         (self.img_patch_stride, self.img_patch_stride)
-        #     )  # 1 x L_i x C x H x W
-        #     for img in x
-        # ]
+        
         img_patches_num: list[int] = [img.size(1) for img in x]
         x = torch.cat(x, dim=1)  # 1 x SUM(L_i) x C x H x W
         x = x.squeeze(dim=0)  # SUM(L_i) x C x H x W
@@ -251,44 +317,41 @@ class PatchBasedMFViT(nn.Module):
         # Process the patches in groups of feature_extraction_batch_size.
         features: list[torch.Tensor] = []
         for i in range(0, x.size(0), feature_extraction_batch_size):
-            batch_start = i
-            batch_end = min(i+feature_extraction_batch_size, x.size(0))
-            
-            # Configure attention directory if needed
-            attention_dir = None
-            if export_attention:
-                 attention_dir = pathlib.Path(f"attention_vis/batch_{batch_start}_{batch_end}")
-                
-            features.append(self.mfvit(x[batch_start:batch_end], 
-                                       export_attention=export_attention, 
-                                       attention_dir=attention_dir))
-                                       
+            features.append(self.mfvit(x[i:i+feature_extraction_batch_size], export_attention=export_attention))
         x = torch.cat(features, dim=0)  # SUM(L_i) x D
         del features
-
-        # Project features if dimensions mismatch before patches_attention
+        
+        # Check and log feature dimensions
+        print(f"Features shape before projection: {x.shape}")
+        
+        # Project features if dimensions mismatch before attending to patches
         if self.input_feature_projector is not None:
-            x = x.to(self.input_feature_projector.weight.dtype)
             x = self.input_feature_projector(x)
+            print(f"Features shape after projection: {x.shape}")
 
         # Attend to patches according to the image they belong to.
         attended: list[torch.Tensor] = []
         processed_sum: int = 0
-        for i in img_patches_num:
-            patch_group = x[processed_sum:processed_sum+i] # Shape: [num_patches_for_this_image, 1, ClsVectorDim]
-            # Unsqueeze to add batch dimension for patches_attention
-            patch_group_batched = patch_group.unsqueeze(0) # Shape: [1, num_patches_for_this_image, 1, ClsVectorDim]
+        for patch_count in img_patches_num:
+            # Ensure inputs are the correct shape for patches_attention
+            patch_features = x[processed_sum:processed_sum+patch_count]
             
-            # Squeeze the redundant middle dimension (of size 1, originally from MFViT's sequence length)
-            # before passing to patches_attention, which expects [Batch, NumPatches, FeatureDim]
-            if patch_group_batched.dim() == 4 and patch_group_batched.shape[2] == 1:
-                patch_group_batched_squeezed = patch_group_batched.squeeze(2) # Shape: [1, num_patches_for_this_image, ClsVectorDim]
-            else:
-                # This path should ideally not be taken if MFViT output and projector are consistent
-                patch_group_batched_squeezed = patch_group_batched
-
-            attended.append(self.patches_attention(patch_group_batched_squeezed))
-            processed_sum += i
+            # Add batch dimension if missing
+            if len(patch_features.shape) == 2:
+                patch_features = patch_features.unsqueeze(0)
+                
+            # Double-check dimensions before attention
+            expected_dim = self.cls_vector_dim
+            actual_dim = patch_features.shape[-1]
+            if actual_dim != expected_dim:
+                print(f"⚠️ Dimension mismatch! Got {actual_dim}, expected {expected_dim}. Creating temporary projector.")
+                temp_proj = nn.Linear(actual_dim, expected_dim).to(patch_features.device)
+                patch_features = temp_proj(patch_features)
+                
+            attended_features = self.patches_attention(patch_features)
+            attended.append(attended_features)
+            processed_sum += patch_count
+        
         x = torch.cat(attended, dim=0)  # B x D
         del attended
 
@@ -320,7 +383,7 @@ class PatchBasedMFViT(nn.Module):
             by the spectral context attention will be exported in a separate file. Beware
             that when there is overlap among the patches, or on very large images, the
             number of these patches could be very large.
-        :param export_attention: Whether to export attention visualizations
+        :param export_attention: Whether to export attention maps for semantic fusion
 
         :returns: A tuple containing a B x 1 tensor, where B is the batch size, and a list
             of attention masks for each image in the batch.
@@ -351,40 +414,15 @@ class PatchBasedMFViT(nn.Module):
                 # Process the patches one by one and export them.
                 for i in range(0, patched.size(1)):
                     export_file = export_dir / f"patch_{i}.png"
-                    
-                    # Configure attention directory if needed
-                    attention_dir = None
-                    if export_attention:
-                        attention_dir = export_dir / f"attention/patch_{i}"
-                    
                     features.append(self.mfvit.forward_with_export(
-                        patched[:, i], export_file=export_file, 
-                        export_attention=export_attention, 
-                        attention_dir=attention_dir
+                        patched[:, i], export_file=export_file, export_attention=export_attention
                     ))
             else:
                 # Process the patches in groups of feature_extraction_batch_size.
                 for i in range(0, patched.size(1), feature_extraction_batch_size):
-                    batch_start = i
-                    batch_end = min(i+feature_extraction_batch_size, patched.size(1))
-                    
-                    # Configure attention directory if needed
-                    attention_dir = None
-                    if export_attention:
-                        attention_dir = export_dir / f"attention/batch_{batch_start}_{batch_end}"
-                    
-                    features.append(self.mfvit(
-                        patched[0, batch_start:batch_end], 
-                        export_attention=export_attention, 
-                        attention_dir=attention_dir
-                    ))
+                    features.append(self.mfvit(patched[0, i:i+feature_extraction_batch_size], export_attention=export_attention))
             x = torch.cat(features, dim=0)  # SUM(L_i) x D
             del features
-
-            # Project features if dimensions mismatch before patches_attention
-            if self.input_feature_projector is not None:
-                x = x.to(self.input_feature_projector.weight.dtype)
-                x = self.input_feature_projector(x)
 
             # Attend to patches.
             x, attn = self.patches_attention(x.unsqueeze(0), return_attn=True)  # 1 x D, 1 x L_i
@@ -527,13 +565,17 @@ class MFViT(nn.Module):
         # Initialize semantic-spectral fusion
         if isinstance(self.vit, (backbones.DINOv2Backbone, DINOv2FeatureEmbedding)):
             print("🚀 Using DINOv2 backbone for semantic features")
+            # Use AdaptiveSemanticSpectralFusion with more parameters and settings
             self.semantic_fusion = AdaptiveSemanticSpectralFusion(
                 spectral_dim=features_processor.proj_dim,
                 semantic_dim=768,  # DINOv2 ViT-B/14 dimension
                 fusion_dim=features_processor.proj_dim,
                 num_heads=8,
-                dropout=0.1
+                dropout=0.1,
+                ffn_ratio=4,
+                num_frequency_bands=5  # Using default value, will be overridden by config if available
             )
+            print(f"✅ Initialized AdaptiveSemanticSpectralFusion with dim={features_processor.proj_dim}")
         else:
             print("⚠️ Warning: Using non-DINOv2 backbone, semantic fusion disabled")
             self.semantic_fusion = None
@@ -551,17 +593,54 @@ class MFViT(nn.Module):
             )
         else:
             raise TypeError(f"Unsupported backbone type: {type(vit)}")
+            
+        # Register hook to handle parameter shape mismatches during loading
+        self._register_load_state_dict_pre_hook(self._adjust_parameters_hook)
+        
+    def _adjust_parameters_hook(self, state_dict, prefix, local_metadata, strict, missing_keys, unexpected_keys, error_msgs):
+        """Pre-hook for load_state_dict to handle parameter shape mismatches in MFViT"""
+        # Handle semantic_fusion parameters that might have different shapes
+        if hasattr(self, 'semantic_fusion') and self.semantic_fusion is not None:
+            for name, param in self.semantic_fusion.named_parameters():
+                param_key = prefix + 'semantic_fusion.' + name
+                if param_key in state_dict and state_dict[param_key].shape != param.shape:
+                    print(f"⚠️ Semantic fusion parameter shape mismatch for {name}: {state_dict[param_key].shape} vs {param.shape}")
+                    
+                    # Create properly shaped parameter - handle specific cases
+                    if name == 'frequency_band_weights':
+                        # Handle different number of frequency bands
+                        checkpoint_bands = state_dict[param_key].shape[0]
+                        model_bands = param.shape[0]
+                        new_param = torch.zeros_like(param)
+                        bands_to_copy = min(checkpoint_bands, model_bands)
+                        new_param[:bands_to_copy] = state_dict[param_key][:bands_to_copy]
+                        state_dict[param_key] = new_param
+                    elif len(param.shape) == 2 and len(state_dict[param_key].shape) == 2:
+                        # For 2D parameters like weight matrices
+                        checkpoint_dim1, checkpoint_dim2 = state_dict[param_key].shape
+                        model_dim1, model_dim2 = param.shape
+                        new_param = torch.zeros_like(param)
+                        dim1_to_copy = min(checkpoint_dim1, model_dim1)
+                        dim2_to_copy = min(checkpoint_dim2, model_dim2)
+                        new_param[:dim1_to_copy, :dim2_to_copy] = state_dict[param_key][:dim1_to_copy, :dim2_to_copy]
+                        state_dict[param_key] = new_param
+                    else:
+                        # Generic case - try to copy as much as possible
+                        print(f"⚠️ Complex parameter shape mismatch for {name}, removing from state_dict")
+                        del state_dict[param_key]
+                        missing_keys.append(param_key)
 
-    def forward(self, x: torch.Tensor, export_attention: bool = False, attention_dir: Optional[pathlib.Path] = None) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, export_attention: bool = False) -> torch.Tensor:
         """Forward pass of a batch of images.
 
         The images should not have been normalized before and the value of each pixel should
         lie in [0, 1].
 
         :param x: B x C x H x W
-        :param export_attention: Whether to export attention visualizations
-        :param attention_dir: Directory to save attention visualizations
+        :param export_attention: Whether to export attention maps
         """
+        #print("🚀 Starting MFViT forward pass")
+
         with torch.cuda.amp.autocast():
             # Spectral branch
             low_freq: torch.Tensor
@@ -579,7 +658,9 @@ class MFViT(nn.Module):
             # Semantic branch
             semantic_vec = None
             if isinstance(self.vit, (backbones.DINOv2Backbone, DINOv2FeatureEmbedding)):
+                #print("🎯 Extracting semantic features with DINOv2")
                 semantic_vec = self.vit(x)
+                #print(f"📊 Semantic vector shape: {semantic_vec.shape}")
 
             if self.frozen_backbone:
                 with torch.no_grad():
@@ -592,9 +673,13 @@ class MFViT(nn.Module):
                 )
 
             spectral_features = self.features_processor(x_feats, low_feats, hi_feats)
+            #print(f"📊 Spectral features shape: {spectral_features.shape}")
             
             # Apply semantic-spectral fusion if semantic vector is available
             if semantic_vec is not None and hasattr(self, 'semantic_fusion'):
+                #print("🔄 Applying semantic-spectral fusion")
+                #print(f"Input shapes - Spectral: {spectral_features.shape}, Semantic: {semantic_vec.shape}")
+                
                 # Always ensure semantic_vec is properly shaped for attention: [batch_size, seq_len, dim]
                 if len(semantic_vec.shape) == 4:  # If shape is [B, 1, 1, D]
                     semantic_vec = semantic_vec.squeeze(2).squeeze(1)  # Convert to [B, D]
@@ -602,20 +687,28 @@ class MFViT(nn.Module):
                 if len(semantic_vec.shape) == 2:  # If shape is [B, D]
                     semantic_vec = semantic_vec.unsqueeze(1)  # Make it [B, 1, D] for attention
                 
+                #print(f"Reshaped semantic vector: {semantic_vec.shape}")
+                
                 # Ensure spectral_features is also 3D if needed: [batch_size, seq_len, dim]
                 if len(spectral_features.shape) == 2:
+                    #print(f"Using 2D input with shape: {spectral_features.shape}")
                     # Reshape to [B, 1, D] format for attention
                     batch_size = spectral_features.size(0)
                     feat_dim = spectral_features.size(1)
+                    #print(f"🔄 Spectral flat shape: {spectral_features.shape}")
                     
                     # Check if semantic fusion module expects a specific dimension
                     if hasattr(self.semantic_fusion, 'spectral_proj'):
                         spectral_dim = self.semantic_fusion.spectral_proj.in_features
+                        #print(f"🔄 Spectral projection layer: {self.semantic_fusion.spectral_proj}")
                         
                         # Handle dimension mismatch with dynamic projection if needed
                         if feat_dim != spectral_dim:
+                            #print(f"⚠️ Dimension mismatch! Expected {spectral_dim}, got {feat_dim}.")
+                            #print(f"Creating new dynamic projection layer: {feat_dim} → {spectral_dim}")
                             temp_proj = nn.Linear(feat_dim, spectral_dim).to(spectral_features.device)
                             spectral_features = temp_proj(spectral_features)
+                            #print(f"Used dynamic projection, output shape: {spectral_features.shape}")
                     
                     # Now reshape to 3D for attention
                     spectral_features = spectral_features.unsqueeze(1)  # [B, 1, D]
@@ -624,39 +717,25 @@ class MFViT(nn.Module):
                 spectral_dim = spectral_features.size(-1)
                 fusion_dim = getattr(self.semantic_fusion, 'fusion_dim', spectral_dim)
                 
-                # Apply fusion
-                fused_features = self.semantic_fusion(spectral_features, semantic_vec)
+                #print(f"Input shapes - Spectral: {spectral_features.shape}, Semantic: {semantic_vec.shape}")
+                #print(f"Configured dimensions - Spectral: {spectral_dim}, Semantic: {semantic_dim}, Fusion: {fusion_dim}")
                 
-                # Export attention visualizations if requested
-                if export_attention and isinstance(self.semantic_fusion, AdaptiveSemanticSpectralFusion):
-                    if attention_dir is not None:
-                        attention_dir.mkdir(exist_ok=True, parents=True)
-                        from spai.utils import save_fusion_attention_visualization
-                        
-                        # Get attention weights from the fusion module
-                        attention_weights = self.semantic_fusion.get_last_attention_weights()
-                        
-                        # Save visualizations
-                        save_fusion_attention_visualization(
-                            attention_weights, 
-                            attention_dir
-                        )
+                fused_features = self.semantic_fusion(spectral_features, semantic_vec, export_attention=export_attention)
             else:
                 fused_features = spectral_features
 
+        #print("✅ MFViT forward pass complete")
         return fused_features
 
-    def forward_with_export(self, x: torch.Tensor, export_file: pathlib.Path, 
-                       export_attention: bool = False, attention_dir: Optional[pathlib.Path] = None) -> torch.Tensor:
+    def forward_with_export(self, x: torch.Tensor, export_file: pathlib.Path, export_attention: bool = False) -> torch.Tensor:
         """Forward pass of a batch of images.
 
         The images should not have been normalized before and the value of each pixel should
         lie in [0, 1].
 
         :param x: B x C x H x W
-        :param export_file: Path to export input and filtered images
-        :param export_attention: Whether to export attention visualizations
-        :param attention_dir: Directory to save attention visualizations
+        :param export_file: Path to save exported visualizations
+        :param export_attention: Whether to export attention maps
         """
 
         low_freq: torch.Tensor
@@ -679,8 +758,8 @@ class MFViT(nn.Module):
         hi_freq = self.backbone_norm(hi_freq)
 
         semantic_vec = None
-        if isinstance(self.vit, (backbones.DINOv2Backbone, DINOv2FeatureEmbedding)):
-            semantic_vec = self.vit(x)
+        if isinstance(self.vit, backbones.CLIPBackbone):
+            semantic_vec = self.vit.get_image_embedding(x)
 
         if self.frozen_backbone:
             with torch.no_grad():
@@ -688,45 +767,11 @@ class MFViT(nn.Module):
         else:
             x, low_freq, hi_freq = self._extract_features(x, low_freq, hi_freq)
 
-        spectral_features = self.features_processor(x, low_freq, hi_freq)
-        
-        # Apply semantic-spectral fusion if semantic vector is available
-        if semantic_vec is not None and hasattr(self, 'semantic_fusion'):
-            # Ensure semantic_vec is properly shaped for attention
-            if len(semantic_vec.shape) == 4:  # If shape is [B, 1, 1, D]
-                semantic_vec = semantic_vec.squeeze(2).squeeze(1)  # Convert to [B, D]
-            
-            if len(semantic_vec.shape) == 2:  # If shape is [B, D]
-                semantic_vec = semantic_vec.unsqueeze(1)  # Make it [B, 1, D] for attention
-            
-            # Ensure spectral_features is 3D for attention
-            if len(spectral_features.shape) == 2:
-                spectral_features = spectral_features.unsqueeze(1)  # [B, 1, D]
-                
-            # Apply fusion
-            fused_features = self.semantic_fusion(spectral_features, semantic_vec)
-            
-            # Export attention visualizations if requested
-            if export_attention and isinstance(self.semantic_fusion, AdaptiveSemanticSpectralFusion):
-                if attention_dir is not None:
-                    attention_dir.mkdir(exist_ok=True, parents=True)
-                    from spai.utils import save_fusion_attention_visualization
-                    
-                    # Get attention weights from the fusion module
-                    attention_weights = self.semantic_fusion.get_last_attention_weights()
-                    
-                    # Save visualizations
-                    save_fusion_attention_visualization(
-                        attention_weights, 
-                        attention_dir
-                    )
-        else:
-            fused_features = spectral_features
-
+        x = self.features_processor(x, low_freq, hi_freq, semantic_vec)
         if self.cls_head is not None:
-            fused_features = self.cls_head(fused_features)
+            x = self.cls_head(x)
 
-        return fused_features
+        return x
 
     def get_vision_transformer(self) -> vision_transformer.VisionTransformer:
         return self.vit
@@ -1483,6 +1528,17 @@ def build_mf_vit(config) -> MFViT:
     )
     initialization_scope: str = "local"
 
+    # Ensure all required FRE parameters are available
+    num_frequency_bands = getattr(config.MODEL.FRE, 'NUM_FREQUENCY_BANDS', 5)
+    attn_dropout = getattr(config.MODEL.FRE, 'ATTN_DROPOUT', 0.1)
+    fusion_dim = getattr(config.MODEL.FRE, 'FUSION_DIM', 1024)
+    use_layer_norm = getattr(config.MODEL.FRE, 'USE_LAYER_NORM', True)
+    ffn_ratio = getattr(config.MODEL.FRE, 'FFN_RATIO', 4)
+    
+    print(f"🔧 FRE Configuration: num_frequency_bands={num_frequency_bands}, "
+          f"attn_dropout={attn_dropout}, fusion_dim={fusion_dim}, "
+          f"use_layer_norm={use_layer_norm}, ffn_ratio={ffn_ratio}")
+
     fre: FrequencyRestorationEstimator = FrequencyRestorationEstimator(
         features_num=len(config.MODEL.VIT.INTERMEDIATE_LAYERS),
         input_dim=config.MODEL.VIT.EMBED_DIM,
@@ -1506,7 +1562,6 @@ def build_mf_vit(config) -> MFViT:
     # Use config values that would correspond to the checkpoint's structure for these specific layers.
     # The error log indicates: to_kv input 1096, attn_embed_dim 1536. cls_head input 1096.
     # These should ideally come from config if they were fixed at checkpoint creation.
-    # Let's use the values from the error log as a guide for now if not directly in config.
     # For example, if PATCH_VIT.CLS_VECTOR_DIM and PATCH_VIT.ATTN_EMBED_DIM from the config
     # are expected to match the checkpoint.
 

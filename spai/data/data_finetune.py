@@ -479,6 +479,13 @@ def build_dataset(
         raise RuntimeError(f"Unsupported split: {split_name}")
 
     transform = build_transform(split_name == "train", config)
+    
+    # Log the image size information based on the transform
+    if split_name in ["train", "val"] and config.TRAIN.HIGH_RES_TRAINING:
+        logger.info(f"📊 {split_name.upper()} data transform will upscale images to {config.TRAIN.HIGH_RES_SIZE}x{config.TRAIN.HIGH_RES_SIZE}")
+    else:
+        logger.info(f"📊 {split_name.upper()} data transform will use original size: {config.DATA.IMG_SIZE}x{config.DATA.IMG_SIZE}")
+        
     logger.info(f"Data transform | mode: {config.TRAIN.MODE} | split: {split_name}:\n{transform}")
 
     if split_name == "train" and config.TRAIN.LOSS == "triplet":
@@ -598,6 +605,15 @@ def build_transform(is_train, config) -> Callable[[np.ndarray], np.ndarray]:
             transforms_list.append(
                 A.Resize(height=config.DATA.IMG_SIZE, width=config.DATA.IMG_SIZE)
             )
+            
+        # Apply high-resolution upscaling if enabled
+        if config.TRAIN.HIGH_RES_TRAINING:
+            transforms_list.append(
+                A.Resize(height=config.TRAIN.HIGH_RES_SIZE, 
+                         width=config.TRAIN.HIGH_RES_SIZE, 
+                         interpolation=cv2.INTER_CUBIC)
+            )
+            
         transforms_list.extend([
             A.GaussianBlur(blur_limit=(3, 9),
                            sigma_limit=(0.01, 0.5),
@@ -622,6 +638,7 @@ def build_transform(is_train, config) -> Callable[[np.ndarray], np.ndarray]:
                                compression_type=ImageCompressionType.WEBP,
                                p=config.AUG.WEBP_COMPRESSION_PROB),
         ])
+        
         if config.MODEL.REQUIRED_NORMALIZATION == "imagenet":
             transforms_list.append(
                 A.Normalize(mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD)

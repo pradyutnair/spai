@@ -443,12 +443,13 @@ class AdaptiveSemanticSpectralFusion(nn.Module):
             
         return weighted_features
     
-    def forward(self, spectral_features, semantic_features):
+    def forward(self, spectral_features, semantic_features, export_attention=False):
         """
         Forward pass for enhanced semantic-spectral fusion.
         Arguments:
           spectral_features: (B, L_spec, D_spec) or (B, D_spec)
           semantic_features: (B, L_sem, D_sem) or (B, D_sem)
+          export_attention: Whether to export attention maps
         Returns:
           output: (B, L_sem, fusion_dim)
         """
@@ -502,6 +503,15 @@ class AdaptiveSemanticSpectralFusion(nn.Module):
         
         # Store attention weights for visualization
         self.last_attention_weights = sem_to_spec_attn.detach().cpu()
+        
+        # Export attention visualization if requested
+        if export_attention:
+            # Store more detailed attention information for export
+            self.last_frequency_weights = F.softmax(self.frequency_band_weights / self.frequency_temperature, dim=0).detach().cpu()
+            
+            # Export spectral and semantic features if needed
+            self.last_spectral_features = spectral_proj.detach().cpu()
+            self.last_semantic_features = semantic_proj.detach().cpu()
         
         # 2. Spectral features attend to semantic features
         spec_queries_sem, _ = self.spec_to_sem_attention(

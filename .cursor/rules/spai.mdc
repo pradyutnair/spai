@@ -3,4 +3,14 @@ description:
 globs: 
 alwaysApply: true
 ---
-The goal of this project is to improve AUC of a synethetic image detector. We want to combine semantic and spectral information in a way that improves the original classifier that only uses spectral information. Your goal is to provide changes that are error free (always check shapes and dtypes) and improve classifier AUC such that the AUC is improved on images on benchmarks such as FLUX, DALLE, GIGAGAN, ARTIFACT, etc. The method needs to infuse spectral and semantic image information to improve deepfake/synthetic image detection especially on compressed images.
+The goal of this project is to improve AUC of a synethetic image detector. We want to combine semantic and spectral information in a way that improves the original classifier that only uses spectral information. Your goal is to provide changes that are error free (always check shapes and dtypes) and improve classifier AUC such that the AUC is improved on images on benchmarks such as FLUX, DALLE, GIGAGAN, ARTIFACT, etc. The method needs to infuse spectral and semantic image information to improve deepfake/synthetic image detection especially on compressed images. The code is running on a SSH server, if you need to test implementations, you ALWAYS need to run the following commands: 
+```
+module load 2023
+module load Anaconda3/2023.07-2
+module load CUDA/12.1.1
+
+source activate spai
+```
+This activates the spai conda environment to test code. When you run your code in the terminal, you may not see CUDA access since we use SLURM jobs to connect to GPUs, do not rely on connecting to GPUs to test code (like shape, dimension, dtype errors).
+
+You can run training via the following command: `sbatch /home/pnair/spai/jobs/directory.job` to view the output, if it fails for whatever reason, look at the error within /home/pnair/spai/jobs/job_outputs/train_patch.log and fix it. 

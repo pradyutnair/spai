@@ -930,6 +930,15 @@ def train_model(
     save_all: bool = False
 ) -> None:
     logger.info("🚀 Starting training")
+    
+    # Log training configuration settings
+    if config.TRAIN.HIGH_RES_TRAINING:
+        logger.info(f"📈 High-resolution training enabled: upscaling images to {config.TRAIN.HIGH_RES_SIZE}x{config.TRAIN.HIGH_RES_SIZE}")
+        neptune_run["train/high_res_enabled"] = True
+        neptune_run["train/high_res_size"] = config.TRAIN.HIGH_RES_SIZE
+    else:
+        logger.info(f"📋 Standard resolution training: images size {config.DATA.IMG_SIZE}x{config.DATA.IMG_SIZE}")
+        neptune_run["train/high_res_enabled"] = False
 
     start_time: float = time.time()
     val_accuracy_per_epoch: list[float] = []
@@ -1120,6 +1129,12 @@ def train_one_epoch(
 
     start = time.time()
     end = time.time()
+    
+    # Adjust memory handling for high-resolution training
+    if config.TRAIN.HIGH_RES_TRAINING:
+        torch.cuda.empty_cache()  # Clear GPU cache before starting the epoch
+        logger.info(f"🧹 Cleared GPU cache for high-resolution training ({config.TRAIN.HIGH_RES_SIZE}x{config.TRAIN.HIGH_RES_SIZE})")
+    
     for idx, batch in enumerate(data_loader):
         if isinstance(criterion, TripletMarginLoss):
             anchor, positive, negative = batch
@@ -1139,6 +1154,7 @@ def train_one_epoch(
             # Forward pass each augmented view of the batch separately
             outputs_views: list[torch.Tensor] = []
             for i in range(samples.size(1)):
+                # High-resolution handling - use smaller batches if necessary
                 view = samples[:, i, :, :, :].float()
                 
                 # For logging attention weights (only do this periodically to save time)
@@ -1191,9 +1207,33 @@ def train_one_epoch(
                         plt.close(fig)
                 else:
                     # Normal forward pass
-                    output = model(view)
+                    try:
+                        output = model(view)
+                    except RuntimeError as e:
+                        if "out of memory" in str(e) and config.TRAIN.HIGH_RES_TRAINING:
+                            # Handle OOM errors during high-res training by clearing cache and reducing batch
+                            logger.warning(f"⚠️ OOM error at batch {idx} - clearing cache and retrying with reduced batch")
+                            torch.cuda.empty_cache()
+                            # Try again with half the batch
+                            half_batch = view.shape[0] // 2
+                            if half_batch >= 1:
+                                outputs1 = model(view[:half_batch])
+                                torch.cuda.empty_cache()
+                                outputs2 = model(view[half_batch:])
+                                output = torch.cat([outputs1, outputs2], dim=0)
+                            else:
+                                # Can't split batch further, skip this batch
+                                logger.warning(f"⚠️ Skipping batch {idx} - cannot split further")
+                                break
+                        else:
+                            raise e
                     
                 outputs_views.append(output)
+            
+            # Skip processing if batch was skipped due to OOM
+            if len(outputs_views) == 0:
+                continue
+                
             outputs: torch.Tensor = torch.stack(outputs_views, dim=1)
             outputs = outputs if outputs.size(dim=1) > 1 else outputs.squeeze(dim=1)
 
@@ -1304,6 +1344,12 @@ def validate(
     semantic_weight_meter = AverageMeter()
     spectral_weight_meter = AverageMeter()
 
+    # Clear cache for high-res validation
+    if hasattr(config.TRAIN, 'HIGH_RES_TRAINING') and config.TRAIN.HIGH_RES_TRAINING:
+        torch.cuda.empty_cache()
+        if verbose:
+            logger.info(f"🧹 Cleared GPU cache for high-resolution validation")
+
     end = time.time()
     for idx, (images, target, dataset_idx) in enumerate(data_loader):
         if isinstance(images, list):
@@ -1316,37 +1362,75 @@ def validate(
         target = target.cuda(non_blocking=True)
 
         # Compute output.
-        if isinstance(images, list) and config.TEST.EXPORT_IMAGE_PATCHES:
-            export_dirs: list[pathlib.Path] = [
-                pathlib.Path(config.OUTPUT)/"images"/f"{dataset_idx.detach().cpu().tolist()[i]}"
-                for i in range(len(dataset_idx))
-            ]
-            
-            # Set up attention export directories if needed
-            attention_dirs = None
-            if export_attention:
-                attention_dirs = [
-                    dir_path / "attention" for dir_path in export_dirs
+        try:
+            if isinstance(images, list) and config.TEST.EXPORT_IMAGE_PATCHES:
+                export_dirs: list[pathlib.Path] = [
+                    pathlib.Path(config.OUTPUT)/"images"/f"{dataset_idx.detach().cpu().tolist()[i]}"
+                    for i in range(len(dataset_idx))
                 ]
-                for attn_dir in attention_dirs:
-                    attn_dir.mkdir(exist_ok=True, parents=True)
-                    
-            output, attention_masks = model(
-                images, config.MODEL.FEATURE_EXTRACTION_BATCH, export_dirs, 
-                export_attention=export_attention
-            )
-        elif isinstance(images, list):
-            output = model(images, config.MODEL.FEATURE_EXTRACTION_BATCH, export_attention=export_attention)
-            attention_masks = [None] * len(images)
-        else:
-            if images.size(dim=1) > 1:
-                predictions: list[torch.Tensor] = []
                 
-                for i in range(images.size(dim=1)):
+                # Set up attention export directories if needed
+                attention_dirs = None
+                if export_attention:
+                    attention_dirs = [
+                        dir_path / "attention" for dir_path in export_dirs
+                    ]
+                    for attn_dir in attention_dirs:
+                        attn_dir.mkdir(exist_ok=True, parents=True)
+                        
+                output, attention_masks = model(
+                    images, config.MODEL.FEATURE_EXTRACTION_BATCH, export_dirs, 
+                    export_attention=export_attention
+                )
+            elif isinstance(images, list):
+                output = model(images, config.MODEL.FEATURE_EXTRACTION_BATCH, export_attention=export_attention)
+                attention_masks = [None] * len(images)
+            else:
+                if images.size(dim=1) > 1:
+                    predictions: list[torch.Tensor] = []
+                    
+                    for i in range(images.size(dim=1)):
+                        # Configure attention directory if needed
+                        if export_attention and i == 0 and idx % config.PRINT_FREQ == 0:
+                            attention_dir = pathlib.Path(config.OUTPUT) / f"attention_val/batch_{idx}_view_{i}"
+                            prediction = model(images[:, i], export_attention=True)
+                            
+                            # Log fusion module stats if available
+                            if hasattr(model, 'mfvit') and hasattr(model.mfvit, 'semantic_fusion') and \
+                               isinstance(model.mfvit.semantic_fusion, AdaptiveSemanticSpectralFusion) and \
+                               neptune_run is not None:
+                                
+                                fusion_module = model.mfvit.semantic_fusion
+                                attention_data = fusion_module.get_last_attention_weights()
+                                
+                                if attention_data.get('modality_contribution') is not None:
+                                    mod_weights = attention_data['modality_contribution'].numpy()
+                                    semantic_weight_meter.update(mod_weights[0], 1)
+                                    spectral_weight_meter.update(mod_weights[1], 1)
+                                    
+                                    # Log to Neptune
+                                    neptune_run[f"val/fusion/semantic_weight"].append(mod_weights[0])
+                                    neptune_run[f"val/fusion/spectral_weight"].append(mod_weights[1])
+                        else:
+                            prediction = model(images[:, i])
+                            
+                        predictions.append(prediction)
+                        
+                    predictions: torch.Tensor = torch.stack(predictions, dim=1)
+                    if config.TEST.VIEWS_REDUCTION_APPROACH == "max":
+                        output: torch.Tensor = predictions.max(dim=1).values
+                    elif config.TEST.VIEWS_REDUCTION_APPROACH == "mean":
+                        output: torch.Tensor = predictions.mean(dim=1)
+                    else:
+                        raise TypeError(f"{config.TEST.VIEWS_REDUCTION_APPROACH} is not a "
+                                        f"supported views reduction approach")
+                else:
+                    images = images.squeeze(dim=1)  # Remove views dimension.
+                    
                     # Configure attention directory if needed
-                    if export_attention and i == 0 and idx % config.PRINT_FREQ == 0:
-                        attention_dir = pathlib.Path(config.OUTPUT) / f"attention_val/batch_{idx}_view_{i}"
-                        prediction = model(images[:, i], export_attention=True)
+                    if export_attention and idx % config.PRINT_FREQ == 0:
+                        attention_dir = pathlib.Path(config.OUTPUT) / f"attention_val/batch_{idx}"
+                        output = model(images, export_attention=True)
                         
                         # Log fusion module stats if available
                         if hasattr(model, 'mfvit') and hasattr(model.mfvit, 'semantic_fusion') and \
@@ -1365,46 +1449,18 @@ def validate(
                                 neptune_run[f"val/fusion/semantic_weight"].append(mod_weights[0])
                                 neptune_run[f"val/fusion/spectral_weight"].append(mod_weights[1])
                     else:
-                        prediction = model(images[:, i])
+                        output = model(images)
                         
-                    predictions.append(prediction)
-                    
-                predictions: torch.Tensor = torch.stack(predictions, dim=1)
-                if config.TEST.VIEWS_REDUCTION_APPROACH == "max":
-                    output: torch.Tensor = predictions.max(dim=1).values
-                elif config.TEST.VIEWS_REDUCTION_APPROACH == "mean":
-                    output: torch.Tensor = predictions.mean(dim=1)
-                else:
-                    raise TypeError(f"{config.TEST.VIEWS_REDUCTION_APPROACH} is not a "
-                                    f"supported views reduction approach")
-            else:
-                images = images.squeeze(dim=1)  # Remove views dimension.
+                attention_masks = [None] * images.size(0)
                 
-                # Configure attention directory if needed
-                if export_attention and idx % config.PRINT_FREQ == 0:
-                    attention_dir = pathlib.Path(config.OUTPUT) / f"attention_val/batch_{idx}"
-                    output = model(images, export_attention=True)
-                    
-                    # Log fusion module stats if available
-                    if hasattr(model, 'mfvit') and hasattr(model.mfvit, 'semantic_fusion') and \
-                       isinstance(model.mfvit.semantic_fusion, AdaptiveSemanticSpectralFusion) and \
-                       neptune_run is not None:
-                        
-                        fusion_module = model.mfvit.semantic_fusion
-                        attention_data = fusion_module.get_last_attention_weights()
-                        
-                        if attention_data.get('modality_contribution') is not None:
-                            mod_weights = attention_data['modality_contribution'].numpy()
-                            semantic_weight_meter.update(mod_weights[0], 1)
-                            spectral_weight_meter.update(mod_weights[1], 1)
-                            
-                            # Log to Neptune
-                            neptune_run[f"val/fusion/semantic_weight"].append(mod_weights[0])
-                            neptune_run[f"val/fusion/spectral_weight"].append(mod_weights[1])
-                else:
-                    output = model(images)
-                    
-            attention_masks = [None] * images.size(0)
+        except RuntimeError as e:
+            if "out of memory" in str(e) and hasattr(config.TRAIN, 'HIGH_RES_TRAINING') and config.TRAIN.HIGH_RES_TRAINING:
+                # Handle OOM during validation with high-res images
+                logger.warning(f"⚠️ OOM error during validation at batch {idx} - skipping batch")
+                torch.cuda.empty_cache()
+                continue
+            else:
+                raise e
 
         loss = criterion(output.squeeze(dim=1), target)
 

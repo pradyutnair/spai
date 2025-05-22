@@ -58,7 +58,7 @@ _C.DATA.INTERPOLATION = 'bicubic'
 # Pin CPU memory in DataLoader for more efficient (sometimes) transfer to GPU.
 _C.DATA.PIN_MEMORY = True
 # Number of data loading threads
-_C.DATA.NUM_WORKERS = 24
+_C.DATA.NUM_WORKERS = 16
 # Number of batches to be prefetched by each worker.
 _C.DATA.PREFETCH_FACTOR = 2
 # Prefetch factor for test data loaders.
@@ -234,14 +234,14 @@ _C.MODEL.FREQ_LOSS.BATCH_MATRIX = False
 # -----------------------------------------------------------------------------
 _C.TRAIN = CN()
 _C.TRAIN.START_EPOCH = 0
-_C.TRAIN.EPOCHS = 300
-_C.TRAIN.WARMUP_EPOCHS = 20
+_C.TRAIN.EPOCHS = 10
+_C.TRAIN.WARMUP_EPOCHS = 1
 _C.TRAIN.WEIGHT_DECAY = 0.05
-_C.TRAIN.BASE_LR = 1e-4
-_C.TRAIN.WARMUP_LR = 2.5e-7
-_C.TRAIN.MIN_LR = 2.5e-6
+_C.TRAIN.BASE_LR = 5e-4
+_C.TRAIN.WARMUP_LR = 5e-7
+_C.TRAIN.MIN_LR = 5e-6
 # Clip gradient norm
-_C.TRAIN.CLIP_GRAD = 3.0
+_C.TRAIN.CLIP_GRAD = 5.0
 # Auto resume from latest checkpoint
 _C.TRAIN.AUTO_RESUME = True
 # Gradient accumulation steps
@@ -250,10 +250,21 @@ _C.TRAIN.ACCUMULATION_STEPS = 1
 # Whether to use gradient checkpointing to save memory
 # could be overwritten by command line argument
 _C.TRAIN.USE_CHECKPOINT = False
+# Learning rate scale factor for backbone parameters.
+_C.TRAIN.BACKBONE_LR_SCALE = 0.1
+# Loss type: "mfm"
+_C.TRAIN.LOSS = 'bce'
+# Scale learning rate based on global batch size
+_C.TRAIN.SCALE_LR = False
+# Train mode: "supervised" (classification), "contrastive", "pretrain"
+_C.TRAIN.MODE = "supervised"
+# High resolution training (upscales images to 1024x1024)
+_C.TRAIN.HIGH_RES_TRAINING = True
+# High resolution size for training
+_C.TRAIN.HIGH_RES_SIZE = 1024
 
 # LR scheduler
 # Supported modes: "supervised", "contrastive"
-_C.TRAIN.MODE = "supervised"
 _C.TRAIN.LR_SCHEDULER = CN()
 _C.TRAIN.LR_SCHEDULER.NAME = 'cosine'
 # Epoch interval to decay LR, used in StepLRScheduler
@@ -263,8 +274,6 @@ _C.TRAIN.LR_SCHEDULER.DECAY_RATE = 0.1
 # Gamma / Multi steps value, used in MultiStepLRScheduler
 _C.TRAIN.LR_SCHEDULER.GAMMA = 0.1
 _C.TRAIN.LR_SCHEDULER.MULTISTEPS = []
-# A flag that indicates whether to scale lr according to batch size and grad accumulation steps.
-_C.TRAIN.SCALE_LR = False
 # Optimizer
 _C.TRAIN.OPTIMIZER = CN()
 _C.TRAIN.OPTIMIZER.NAME = 'adamw'
@@ -274,7 +283,6 @@ _C.TRAIN.OPTIMIZER.EPS = 1e-8
 _C.TRAIN.OPTIMIZER.BETAS = (0.9, 0.999)
 # SGD momentum
 _C.TRAIN.OPTIMIZER.MOMENTUM = 0.9
-_C.TRAIN.LOSS = "bce_supcont"
 _C.TRAIN.TRIPLET_LOSS_MARGIN = 0.5
 # Layer decay for fine-tuning
 _C.TRAIN.LAYER_DECAY = 1.0

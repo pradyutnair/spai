@@ -3,9 +3,9 @@
 #SBATCH --gpus=1
 #SBATCH --cpus-per-task=16
 #SBATCH --job-name=train_patch
-#SBATCH --output=/home/pnair/spai/jobs/job_outputs/train_patch.log
-#SBATCH --time=04:00:00
-##SBATCH --mem=180G
+#SBATCH --output=/home/pnair/spai/jobs/job_outputs/train_patch_unsized.log
+#SBATCH --time=06:00:00
+#SBATCH --mem=180G
 #SBATCH --hint=nomultithread
 
 echo "✅ Job started at: $(date)"
@@ -44,17 +44,18 @@ export CUDA_LAUNCH_BLOCKING=0
 
 python -m spai train \
   --cfg "/home/pnair/spai/configs/spai.yaml" \
-  --batch-size 256 \
+  --batch-size 128 \
   --pretrained "/home/pnair/spai/weights/spai.pth" \
-  --output "/home/pnair/spai/output/train_patch" \
+  --output "/home/pnair/spai/output/train_patch_unsized" \
   --data-path "/home/pnair/spai/datasets/ldm_lsun_train_val_subset.csv" \
   --tag "spai" \
   --amp-opt-level "O2" \
-  --data-workers 16 \
+  --data-workers 8 \
   --save-all \
-  --opt "DATA.VAL_BATCH_SIZE" "256" \
-  --opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
-  --opt "DATA.TEST_PREFETCH_FACTOR" "4"
+  --opt "DATA.VAL_BATCH_SIZE" "128" \
+  --opt "MODEL.FEATURE_EXTRACTION_BATCH" "200" \
+  --opt "DATA.TEST_PREFETCH_FACTOR" "2" \
+  --opt "DATA.PIN_MEMORY" "False"
 
 # echo "🔍 Testing FLUX"
 

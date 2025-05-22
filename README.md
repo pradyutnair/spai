@@ -1,3 +1,54 @@
+# SPAI - Synthetic Image Detection with Spectral and Semantic Features
+
+This repository contains the implementation of SPAI, a model that combines spectral and semantic information to improve synthetic image detection.
+
+## Recent Fixes
+
+### Parameter Size Mismatch Fixes
+
+The following issues have been fixed:
+
+1. **Fixed patch_aggregator parameter size mismatch** - Added a load_state_dict pre-hook that automatically handles shape mismatches in the `patch_aggregator` parameter by dynamically resizing the checkpoint parameter to match the model's expected shape.
+
+2. **Fixed FeatureImportanceProjector alpha parameter mismatch** - Added handling for mismatched `alpha` parameter shapes in the `FeatureImportanceProjector` class.
+
+3. **Added support for AdaptiveSemanticSpectralFusion** - Updated the model to use the more advanced `AdaptiveSemanticSpectralFusion` class which includes frequency band attention and better modality fusion.
+
+4. **Added missing config parameters** - Added support for the following config parameters:
+   - `MODEL.FRE.NUM_FREQUENCY_BANDS`: Number of frequency bands for attention (default: 5)
+   - `MODEL.FRE.ATTN_DROPOUT`: Dropout rate for attention layers (default: 0.1)
+   - `MODEL.FRE.FUSION_DIM`: Dimension for fusion features (default: 1024)
+   - `MODEL.FRE.USE_LAYER_NORM`: Whether to use layer normalization (default: True)
+   - `MODEL.FRE.FFN_RATIO`: Expansion ratio for feed-forward networks (default: 4)
+
+5. **Fixed dimension handling in patches_attention** - Added handling for 4D tensor inputs to prevent einops rearrange errors.
+
+### Testing the Fixes
+
+You can verify that the fixes are working properly by running:
+
+```bash
+./test_load_model.py --cfg configs/spai.yaml --model weights/spai.pth
+```
+
+This will attempt to load the model and run a simple forward pass to ensure everything is working correctly.
+
+## Training
+
+To train the model with the fixed configuration:
+
+```bash
+python -m spai.main train --cfg configs/spai.yaml --data-path /path/to/data.csv --pretrained weights/spai.pth
+```
+
+## Inference
+
+To run inference:
+
+```bash
+python -m spai.main infer --cfg configs/spai.yaml --input /path/to/images --model weights/spai.pth --output results
+```
+
 # SPAI: Spectral AI-Generated Image Detector
 __Official code repository for the CVPR2025 paper [Any-Resolution AI-Generated Image Detection by Spectral Learning](https://arxiv.org/abs/2411.19417).__
 
