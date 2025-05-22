@@ -1356,7 +1356,8 @@ class SemanticContextModel(nn.Module):
         """
         device = next(self.parameters()).device
         normalize = transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD)
-        resize = transforms.Resize((1024, 1024), antialias=True)
+        spai_resize = transforms.Resize((1024, 1024), antialias=True)  # <-- Set your unified SPAI size here
+        convnext_resize = transforms.Resize((224, 224), antialias=True)
 
         # === Validation/inference mode: list of images ===
         if isinstance(x, list):
@@ -1368,9 +1369,10 @@ class SemanticContextModel(nn.Module):
                     raise ValueError(f"Expected C×H×W or 1×C×H×W, got {img.shape}")
                 if img.max() > 1.0:
                     img = img / 255.0
-                img_resized = resize(img)  # SPAI gets resized, no normalization
-                spai_input.append(img_resized)
-                convnext_input.append(normalize(img_resized))
+                img_spai = spai_resize(img)
+                img_convnext = convnext_resize(img)
+                spai_input.append(img_spai)
+                convnext_input.append(normalize(img_convnext))
             x_spai = torch.stack(spai_input).to(device).float()
             x_convnext = torch.stack(convnext_input).to(device).float()
 
