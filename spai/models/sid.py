@@ -156,6 +156,23 @@ class PatchBasedMFViT(nn.Module):
                     param.requires_grad = False
                 for param in self.semantic_encoder.convnext_proj.parameters():
                     param.requires_grad = True
+            elif self.semantic_encoder_type == "dino":
+                print("Using DINOv2 backbone for semantic encoding")
+                self.semantic_encoder = backbones.DINOv2FeatureEmbedding()
+                self.semantic_encoder.eval()
+                for param in self.semantic_encoder.parameters():
+                    param.requires_grad = False
+
+                # 🔧 ensure projection is trainable and dimensional match is correct
+                self.semantic_embed_dim = self.semantic_encoder.output_dim
+                print(f"Using DINOv2 backbone for semantic encoding with output dim: {self.semantic_embed_dim}")
+                self.semantic_projection = nn.Sequential(
+                    nn.LayerNorm(self.semantic_embed_dim),
+                    nn.Linear(self.semantic_embed_dim, cls_vector_dim),
+                    nn.ReLU(),
+                    nn.Linear(cls_vector_dim, cls_vector_dim),
+                )
+                self.semantic_projection.requires_grad_(True)
             else:
                 raise ValueError(
                     f"Unknown semantic_encoder: {self.semantic_encoder_type}"
@@ -251,6 +268,15 @@ class PatchBasedMFViT(nn.Module):
                 global_image_encoding = self.semantic_projection(
                     global_image_encoding.float()
                 )  # B x D
+            elif self.semantic_encoder_type == "dino":
+                # Get the global image encoding from the DINOv2 backbone
+                global_image_encoding = self.semantic_encoder.get_image_embedding(
+                    x_resized.float()
+                )
+                # Project global image encoding to match the cross-attention query dimension
+                global_image_encoding = self.semantic_projection(
+                    global_image_encoding.float()
+                )
             # ConvNeXt
             else:
                 # Get the global image encoding from the ConvNeXt backbone
