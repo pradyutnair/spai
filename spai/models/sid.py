@@ -1356,7 +1356,7 @@ class SemanticContextModel(nn.Module):
         """
         device = next(self.parameters()).device
         normalize = transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD)
-        resize = transforms.Resize((224, 224), antialias=True)
+        resize = transforms.Resize((1024, 1024), antialias=True)
 
         # === Validation/inference mode: list of images ===
         if isinstance(x, list):
