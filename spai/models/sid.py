@@ -1282,10 +1282,11 @@ class SemanticContextModel(nn.Module):
     def __init__(
         self,
         spai_model_path: str,
-        semantic_output_dim: int = 1096,
+        spectral_output_dim: int = 1096,
         projection_dim: int = 256,
         hidden_dims: List[int] = [512, 256],
         dropout: float = 0.5,
+        spai_input_size:tuple = (224,224)
     ):
         super().__init__()
 
@@ -1295,6 +1296,8 @@ class SemanticContextModel(nn.Module):
 
         cfg = get_config({"cfg": "configs/spai.yaml"})
         self.spai_model = build_mf_vit(cfg)
+        
+        self.spai_input_size = spai_input_size
 
         checkpoint = torch.load(spai_model_path, map_location="cpu", weights_only=False)
         self.spai_model.load_state_dict(checkpoint.get("model", checkpoint))
@@ -1324,33 +1327,38 @@ class SemanticContextModel(nn.Module):
         self.semantic_backbone.eval()
 
         # === Projections (raw -> aligned dimensions) ===
+
+        self.norm_spectral = nn.LayerNorm(spectral_features_dim)
+        self.norm_semantic = nn.LayerNorm(3072)
+
         self.semantic_projection = nn.Sequential(
             nn.LayerNorm(3072),
-            nn.Linear(3072, projection_dim),
+            nn.Linear(3072, spectral_features_dim),
             nn.GELU(),
             nn.Dropout(dropout)
         )
 
-        # === Added: fusion layer to process combined features ===
-        self.fusion_layer = nn.Sequential(
-            nn.Linear(1096 + projection_dim, 512),
-            nn.GELU(),
-            nn.Dropout(dropout)
+
+
+        # === Gate to measure importance of semantic features ===
+        self.gate = nn.Sequential(
+            nn.Linear(spectral_features_dim * 2, spectral_features_dim),  # or just 1 for scalar gate
+            nn.Sigmoid()
         )
-        
-        # === Modified: classifier with residual connection ===
-        # Takes both spectral features directly and fusion output
+
+        # === Classifier using both spectral and semantic features ===
         self.classifier = nn.Sequential(
-            nn.Linear(1096 + 512, 512),  # spectral features + fusion features
+            nn.Linear(spectral_features_dim * 3, 512),
             nn.GELU(),
             nn.Dropout(dropout),
-            nn.Linear(512, 1)
+            nn.Linear(512,1)
         )
-
         # === Initialization ===
         self.semantic_projection.apply(_init_weights)
-        self.fusion_layer.apply(_init_weights)
         self.classifier.apply(_init_weights)
+        self.gate.apply(_init_weights)
+        self.norm_spectral.apply(_init_weights)
+        self.norm_semantic.apply(_init_weights)
 
     def forward(self, x: Union[torch.Tensor, List[torch.Tensor]], feature_extraction_batch_size: Optional[int] = None
     ) -> torch.Tensor:
@@ -1359,7 +1367,7 @@ class SemanticContextModel(nn.Module):
         """
         device = next(self.parameters()).device
         normalize = transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD)
-        spai_resize = transforms.Resize((1024, 1024), antialias=True)  # <-- Set your unified SPAI size here
+        spai_resize = transforms.Resize(self.spai_input_size, antialias=True)  # <-- Set your unified SPAI size here [for test do 1024x1024 but for validation keep small for efficiency]
         convnext_resize = transforms.Resize((224, 224), antialias=True)
 
         # === Validation/inference mode: list of images ===
@@ -1401,23 +1409,18 @@ class SemanticContextModel(nn.Module):
             semantic_features = self.semantic_backbone(x_convnext)
             semantic_features = self.global_pool(semantic_features).flatten(1)
 
-        # === Semantic projection ===
-        semantic_proj = self.semantic_projection(semantic_features)  # e.g. 3072 → 256
+        # === Semantic projection + normalization ===
+        semantic_features = self.semantic_projection(semantic_features)
+        semantic_features = self.norm_semantic(semantic_features)
+        spectral_features = self.norm_spectral(spectral_features)
 
-        # === Combined features with weighting ===
-        combined = torch.cat([spectral_features, semantic_proj], dim=1)
-        # === Process combined features ===
-        fused_features = self.fusion_layer(combined)
-        
-        # === RESIDUAL CONNECTION: concatenate raw spectral features with fusion output ===
-        final_features = torch.cat([spectral_features, fused_features], dim=1)
-        
-        # === Final classification ===
+        # === Gated fusion ===
+        combined = torch.cat([spectral_features, semantic_features], dim=1)
+        gate = self.gate(combined)
+        fused = gate * spectral_features + (1 - gate) * semantic_features
+
+        final_features = torch.cat([spectral_features, semantic_features, fused], dim=1)
         output = self.classifier(final_features)
-
-        if not self.training:
-            torch.cuda.empty_cache()
-
         return output
 
     def unfreeze_backbone(self) -> None:
@@ -1442,13 +1445,16 @@ def build_semantic_context_model(config) -> SemanticContextModel:
     semantic_output_dim = config.MODEL.SEMANTIC_CONTEXT.OUTPUT_DIM
     hidden_dims = config.MODEL.SEMANTIC_CONTEXT.HIDDEN_DIMS
     dropout = config.MODEL.SEMANTIC_CONTEXT.DROPOUT
+    spai_input_size = tuple(config.MODEL.SEMANTIC_CONTEXT.SPAI_INPUT_SIZE)  # <-- Add this
+
     
     # Build and return the model
     model = SemanticContextModel(
         spai_model_path=spai_model_path,
         semantic_output_dim=semantic_output_dim,
         hidden_dims=hidden_dims,
-        dropout=dropout
+        dropout=dropout,
+        spai_input_size = spai_input_size  # <-- Pass this to the model
     )
     
     return model
