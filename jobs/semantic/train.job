@@ -6,7 +6,7 @@
 #SBATCH --time=12:00:00
 #SBATCH --mem=180G
 #SBATCH --hint=nomultithread
-#SBATCH --output=/home/scur2605/spai/jobs/outputs/semantic/train_simple_%A.out
+#SBATCH --output=/home/scur2605/spai/jobs/outputs/semantic/train_attention%A.out
 
 # Set the correct Python path
 cd /home/scur2605/spai
@@ -75,17 +75,17 @@ subset.to_csv('/home/scur2605/spai/data/train/ldm_train_val_subset_10pct.csv', i
 
 # ATTENTION
 python -m spai train \
-  --cfg "./configs/spai.yaml" \
-  --batch-size 256 \
-  --data-path "/home/scur2605/spai/data/chameleon_dataset_split.csv" \
-  --csv-root-dir "/home/scur2605/spai/data/train" \
-  --output "./output/attention" \
-  --tag "first_run" \
-  --data-workers 4 \
-  --save-all \
-  --amp-opt-level "O0" \
-  --opt "TRAIN.EPOCHS" "10" \
-  --opt "DATA.TEST_PREFETCH_FACTOR" "1" \
-  --opt "DATA.VAL_BATCH_SIZE" "256" \
-  --opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
-  --opt "PRINT_FREQ" "2"
+--cfg "./configs/spai.yaml" \
+--batch-size 256 \
+--data-path "/home/scur2605/spai/data/chameleon_dataset_split.csv" \
+--csv-root-dir "/home/scur2605/spai/data/train" \
+--output "./output/attention" \
+--tag "first_run" \
+--data-workers 4 \
+--save-all \
+--amp-opt-level "O0" \
+--opt "TRAIN.EPOCHS" "10" \
+--opt "DATA.TEST_PREFETCH_FACTOR" "1" \
+--opt "DATA.VAL_BATCH_SIZE" "256" \
+--opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
+--opt "PRINT_FREQ" "2"

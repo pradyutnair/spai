@@ -1356,7 +1356,7 @@ class SemanticContextModel(nn.Module):
         """
         device = next(self.parameters()).device
         normalize = transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD)
-        spai_resize = transforms.Resize((1024, 1024), antialias=True)  # <-- Set your unified SPAI size here
+        spai_resize = transforms.Resize((224, 224), antialias=True)  # <-- Set your unified SPAI size here
         convnext_resize = transforms.Resize((224, 224), antialias=True)
 
         # === Validation/inference mode: list of images ===
