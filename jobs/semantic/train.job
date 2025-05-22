@@ -62,7 +62,7 @@ python -m spai train \
 --batch-size 256 \
 --data-path "/home/scur2605/spai/data/chameleon_dataset_split.csv" \
 --csv-root-dir "/home/scur2605/spai/data/train" \
---output "./output/triple-fuse" \
+--output "./output/triple-fuse-fixed" \
 --tag "first_run" \
 --data-workers 4 \
 --save-all \

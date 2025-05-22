@@ -4,10 +4,10 @@
 #SBATCH --job-name=eval_ff
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
-#SBATCH --time=5:00:00
+#SBATCH --time=1:00:00
 #SBATCH --mem=180G
 #SBATCH --hint=nomultithread
-#SBATCH --output=/home/scur2605/spai/jobs/outputs/semantic/FIXED-OG-TEST-EVAL%A.out
+#SBATCH --output=/home/scur2605/spai/jobs/outputs/semantic/TEST-TRIPLE-FUSION%A.out
 
 cd /home/scur2605/spai
 export PYTHONPATH=/home/scur2605:$PYTHONPATH
@@ -45,40 +45,40 @@ source activate spai_2
 # --opt "PRINT_FREQ" "2"
 
 
-python -m spai test \
---cfg "./configs/spai.yaml" \
---batch-size 10 \
---model "/home/scur2605/spai/output/resnet/finetune/fused_run/ckpt_epoch_9.pth" \
---output "./output/semantic_test" \
---tag "spai" \
---opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
---opt "DATA.NUM_WORKERS" "8" \
---opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
---opt "DATA.TEST_PREFETCH_FACTOR" "1" \
---test-csv "/home/scur2605/spai/data/test_set_dalle2.csv" \
---opt "PRINT_FREQ" "2" \
---opt "MODEL.SEMANTIC_CONTEXT.HIDDEN_DIMS" "[512]" \
+# python -m spai test \
+# --cfg "./configs/spai.yaml" \
+# --batch-size 10 \
+# --model "/home/scur2605/spai/output/resnet/finetune/fused_run/ckpt_epoch_9.pth" \
+# --output "./output/semantic_test" \
+# --tag "spai" \
+# --opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
+# --opt "DATA.NUM_WORKERS" "8" \
+# --opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
+# --opt "DATA.TEST_PREFETCH_FACTOR" "1" \
+# --test-csv "/home/scur2605/spai/data/test_set_dalle2.csv" \
+# --opt "PRINT_FREQ" "2" \
+# --opt "MODEL.SEMANTIC_CONTEXT.HIDDEN_DIMS" "[512]" \
+
+# python -m spai test \
+# --cfg "./configs/spai.yaml" \
+# --batch-size 10 \
+# --model "/home/scur2605/spai/output/resnet/finetune/fused_run/ckpt_epoch_9.pth" \
+# --output "./output/semantic_test" \
+# --tag "spai" \
+# --opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
+# --opt "DATA.NUM_WORKERS" "8" \
+# --opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
+# --opt "DATA.TEST_PREFETCH_FACTOR" "1" \
+# --test-csv "/home/scur2605/spai/data/test_set_dalle3.csv" \
+# --opt "PRINT_FREQ" "2" \
+# --opt "MODEL.SEMANTIC_CONTEXT.HIDDEN_DIMS" "[512]" \
+
+
 
 python -m spai test \
 --cfg "./configs/spai.yaml" \
 --batch-size 10 \
---model "/home/scur2605/spai/output/resnet/finetune/fused_run/ckpt_epoch_9.pth" \
---output "./output/semantic_test" \
---tag "spai" \
---opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
---opt "DATA.NUM_WORKERS" "8" \
---opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
---opt "DATA.TEST_PREFETCH_FACTOR" "1" \
---test-csv "/home/scur2605/spai/data/test_set_dalle3.csv" \
---opt "PRINT_FREQ" "2" \
---opt "MODEL.SEMANTIC_CONTEXT.HIDDEN_DIMS" "[512]" \
-
-
-
-python -m spai test \
---cfg "./configs/spai.yaml" \
---batch-size 10 \
---model "/home/scur2605/spai/output/resnet/finetune/fused_run/ckpt_epoch_9.pth" \
+--model "/home/scur2605/spai/output/triple-fuse/finetune/first_run/ckpt_epoch_1.pth" \
 --output "./output/semantic_test" \
 --tag "spai" \
 --opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
@@ -88,67 +88,68 @@ python -m spai test \
 --test-csv "/home/scur2605/spai/data/test_set_gigagan.csv" \
 --opt "PRINT_FREQ" "2" \
 --opt "MODEL.SEMANTIC_CONTEXT.HIDDEN_DIMS" "[512]" \
+--opt "MODEL.SEMANTIC_CONTEXT.SPAI_INPUT_SIZE" "[1024, 1024]" \
 
 
-python -m spai test \
---cfg "./configs/spai.yaml" \
---batch-size 10 \
---model "/home/scur2605/spai/output/resnet/finetune/fused_run/ckpt_epoch_9.pth" \
---output "./output/semantic_test" \
---tag "spai" \
---opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
---opt "DATA.NUM_WORKERS" "8" \
---opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
---opt "DATA.TEST_PREFETCH_FACTOR" "1" \
---test-csv "/home/scur2605/spai/data/test_set_midjourney-v6.1.csv" \
---opt "PRINT_FREQ" "2" \
---opt "MODEL.SEMANTIC_CONTEXT.HIDDEN_DIMS" "[512]" \
-
-
-
-python -m spai test \
---cfg "./configs/spai.yaml" \
---batch-size 10 \
---model "/home/scur2605/spai/output/resnet/finetune/fused_run/ckpt_epoch_9.pth" \
---output "./output/semantic_test" \
---tag "spai" \
---opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
---opt "DATA.NUM_WORKERS" "8" \
---opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
---opt "DATA.TEST_PREFETCH_FACTOR" "1" \
---test-csv "/home/scur2605/spai/data/test_set_sd1_4.csv" \
---opt "PRINT_FREQ" "2" \
---opt "MODEL.SEMANTIC_CONTEXT.HIDDEN_DIMS" "[512]" \
+# python -m spai test \
+# --cfg "./configs/spai.yaml" \
+# --batch-size 10 \
+# --model "/home/scur2605/spai/output/resnet/finetune/fused_run/ckpt_epoch_9.pth" \
+# --output "./output/semantic_test" \
+# --tag "spai" \
+# --opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
+# --opt "DATA.NUM_WORKERS" "8" \
+# --opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
+# --opt "DATA.TEST_PREFETCH_FACTOR" "1" \
+# --test-csv "/home/scur2605/spai/data/test_set_midjourney-v6.1.csv" \
+# --opt "PRINT_FREQ" "2" \
+# --opt "MODEL.SEMANTIC_CONTEXT.HIDDEN_DIMS" "[512]" \
 
 
 
-python -m spai test \
---cfg "./configs/spai.yaml" \
---batch-size 10 \
---model "/home/scur2605/spai/output/resnet/finetune/fused_run/ckpt_epoch_9.pth" \
---output "./output/semantic_test" \
---tag "spai" \
---opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
---opt "DATA.NUM_WORKERS" "8" \
---opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
---opt "DATA.TEST_PREFETCH_FACTOR" "1" \
---test-csv "/home/scur2605/spai/data/test_set_sd3.csv" \
---opt "PRINT_FREQ" "2" \
---opt "MODEL.SEMANTIC_CONTEXT.HIDDEN_DIMS" "[512]" \
+# python -m spai test \
+# --cfg "./configs/spai.yaml" \
+# --batch-size 10 \
+# --model "/home/scur2605/spai/output/resnet/finetune/fused_run/ckpt_epoch_9.pth" \
+# --output "./output/semantic_test" \
+# --tag "spai" \
+# --opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
+# --opt "DATA.NUM_WORKERS" "8" \
+# --opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
+# --opt "DATA.TEST_PREFETCH_FACTOR" "1" \
+# --test-csv "/home/scur2605/spai/data/test_set_sd1_4.csv" \
+# --opt "PRINT_FREQ" "2" \
+# --opt "MODEL.SEMANTIC_CONTEXT.HIDDEN_DIMS" "[512]" \
 
 
 
-python -m spai test \
---cfg "./configs/spai.yaml" \
---batch-size 10 \
---model "/home/scur2605/spai/output/resnet/finetune/fused_run/ckpt_epoch_9.pth" \
---output "./output/semantic_test" \
---tag "spai" \
---opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
---opt "DATA.NUM_WORKERS" "8" \
---opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
---opt "DATA.TEST_PREFETCH_FACTOR" "1" \
---test-csv "/home/scur2605/spai/data/test_set_flux.csv" \
---opt "PRINT_FREQ" "2" \
---opt "MODEL.SEMANTIC_CONTEXT.HIDDEN_DIMS" "[512]" \
+# python -m spai test \
+# --cfg "./configs/spai.yaml" \
+# --batch-size 10 \
+# --model "/home/scur2605/spai/output/resnet/finetune/fused_run/ckpt_epoch_9.pth" \
+# --output "./output/semantic_test" \
+# --tag "spai" \
+# --opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
+# --opt "DATA.NUM_WORKERS" "8" \
+# --opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
+# --opt "DATA.TEST_PREFETCH_FACTOR" "1" \
+# --test-csv "/home/scur2605/spai/data/test_set_sd3.csv" \
+# --opt "PRINT_FREQ" "2" \
+# --opt "MODEL.SEMANTIC_CONTEXT.HIDDEN_DIMS" "[512]" \
+
+
+
+# python -m spai test \
+# --cfg "./configs/spai.yaml" \
+# --batch-size 10 \
+# --model "/home/scur2605/spai/output/resnet/finetune/fused_run/ckpt_epoch_9.pth" \
+# --output "./output/semantic_test" \
+# --tag "spai" \
+# --opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
+# --opt "DATA.NUM_WORKERS" "8" \
+# --opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
+# --opt "DATA.TEST_PREFETCH_FACTOR" "1" \
+# --test-csv "/home/scur2605/spai/data/test_set_flux.csv" \
+# --opt "PRINT_FREQ" "2" \
+# --opt "MODEL.SEMANTIC_CONTEXT.HIDDEN_DIMS" "[512]" \
 

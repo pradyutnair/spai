@@ -1282,13 +1282,13 @@ class SemanticContextModel(nn.Module):
     def __init__(
         self,
         spai_model_path: str,
-        spectral_output_dim: int = 1096,
         projection_dim: int = 256,
         hidden_dims: List[int] = [512, 256],
         dropout: float = 0.5,
         spai_input_size:tuple = (224,224)
     ):
         super().__init__()
+        print(f'Spai input size: {spai_input_size}')
 
         # === Load and freeze SPAI model ===
         from spai.models.build import build_mf_vit
@@ -1410,8 +1410,8 @@ class SemanticContextModel(nn.Module):
             semantic_features = self.global_pool(semantic_features).flatten(1)
 
         # === Semantic projection + normalization ===
-        semantic_features = self.semantic_projection(semantic_features)
         semantic_features = self.norm_semantic(semantic_features)
+        semantic_features = self.semantic_projection(semantic_features)
         spectral_features = self.norm_spectral(spectral_features)
 
         # === Gated fusion ===
@@ -1442,7 +1442,6 @@ def build_semantic_context_model(config) -> SemanticContextModel:
     """
     # Extract configuration parameters
     spai_model_path = config.MODEL.SEMANTIC_CONTEXT.SPAI_MODEL_PATH
-    semantic_output_dim = config.MODEL.SEMANTIC_CONTEXT.OUTPUT_DIM
     hidden_dims = config.MODEL.SEMANTIC_CONTEXT.HIDDEN_DIMS
     dropout = config.MODEL.SEMANTIC_CONTEXT.DROPOUT
     spai_input_size = tuple(config.MODEL.SEMANTIC_CONTEXT.SPAI_INPUT_SIZE)  # <-- Add this
@@ -1451,7 +1450,6 @@ def build_semantic_context_model(config) -> SemanticContextModel:
     # Build and return the model
     model = SemanticContextModel(
         spai_model_path=spai_model_path,
-        semantic_output_dim=semantic_output_dim,
         hidden_dims=hidden_dims,
         dropout=dropout,
         spai_input_size = spai_input_size  # <-- Pass this to the model

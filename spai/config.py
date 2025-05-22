@@ -228,6 +228,8 @@ _C.MODEL.SEMANTIC_CONTEXT.OUTPUT_DIM = 1096
 _C.MODEL.SEMANTIC_CONTEXT.HIDDEN_DIMS = [1024, 512]
 _C.MODEL.SEMANTIC_CONTEXT.DROPOUT = 0.5
 
+_C.MODEL.SEMANTIC_CONTEXT.SPAI_INPUT_SIZE = [224, 224]  # <-- Add this line!
+
 # -----------------------------------------------------------------------------
 # Training settings
 # -----------------------------------------------------------------------------
