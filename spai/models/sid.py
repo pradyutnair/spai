@@ -1448,8 +1448,10 @@ def build_semantic_context_model(config) -> SemanticContextModel:
     semantic_output_dim = config.MODEL.SEMANTIC_CONTEXT.OUTPUT_DIM
     hidden_dims = config.MODEL.SEMANTIC_CONTEXT.HIDDEN_DIMS
     dropout = config.MODEL.SEMANTIC_CONTEXT.DROPOUT
-    spai_input_size = config.MODEL.SEMANTIC_CONTEXT.SPAI_INPUT_SIZE
-    
+    if spai_input_size is None:
+        spai_input_size = None
+    else:
+        spai_input_size = tuple(config.MODEL.SEMANTIC_CONTEXT.SPAI_INPUT_SIZE)
     # Build and return the model
     model = SemanticContextModel(
         spai_model_path=spai_model_path,
