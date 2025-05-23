@@ -3,7 +3,7 @@
 # Path to project root (if needed)
 ROOT_DIR="/home/azywot/DL2/spai"
 MODEL_DIR="/scratch-shared/dl2_spai_models/finetune"
-MAX_JOBS=4       # Max concurrent jobs allowed
+MAX_JOBS=1       # Max concurrent jobs allowed
 SLEEP_TIME=60    # Seconds to wait before checking again
 
 # Test sets
@@ -16,29 +16,30 @@ declare -A TEST_SETS=(
 
 # Model -> Model path
 declare -A MODELS=(
+  ["dino_cross_attn_after_sca"]="$MODEL_DIR/23_05_train_dino_cross_attn_after_sca_ldm_lsun/ckpt_best.pth"
   # # CHAMELEON
-  ["clip_cross_attn_after_sca_chameleon"]="$MODEL_DIR/train_clip_cross_attn_after_sca_chameleon/ckpt_best.pth"
-  ["clip_cross_attn_before_sca_chameleon"]="$MODEL_DIR/train_clip_cross_attn_before_sca_chameleon/ckpt_best.pth"
-  ["clip_dual_cross_attn_after_sca_chameleon"]="$MODEL_DIR/train_clip_dual_cross_attn_after_sca_chameleon/ckpt_best.pth"
-  ["clip_dual_cross_attn_before_sca_chameleon"]="$MODEL_DIR/train_clip_dual_cross_attn_before_sca_chameleon/ckpt_best.pth"
+  # ["clip_cross_attn_after_sca_chameleon"]="$MODEL_DIR/train_clip_cross_attn_after_sca_chameleon/ckpt_best.pth"
+  # ["clip_cross_attn_before_sca_chameleon"]="$MODEL_DIR/train_clip_cross_attn_before_sca_chameleon/ckpt_best.pth"
+  # ["clip_dual_cross_attn_after_sca_chameleon"]="$MODEL_DIR/train_clip_dual_cross_attn_after_sca_chameleon/ckpt_best.pth"
+  # ["clip_dual_cross_attn_before_sca_chameleon"]="$MODEL_DIR/train_clip_dual_cross_attn_before_sca_chameleon/ckpt_best.pth"
   # ["convnext_cross_attn_after_sca_chameleon"]="$MODEL_DIR/train_convnext_cross_attn_after_sca_chameleon/ckpt_best.pth"
   # ["convnext_cross_attn_before_sca_chameleon"]="$MODEL_DIR/train_convnext_cross_attn_before_sca_chameleon/ckpt_best.pth"
   # ["convnext_dual_cross_attn_after_sca_chameleon"]="$MODEL_DIR/train_convnext_dual_cross_attn_after_sca_chameleon/ckpt_best.pth"
   # ["convnext_dual_cross_attn_before_sca_chameleon"]="$MODEL_DIR/train_convnext_dual_cross_attn_before_sca_chameleon/ckpt_best.pth"
   # # LDM
-  ["clip_cross_attn_after_sca_ldm"]="$MODEL_DIR/train_clip_cross_attn_after_sca_ldm/ckpt_best.pth"
-  ["clip_cross_attn_before_sca_ldm"]="$MODEL_DIR/train_clip_cross_attn_before_sca_ldm/ckpt_best.pth"
-  ["clip_dual_cross_attn_after_sca_ldm"]="$MODEL_DIR/train_clip_dual_cross_attn_after_sca_ldm/ckpt_best.pth"
-  ["clip_dual_cross_attn_before_sca_ldm"]="$MODEL_DIR/train_clip_dual_cross_attn_before_sca_ldm/ckpt_best.pth"
+  # ["clip_cross_attn_after_sca_ldm"]="$MODEL_DIR/train_clip_cross_attn_after_sca_ldm/ckpt_best.pth"
+  # ["clip_cross_attn_before_sca_ldm"]="$MODEL_DIR/train_clip_cross_attn_before_sca_ldm/ckpt_best.pth"
+  # ["clip_dual_cross_attn_after_sca_ldm"]="$MODEL_DIR/train_clip_dual_cross_attn_after_sca_ldm/ckpt_best.pth"
+  # ["clip_dual_cross_attn_before_sca_ldm"]="$MODEL_DIR/train_clip_dual_cross_attn_before_sca_ldm/ckpt_best.pth"
   # ["convnext_cross_attn_after_sca_ldm"]="$MODEL_DIR/train_convnext_cross_attn_after_sca_ldm/ckpt_best.pth"
   # ["convnext_cross_attn_before_sca_ldm"]="$MODEL_DIR/train_convnext_cross_attn_before_sca_ldm/ckpt_best.pth"
   # ["convnext_dual_cross_attn_after_sca_ldm"]="$MODEL_DIR/train_convnext_dual_cross_attn_after_sca_ldm/ckpt_best.pth"
   # ["convnext_dual_cross_attn_before_sca_ldm"]="$MODEL_DIR/train_convnext_dual_cross_attn_before_sca_ldm/ckpt_best.pth"
   # # LDM + LSUN
-  ["clip_cross_attn_after_sca_ldm_lsun"]="$MODEL_DIR/train_clip_cross_attn_after_sca_ldm_lsun/ckpt_best.pth"
-  ["clip_cross_attn_before_sca_ldm_lsun"]="$MODEL_DIR/train_clip_cross_attn_before_sca_ldm_lsun/ckpt_best.pth"
-  ["clip_dual_cross_attn_after_sca_ldm_lsun"]="$MODEL_DIR/train_clip_dual_cross_attn_after_sca_ldm_lsun/ckpt_best.pth"
-  ["clip_dual_cross_attn_before_sca_ldm_lsun"]="$MODEL_DIR/train_clip_dual_cross_attn_before_sca_ldm_lsun/ckpt_best.pth"
+  # ["clip_cross_attn_after_sca_ldm_lsun"]="$MODEL_DIR/train_clip_cross_attn_after_sca_ldm_lsun/ckpt_best.pth"
+  # ["clip_cross_attn_before_sca_ldm_lsun"]="$MODEL_DIR/train_clip_cross_attn_before_sca_ldm_lsun/ckpt_best.pth"
+  # ["clip_dual_cross_attn_after_sca_ldm_lsun"]="$MODEL_DIR/train_clip_dual_cross_attn_after_sca_ldm_lsun/ckpt_best.pth"
+  # ["clip_dual_cross_attn_before_sca_ldm_lsun"]="$MODEL_DIR/train_clip_dual_cross_attn_before_sca_ldm_lsun/ckpt_best.pth"
   # ["convnext_cross_attn_after_sca_ldm_lsun"]="$MODEL_DIR/train_convnext_cross_attn_after_sca_ldm_lsun/ckpt_best.pth"
   # ["convnext_cross_attn_before_sca_ldm_lsun"]="$MODEL_DIR/train_convnext_cross_attn_before_sca_ldm_lsun/ckpt_best.pth"
   # ["convnext_dual_cross_attn_after_sca_ldm_lsun"]="$MODEL_DIR/train_convnext_dual_cross_attn_after_sca_ldm_lsun/ckpt_best.pth"
@@ -47,29 +48,29 @@ declare -A MODELS=(
 
 # Model -> Config path
 declare -A CONFIGS=(
+  ["dino_cross_attn_after_sca"]="/home/azywot/DL2/spai/configs/dino_spai_after_sca.yaml"
   # # CHAMELEON
-  ["clip_cross_attn_after_sca_chameleon"]="/home/azywot/DL2/spai/configs/clip_spai_after_sca.yaml"
-  ["clip_cross_attn_before_sca_chameleon"]="/home/azywot/DL2/spai/configs/clip_spai_before_sca.yaml"
-  ["clip_dual_cross_attn_after_sca_chameleon"]="/home/azywot/DL2/spai/configs/clip_spai_dual_after_sca.yaml"
-  ["clip_dual_cross_attn_before_sca_chameleon"]="/home/azywot/DL2/spai/configs/clip_spai_dual_before_sca.yaml"
+  # ["clip_cross_attn_before_sca_chameleon"]="/home/azywot/DL2/spai/configs/clip_spai_before_sca.yaml"
+  # ["clip_dual_cross_attn_after_sca_chameleon"]="/home/azywot/DL2/spai/configs/clip_spai_dual_after_sca.yaml"
+  # ["clip_dual_cross_attn_before_sca_chameleon"]="/home/azywot/DL2/spai/configs/clip_spai_dual_before_sca.yaml"
   # ["convnext_cross_attn_after_sca_chameleon"]="/home/azywot/DL2/spai/configs/convnext_spai_after_sca.yaml"
   # ["convnext_cross_attn_before_sca_chameleon"]="/home/azywot/DL2/spai/configs/convnext_spai_before_sca.yaml"
   # ["convnext_dual_cross_attn_after_sca_chameleon"]="/home/azywot/DL2/spai/configs/convnext_spai_dual_after_sca.yaml"
   # ["convnext_dual_cross_attn_before_sca_chameleon"]="/home/azywot/DL2/spai/configs/convnext_spai_dual_before_sca.yaml"
   # # LDM
-  ["clip_cross_attn_after_sca_ldm"]="/home/azywot/DL2/spai/configs/clip_spai_after_sca.yaml"
-  ["clip_cross_attn_before_sca_ldm"]="/home/azywot/DL2/spai/configs/clip_spai_before_sca.yaml"
-  ["clip_dual_cross_attn_after_sca_ldm"]="/home/azywot/DL2/spai/configs/clip_spai_dual_after_sca.yaml"
-  ["clip_dual_cross_attn_before_sca_ldm"]="/home/azywot/DL2/spai/configs/clip_spai_dual_before_sca.yaml"
+  # ["clip_cross_attn_after_sca_ldm"]="/home/azywot/DL2/spai/configs/clip_spai_after_sca.yaml"
+  # ["clip_cross_attn_before_sca_ldm"]="/home/azywot/DL2/spai/configs/clip_spai_before_sca.yaml"
+  # ["clip_dual_cross_attn_after_sca_ldm"]="/home/azywot/DL2/spai/configs/clip_spai_dual_after_sca.yaml"
+  # ["clip_dual_cross_attn_before_sca_ldm"]="/home/azywot/DL2/spai/configs/clip_spai_dual_before_sca.yaml"
   # ["convnext_cross_attn_after_sca_ldm"]="/home/azywot/DL2/spai/configs/convnext_spai_after_sca.yaml"
   # ["convnext_cross_attn_before_sca_ldm"]="/home/azywot/DL2/spai/configs/convnext_spai_before_sca.yaml"
   # ["convnext_dual_cross_attn_after_sca_ldm"]="/home/azywot/DL2/spai/configs/convnext_spai_dual_after_sca.yaml"
   # ["convnext_dual_cross_attn_before_sca_ldm"]="/home/azywot/DL2/spai/configs/convnext_spai_dual_before_sca.yaml"
   # # LDM + LSUN
-  ["clip_cross_attn_after_sca_ldm_lsun"]="/home/azywot/DL2/spai/configs/clip_spai_after_sca.yaml"
-  ["clip_cross_attn_before_sca_ldm_lsun"]="/home/azywot/DL2/spai/configs/clip_spai_before_sca.yaml"
-  ["clip_dual_cross_attn_after_sca_ldm_lsun"]="/home/azywot/DL2/spai/configs/clip_spai_dual_after_sca.yaml"
-  ["clip_dual_cross_attn_before_sca_ldm_lsun"]="/home/azywot/DL2/spai/configs/clip_spai_dual_before_sca.yaml"
+  # ["clip_cross_attn_after_sca_ldm_lsun"]="/home/azywot/DL2/spai/configs/clip_spai_after_sca.yaml"
+  # ["clip_cross_attn_before_sca_ldm_lsun"]="/home/azywot/DL2/spai/configs/clip_spai_before_sca.yaml"
+  # ["clip_dual_cross_attn_after_sca_ldm_lsun"]="/home/azywot/DL2/spai/configs/clip_spai_dual_after_sca.yaml"
+  # ["clip_dual_cross_attn_before_sca_ldm_lsun"]="/home/azywot/DL2/spai/configs/clip_spai_dual_before_sca.yaml"
   # ["convnext_cross_attn_after_sca_ldm_lsun"]="/home/azywot/DL2/spai/configs/convnext_spai_after_sca.yaml"
   # ["convnext_cross_attn_before_sca_ldm_lsun"]="/home/azywot/DL2/spai/configs/convnext_spai_before_sca.yaml"
   # ["convnext_dual_cross_attn_after_sca_ldm_lsun"]="/home/azywot/DL2/spai/configs/convnext_spai_dual_after_sca.yaml"
@@ -106,6 +107,7 @@ for model_name in "${!MODELS[@]}"; do
 
     wait_for_available_slot
 
+    sleep 1
     TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
     echo "[$TIMESTAMP] 📤 Submitting job: model=$SAFE_MODEL_NAME, test_set=$test_name"
 

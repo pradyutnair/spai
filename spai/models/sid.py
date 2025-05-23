@@ -32,7 +32,7 @@ from spai.utils import save_image_with_attention_overlay
 from semantic_pipeline.semantic import SemanticPipeline
 
 from . import backbones, filters, utils, vision_transformer
-
+import torchvision.transforms as transforms
 
 class PatchBasedMFViT(nn.Module):
     def __init__(
@@ -208,6 +208,8 @@ class PatchBasedMFViT(nn.Module):
         :param export_dirs:
         """
         if isinstance(x, torch.Tensor):
+            # resize to 1024x1024 in eavh element in the batch
+            x = F.interpolate(x, size=(1024, 1024), mode="bilinear", align_corners=False)
             x = self.forward_batch(x)
         elif isinstance(x, list):
             if feature_extraction_batch_size is None:
@@ -270,7 +272,7 @@ class PatchBasedMFViT(nn.Module):
                 )  # B x D
             elif self.semantic_encoder_type == "dino":
                 # Get the global image encoding from the DINOv2 backbone
-                global_image_encoding = self.semantic_encoder.get_image_embedding(
+                global_image_encoding = self.semantic_encoder(
                     x_resized.float()
                 )
                 # Project global image encoding to match the cross-attention query dimension

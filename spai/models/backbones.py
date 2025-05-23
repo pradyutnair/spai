@@ -21,6 +21,7 @@ import clip
 
 CLIP_MEAN: tuple[float, ...] = (0.48145466, 0.4578275, 0.40821073)
 CLIP_STD: tuple[float, ...] = (0.26862954, 0.26130258, 0.27577711)
+from torchvision.transforms import Compose, Resize, Normalize
 
 
 class Hook:
@@ -210,8 +211,8 @@ class DINOv2FeatureEmbedding(nn.Module):
     def preprocess_image(self, image_tensor):
         # DINOv2 expects images normalized with ImageNet stats
         preprocess = Compose([
-            Resize((1024, 1024)),
-            # Resize((224, 224)),
+            # Resize((1024, 1024)),
+            Resize((224, 224)),
             Normalize(mean=(0.485, 0.456, 0.406),
                      std=(0.229, 0.224, 0.225))
         ])
