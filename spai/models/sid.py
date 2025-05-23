@@ -1375,6 +1375,7 @@ class SemanticContextModel(nn.Module):
                 img_spai = spai_resize(img)
                 img_convnext = convnext_resize(img)
                 spai_input.append(img_spai)
+                #spai_input.append(img)
                 convnext_input.append(normalize(img_convnext))
             x_spai = torch.stack(spai_input).to(device).float()
             x_convnext = torch.stack(convnext_input).to(device).float()
