@@ -1286,6 +1286,7 @@ class SemanticContextModel(nn.Module):
         projection_dim: int = 256,
         hidden_dims: List[int] = [512, 256],
         dropout: float = 0.5,
+        spai_input_size:tuple = (224,224)
     ):
         super().__init__()
 
@@ -1359,8 +1360,12 @@ class SemanticContextModel(nn.Module):
         """
         device = next(self.parameters()).device
         normalize = transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD)
-        spai_resize = transforms.Resize((1024, 1024), antialias=True)  # <-- Set your unified SPAI size here
         convnext_resize = transforms.Resize((224, 224), antialias=True)
+
+        if self.spai_input_size:
+            spai_resize = transforms.Resize(self.spai_input_size, antialias=True)
+        else:
+            spai_resize = lambda x: x  # identity function, does nothing
 
         # === Validation/inference mode: list of images ===
         if isinstance(x, list):
@@ -1443,13 +1448,16 @@ def build_semantic_context_model(config) -> SemanticContextModel:
     semantic_output_dim = config.MODEL.SEMANTIC_CONTEXT.OUTPUT_DIM
     hidden_dims = config.MODEL.SEMANTIC_CONTEXT.HIDDEN_DIMS
     dropout = config.MODEL.SEMANTIC_CONTEXT.DROPOUT
+    spai_input_size = config.MODEL.SEMANTIC_CONTEXT.SPAI_INPUT_SIZE
     
     # Build and return the model
     model = SemanticContextModel(
         spai_model_path=spai_model_path,
         semantic_output_dim=semantic_output_dim,
         hidden_dims=hidden_dims,
-        dropout=dropout
+        dropout=dropout,
+        spai_input_size = spai_input_size
+
     )
     
     return model
