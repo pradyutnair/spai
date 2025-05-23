@@ -1289,6 +1289,8 @@ class SemanticContextModel(nn.Module):
         spai_input_size:tuple = (224,224)
     ):
         super().__init__()
+        self.spai_input_size = spai_input_size
+        print(f'Input size for resizing SPAI model: {self.spai_input_size}')
 
         # === Load and freeze SPAI model ===
         from spai.models.build import build_mf_vit
@@ -1448,10 +1450,8 @@ def build_semantic_context_model(config) -> SemanticContextModel:
     semantic_output_dim = config.MODEL.SEMANTIC_CONTEXT.OUTPUT_DIM
     hidden_dims = config.MODEL.SEMANTIC_CONTEXT.HIDDEN_DIMS
     dropout = config.MODEL.SEMANTIC_CONTEXT.DROPOUT
-    if spai_input_size is None:
-        spai_input_size = None
-    else:
-        spai_input_size = tuple(config.MODEL.SEMANTIC_CONTEXT.SPAI_INPUT_SIZE)
+    spai_input_size = config.MODEL.SEMANTIC_CONTEXT.SPAI_INPUT_SIZE
+    spai_input_size = tuple(spai_input_size) if spai_input_size is not None else None
     # Build and return the model
     model = SemanticContextModel(
         spai_model_path=spai_model_path,

@@ -30,6 +30,8 @@ source activate spai_2
 # --opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
 # --opt "DATA.TEST_PREFETCH_FACTOR" "1" \
 # --test-csv "/home/scur2605/spai/data/test_set_dalle2.csv" 
+
+
 python -m spai test \
 --cfg "./configs/spai.yaml" \
 --batch-size 8 \
@@ -40,9 +42,9 @@ python -m spai test \
 --opt "DATA.NUM_WORKERS" "8" \
 --opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
 --opt "DATA.TEST_PREFETCH_FACTOR" "1" \
---test-csv "/home/scur2605/spai/data/artifact_test.csv" \
---opt "PRINT_FREQ" "2"
-
+--test-csv "/home/scur2605/spai/data/artifact_test_1k.csv" \
+--opt "PRINT_FREQ" "2" \
+--opt "MODEL.SEMANTIC_CONTEXT.SPAI_INPUT_SIZE" "[1024, 1024]" 
 
 # python -m spai test \
 # --cfg "./configs/spai.yaml" \
