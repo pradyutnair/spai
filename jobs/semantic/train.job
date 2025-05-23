@@ -6,7 +6,7 @@
 #SBATCH --time=12:00:00
 #SBATCH --mem=180G
 #SBATCH --hint=nomultithread
-#SBATCH --output=/home/scur2605/spai/jobs/outputs/semantic/train_simple_%A.out
+#SBATCH --output=/home/scur2637/spai/jobs/job_outputs/train_simple.log
 
 # Set the correct Python path
 cd /home/scur2605/spai
@@ -19,7 +19,7 @@ module load Anaconda3/2023.07-2
 
 
 
-source activate spai_2
+source activate spai
 export NEPTUNE_API_TOKEN="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiJjZWZkYTNkZC02Y2VmLTRjZWYtYjQwMy1kNGZiMzAwYzg3NjgifQ=="
 export NEPTUNE_PROJECT="iwkooo/spai"
 
@@ -48,22 +48,21 @@ echo "Current directory: $(pwd)"
 
 
 # Subset the dataset to 10% for faster training
-python -c "
-import pandas as pd
-import numpy as np
-df = pd.read_csv('/home/scur2605/spai/data/train/ldm_train_val.csv')
-subset = df.sample(frac=0.1, random_state=42)
-subset.to_csv('/home/scur2605/spai/data/train/ldm_train_val_subset_10pct.csv', index=False)
-"
+# python -c "
+# import pandas as pd
+# import numpy as np
+# df = pd.read_csv('/home/scur2605/spai/data/train/ldm_train_val.csv')
+# subset = df.sample(frac=0.1, random_state=42)
+# subset.to_csv('/home/scur2605/spai/data/train/ldm_train_val_subset_10pct.csv', index=False)
+# "
 
 
 python -m spai train \
   --cfg "./configs/spai.yaml" \
   --batch-size 256 \
-  --data-path "/home/scur2605/spai/data/chameleon_dataset_split.csv" \
-  --csv-root-dir "/home/scur2605/spai/data/train" \
-  --output "./output/simple" \
-  --tag "first_run" \
+  --data-path "/home/scur2637/spai/data/chameleon_dataset_split.csv" \
+  --output "./output/train_1024_dino/" \
+  --tag "iwo_dino" \
   --data-workers 4 \
   --save-all \
   --amp-opt-level "O0" \

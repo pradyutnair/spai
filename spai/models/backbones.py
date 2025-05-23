@@ -92,3 +92,72 @@ class DINOv2Backbone(nn.Module):
         x: torch.Tensor = torch.stack(x, dim=1)
         x = x.to(input_dtype)
         return x
+    
+
+class DINOv2FeatureEmbedding(nn.Module):
+    """Projector that embeds DINOv2 features into a lower-dimensional space."""
+    def __init__(self, model_name="dinov2_vitg14", 
+                 device='cuda' if torch.cuda.is_available() else 'cpu', 
+                 proj_dim=512):
+        super().__init__()
+        self.device = device
+
+        # Load DINOv2 model
+        if model_name == "dinov2_vitl14":
+            self.dino_model = torch.hub.load('facebookresearch/dinov2', 'dinov2_vitl14')
+            self.output_dim = 1024
+        elif model_name == "dinov2_vitg14":
+            self.dino_model = torch.hub.load('facebookresearch/dinov2', 'dinov2_vitg14')
+            self.output_dim = 1536
+        elif model_name == "dinov2_vitb14":
+            self.dino_model = torch.hub.load('facebookresearch/dinov2', 'dinov2_vitb14')
+            self.output_dim = 768
+        elif model_name == "dinov2_vits14":
+            self.dino_model = torch.hub.load('facebookresearch/dinov2', 'dinov2_vits14')
+            self.output_dim = 384
+        else:
+            raise ValueError(f"Unknown DINOv2 model: {model_name}")
+
+        self.dino_model.to(device)
+        self.dino_model.eval()  # Freeze model
+
+        for param in self.dino_model.parameters():
+            param.requires_grad = False
+
+        # # Project to desired dimension
+        # self.projection = nn.Linear(self.output_dim, proj_dim)
+
+        # Print model info for debugging
+        print(f"Loaded DINOv2 model {model_name} with output dim {self.output_dim}")
+
+    def forward(self, images):
+        # Handle input types: list of tensors vs 4D tensor
+        if isinstance(images, list):
+            processed_images = torch.stack([
+                self.preprocess_image(img).to(self.device).squeeze(0) for img in images
+            ])
+        else:
+            processed_images = torch.stack([
+                self.preprocess_image(img).to(self.device).squeeze(0) for img in images
+            ])
+
+        # Extract features using DINOv2
+        with torch.no_grad():
+            # DINOv2 returns the [CLS] token features by default
+            features = self.dino_model(processed_images)
+
+        # Project to desired dimension
+        features = features.float()
+        # features = self.projection(features)
+
+        return features # output dimention should match semantic_dim in build_mf_vit
+
+    def preprocess_image(self, image_tensor):
+        # DINOv2 expects images normalized with ImageNet stats
+        preprocess = Compose([
+            Resize((1024, 1024)),
+            # Resize((224, 224)),
+            Normalize(mean=(0.485, 0.456, 0.406),
+                     std=(0.229, 0.224, 0.225))
+        ])
+        return preprocess(image_tensor)
