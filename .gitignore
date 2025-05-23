@@ -1,3 +1,10 @@
+jobs/*
+job_outputs/*
+datasets/*
+datasets_o/*
+download_box.out
+download.job
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

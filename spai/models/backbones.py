@@ -17,6 +17,7 @@
 import torch
 from torch import nn
 import clip
+from torchvision.transforms import Compose, Resize, Normalize
 
 
 CLIP_MEAN: tuple[float, ...] = (0.48145466, 0.4578275, 0.40821073)
@@ -155,8 +156,8 @@ class DINOv2FeatureEmbedding(nn.Module):
     def preprocess_image(self, image_tensor):
         # DINOv2 expects images normalized with ImageNet stats
         preprocess = Compose([
-            Resize((1024, 1024)),
-            # Resize((224, 224)),
+            #Resize((1022, 1022)),
+            Resize((224, 224)),
             Normalize(mean=(0.485, 0.456, 0.406),
                      std=(0.229, 0.224, 0.225))
         ])

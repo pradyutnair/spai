@@ -1,15 +1,14 @@
 #!/bin/bash
 #SBATCH --partition=gpu_h100
 #SBATCH --gpus=1
-#SBATCH --job-name=eval_ff
+#SBATCH --job-name=eval
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
-#SBATCH --time=5:00:00
+#SBATCH --time=6:00:00
 #SBATCH --mem=180G
 #SBATCH --hint=nomultithread
-#SBATCH --output=/home/scur2605/spai/jobs/outputs/semantic/FIXED-OG-TEST-EVAL%A.out
+#SBATCH --output=/home/scur2637/spai/jobs/job_outputs/test.log
 
-cd /home/scur2605/spai
 export PYTHONPATH=/home/scur2605:$PYTHONPATH
 export NEPTUNE_API_TOKEN="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiJjZWZkYTNkZC02Y2VmLTRjZWYtYjQwMy1kNGZiMzAwYzg3NjgifQ=="
 export NEPTUNE_PROJECT="iwkooo/spai"
@@ -17,138 +16,76 @@ module purge
 module load 2023
 module load Anaconda3/2023.07-2
 
-source activate spai_2
+source activate spai
 
-# python -m spai test \
-# --cfg "./configs/spai.yaml" \
-# --batch-size 8 \
-# --model "/home/scur2605/spai/weights/spai.pth" \
-# --output "./output/spai/test" \
-# --tag "spai" \
-# --opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
-# --opt "DATA.NUM_WORKERS" "8" \
-# --opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
-# --opt "DATA.TEST_PREFETCH_FACTOR" "1" \
-# --test-csv "/home/scur2605/spai/data/test_set_dalle2.csv" 
+# Common parameters
+MODEL_DIR="/home/scur2637/spai/output/train_1024_dino/finetune/iwo_dino/ckpt_epoch_9.pth"
+OUTPUT_DIR="./output/test/dino_1024/"
+DATASET_DIR="/home/scur2637/spai/datasets"
+CONFIG_FILE="./configs/spai.yaml"
 
-# python -m spai test \
-# --cfg "./configs/spai.yaml" \z
-# --batch-size 8 \
-# --model "/home/scur2605/spai/output/simple/finetune/first_run/ckpt_epoch_3.pth" \
-# --output "./output/semantic_test" \
-# --tag "spai" \
-# --opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
-# --opt "DATA.NUM_WORKERS" "8" \
-# --opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
-# --opt "DATA.TEST_PREFETCH_FACTOR" "1" \
-# --test-csv "/home/scur2605/spai/data/artifact_test.csv" \
-# --opt "PRINT_FREQ" "2"
+# Ensure tests continue even if one fails
+set +e
 
+# Common options for all test runs
+COMMON_OPTS=(
+  "--cfg ${CONFIG_FILE}"
+  "--batch-size 10"
+  "--model ${MODEL_DIR}"
+  "--output ${OUTPUT_DIR}"
+  "--tag spai"
+  "--opt MODEL.PATCH_VIT.MINIMUM_PATCHES 4"
+  "--opt DATA.NUM_WORKERS 8"
+  "--opt MODEL.FEATURE_EXTRACTION_BATCH 400"
+  "--opt DATA.TEST_PREFETCH_FACTOR 1"
+  "--opt PRINT_FREQ 2"
+  "--opt MODEL.SEMANTIC_CONTEXT.HIDDEN_DIMS [512]"
+)
 
-python -m spai test \
---cfg "./configs/spai.yaml" \
---batch-size 10 \
---model "/home/scur2605/spai/output/resnet/finetune/fused_run/ckpt_epoch_9.pth" \
---output "./output/semantic_test" \
---tag "spai" \
---opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
---opt "DATA.NUM_WORKERS" "8" \
---opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
---opt "DATA.TEST_PREFETCH_FACTOR" "1" \
---test-csv "/home/scur2605/spai/data/test_set_dalle2.csv" \
---opt "PRINT_FREQ" "2" \
---opt "MODEL.SEMANTIC_CONTEXT.HIDDEN_DIMS" "[512]" \
+echo "Running test with model: $MODEL_DIR"
+echo "Output directory: $OUTPUT_DIR"
 
-python -m spai test \
---cfg "./configs/spai.yaml" \
---batch-size 10 \
---model "/home/scur2605/spai/output/resnet/finetune/fused_run/ckpt_epoch_9.pth" \
---output "./output/semantic_test" \
---tag "spai" \
---opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
---opt "DATA.NUM_WORKERS" "8" \
---opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
---opt "DATA.TEST_PREFETCH_FACTOR" "1" \
---test-csv "/home/scur2605/spai/data/test_set_dalle3.csv" \
---opt "PRINT_FREQ" "2" \
---opt "MODEL.SEMANTIC_CONTEXT.HIDDEN_DIMS" "[512]" \
+# Function to run test with a specific dataset
+run_test() {
+  local dataset_name=$1
+  local dataset_path=$2
+  
+  echo "🔄 TESTING ON ${dataset_name}"
+  
+  # Construct command with all options
+  CMD="python -m spai test ${COMMON_OPTS[*]} --test-csv ${dataset_path}"
+  
+  # Run the command and capture exit status
+  eval $CMD
+  local status=$?
+  
+  if [ $status -ne 0 ]; then
+    echo "⚠️ Test on ${dataset_name} exited with status $status"
+  else
+    echo "✅ Test on ${dataset_name} completed successfully"
+  fi
+  
+  # Always return true to continue with next dataset
+  return 0
+}
 
+# Define datasets array with name and path
+declare -a DATASETS=(
+  "DALLE2 ${DATASET_DIR}/test_set_dalle2_no_imagenet.csv"
+  "DALL-E-3 ${DATASET_DIR}/test_set_dalle3_no_imagenet.csv"
+  "GIGAGAN ${DATASET_DIR}/test_set_gigagan_no_imagenet.csv"
+  "MIDJOURNEY ${DATASET_DIR}/test_set_midjourney-v6.1_no_imagenet.csv"
+  "SD1-4 ${DATASET_DIR}/test_set_sd1_4_no_imagenet.csv"
+  "SD3 ${DATASET_DIR}/test_set_sd3_fixed_no_imagenet.csv"
+  "FLUX ${DATASET_DIR}/test_set_flux_no_imagenet.csv"
+  "ARTIFACT ${DATASET_DIR}/artifact_test.csv"
+)
 
+# Run tests for all datasets
+for dataset in "${DATASETS[@]}"; do
+  # Split the dataset string into name and path
+  read -r name path <<< "$dataset"
+  run_test "$name" "$path"
+done
 
-python -m spai test \
---cfg "./configs/spai.yaml" \
---batch-size 10 \
---model "/home/scur2605/spai/output/resnet/finetune/fused_run/ckpt_epoch_9.pth" \
---output "./output/semantic_test" \
---tag "spai" \
---opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
---opt "DATA.NUM_WORKERS" "8" \
---opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
---opt "DATA.TEST_PREFETCH_FACTOR" "1" \
---test-csv "/home/scur2605/spai/data/test_set_gigagan.csv" \
---opt "PRINT_FREQ" "2" \
---opt "MODEL.SEMANTIC_CONTEXT.HIDDEN_DIMS" "[512]" \
-
-
-python -m spai test \
---cfg "./configs/spai.yaml" \
---batch-size 10 \
---model "/home/scur2605/spai/output/resnet/finetune/fused_run/ckpt_epoch_9.pth" \
---output "./output/semantic_test" \
---tag "spai" \
---opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
---opt "DATA.NUM_WORKERS" "8" \
---opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
---opt "DATA.TEST_PREFETCH_FACTOR" "1" \
---test-csv "/home/scur2605/spai/data/test_set_midjourney-v6.1.csv" \
---opt "PRINT_FREQ" "2" \
---opt "MODEL.SEMANTIC_CONTEXT.HIDDEN_DIMS" "[512]" \
-
-
-
-python -m spai test \
---cfg "./configs/spai.yaml" \
---batch-size 10 \
---model "/home/scur2605/spai/output/resnet/finetune/fused_run/ckpt_epoch_9.pth" \
---output "./output/semantic_test" \
---tag "spai" \
---opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
---opt "DATA.NUM_WORKERS" "8" \
---opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
---opt "DATA.TEST_PREFETCH_FACTOR" "1" \
---test-csv "/home/scur2605/spai/data/test_set_sd1_4.csv" \
---opt "PRINT_FREQ" "2" \
---opt "MODEL.SEMANTIC_CONTEXT.HIDDEN_DIMS" "[512]" \
-
-
-
-python -m spai test \
---cfg "./configs/spai.yaml" \
---batch-size 10 \
---model "/home/scur2605/spai/output/resnet/finetune/fused_run/ckpt_epoch_9.pth" \
---output "./output/semantic_test" \
---tag "spai" \
---opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
---opt "DATA.NUM_WORKERS" "8" \
---opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
---opt "DATA.TEST_PREFETCH_FACTOR" "1" \
---test-csv "/home/scur2605/spai/data/test_set_sd3.csv" \
---opt "PRINT_FREQ" "2" \
---opt "MODEL.SEMANTIC_CONTEXT.HIDDEN_DIMS" "[512]" \
-
-
-
-python -m spai test \
---cfg "./configs/spai.yaml" \
---batch-size 10 \
---model "/home/scur2605/spai/output/resnet/finetune/fused_run/ckpt_epoch_9.pth" \
---output "./output/semantic_test" \
---tag "spai" \
---opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
---opt "DATA.NUM_WORKERS" "8" \
---opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
---opt "DATA.TEST_PREFETCH_FACTOR" "1" \
---test-csv "/home/scur2605/spai/data/test_set_flux.csv" \
---opt "PRINT_FREQ" "2" \
---opt "MODEL.SEMANTIC_CONTEXT.HIDDEN_DIMS" "[512]" \
-
+echo "All tests completed!"

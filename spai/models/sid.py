@@ -1276,7 +1276,7 @@ def _init_weights(m: nn.Module) -> None:
 
 class SemanticContextModel(nn.Module):
     """
-    Combines SPAI's spectral features with ConvNeXt semantic features using residual connections
+    Combines SPAI's spectral features with DINOv2 semantic features using residual connections
     to structurally bias the model toward spectral features.
     """
     def __init__(
@@ -1286,6 +1286,7 @@ class SemanticContextModel(nn.Module):
         projection_dim: int = 256,
         hidden_dims: List[int] = [512, 256],
         dropout: float = 0.5,
+        dinov2_model_name: str = "dinov2_vitg14",  # New parameter for DINOv2 model selection
     ):
         super().__init__()
 
@@ -1297,8 +1298,6 @@ class SemanticContextModel(nn.Module):
         self.spai_model = build_mf_vit(cfg)
 
         checkpoint = torch.load(spai_model_path, map_location="cpu", weights_only=False)
-        self.spai_model.load_state_dict(checkpoint.get("model", checkpoint))
-        print(f"Loaded SPAI model from {spai_model_path}") 
         load_result = self.spai_model.load_state_dict(checkpoint.get("model", checkpoint), strict=False)
         print(f"Loaded SPAI model from {spai_model_path}")
         print("Missing keys (randomly initialized):", load_result.missing_keys)
@@ -1309,24 +1308,17 @@ class SemanticContextModel(nn.Module):
 
         spectral_features_dim = 1096  # known output dim from SPAI feature extractor
 
-        # === Load and freeze ConvNeXt-XXL from OpenCLIP ===
-        import open_clip
-        convnext_model, _, _ = open_clip.create_model_and_transforms(
-            "convnext_xxlarge", pretrained="laion2b_s34b_b82k_augreg"
-        )
-        self.semantic_backbone = convnext_model.visual.trunk
-        self.semantic_backbone.head.global_pool = nn.Identity()
-        self.semantic_backbone.head.flatten = nn.Identity()
-        self.global_pool = nn.AdaptiveAvgPool2d((1, 1))
-
-        for param in self.semantic_backbone.parameters():
-            param.requires_grad = False
-        self.semantic_backbone.eval()
-
+        # === Use DINOv2FeatureEmbedding instead of ConvNeXt ===
+        from spai.models.backbones import DINOv2FeatureEmbedding
+        self.semantic_backbone = DINOv2FeatureEmbedding(model_name=dinov2_model_name)
+        
+        # Get the output dimension from DINOv2 model
+        dinov2_dim = self.semantic_backbone.output_dim
+        
         # === Projections (raw -> aligned dimensions) ===
         self.semantic_projection = nn.Sequential(
-            nn.LayerNorm(3072),
-            nn.Linear(3072, projection_dim),
+            nn.LayerNorm(dinov2_dim),
+            nn.Linear(dinov2_dim, projection_dim),
             nn.GELU(),
             nn.Dropout(dropout)
         )
@@ -1360,11 +1352,10 @@ class SemanticContextModel(nn.Module):
         device = next(self.parameters()).device
         normalize = transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD)
         spai_resize = transforms.Resize((1024, 1024), antialias=True)  # <-- Set your unified SPAI size here
-        convnext_resize = transforms.Resize((224, 224), antialias=True)
 
         # === Validation/inference mode: list of images ===
         if isinstance(x, list):
-            spai_input, convnext_input = [], []
+            spai_input = []
             for img in x:
                 if img.dim() == 4 and img.size(0) == 1:
                     img = img.squeeze(0)
@@ -1373,12 +1364,10 @@ class SemanticContextModel(nn.Module):
                 if img.max() > 1.0:
                     img = img / 255.0
                 img_spai = spai_resize(img)
-                img_convnext = convnext_resize(img)
                 spai_input.append(img_spai)
-                convnext_input.append(normalize(img_convnext))
             x_spai = torch.stack(spai_input).to(device).float()
-            x_convnext = torch.stack(convnext_input).to(device).float()
-
+            # DINOv2FeatureEmbedding will handle its own preprocessing internally
+            x_dinov2 = x  # Pass original images directly to DINOv2
 
         # === Training mode: batched tensor ===
         else:
@@ -1387,7 +1376,8 @@ class SemanticContextModel(nn.Module):
             if x.max() > 1.0:
                 x = x / 255.0
             x_spai = x.to(device).float()
-            x_convnext = normalize(x).to(device).float()
+            # DINOv2FeatureEmbedding will handle normalization internally
+            x_dinov2 = x  # Pass batch directly to DINOv2
 
         # === Feature extraction ===
         with torch.no_grad():
@@ -1397,12 +1387,11 @@ class SemanticContextModel(nn.Module):
             spectral_features = self.spai_model(x_spai)
             self.spai_model.cls_head = original_cls_head
 
-            # ConvNeXt
-            semantic_features = self.semantic_backbone(x_convnext)
-            semantic_features = self.global_pool(semantic_features).flatten(1)
+            # DINOv2 features
+            semantic_features = self.semantic_backbone(x_dinov2)
 
         # === Semantic projection ===
-        semantic_proj = self.semantic_projection(semantic_features)  # e.g. 3072 → 256
+        semantic_proj = self.semantic_projection(semantic_features)  # e.g. 1536 → 256
 
         # === Combined features with weighting ===
         combined = torch.cat([spectral_features, semantic_proj], dim=1)
@@ -1450,5 +1439,5 @@ def build_semantic_context_model(config) -> SemanticContextModel:
         hidden_dims=hidden_dims,
         dropout=dropout
     )
-    
+
     return model
