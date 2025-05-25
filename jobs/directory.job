@@ -2,13 +2,14 @@
 #SBATCH --partition=gpu_h100
 #SBATCH --gpus=1
 #SBATCH --cpus-per-task=16
-#SBATCH --job-name=train
-#SBATCH --output=/home/pnair/spai/jobs/job_outputs/train.log
+#SBATCH --job-name=train_semantic_fusion
+#SBATCH --output=/home/pnair/spai/jobs/job_outputs/train_semantic_fusion.log
 #SBATCH --time=04:00:00
 ##SBATCH --mem=180G
 #SBATCH --hint=nomultithread
 
 echo "✅ Job started at: $(date)"
+echo "🎯 Training SPAI with Enhanced Semantic-Spectral Fusion"
 module purge
 module load 2023
 module load Anaconda3/2023.07-2
@@ -24,6 +25,7 @@ export NEPTUNE_PROJECT="spai/beast-mode"
 export PYTHONPATH=$PYTHONPATH:/home/pnair/spai
 export NCCL_DEBUG=INFO
 export CUDA_LAUNCH_BLOCKING=0
+export PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:512
 
 # python /home/pnair/spai/spai/tools/create_dmid_ldm_train_val_csv.py \
 #   --train_dir "/scratch-shared/dl2_spai/datasets/latent_diffusion_trainingset/train" \
@@ -42,19 +44,21 @@ export CUDA_LAUNCH_BLOCKING=0
 #   -o ./datasets/ldm_val_augm.csv \
 #   -d ./datasets/latent_diffusion_trainingset_augm
 
-# python -m spai train \
-#   --cfg "/home/pnair/spai/configs/spai.yaml" \
-#   --batch-size 32 \
-#   --pretrained "/home/pnair/spai/weights/spai.pth" \
-#   --output "/home/pnair/spai/output/train_mid_level_cross_attn" \
-#   --data-path "/home/pnair/spai/datasets/ldm_lsun_train_val_subset.csv" \
-#   --tag "spai" \
-#   --amp-opt-level "O2" \
-#   --data-workers 16 \
-#   --save-all \
-#   --opt "DATA.VAL_BATCH_SIZE" "256" \
-#   --opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
-#   --opt "DATA.TEST_PREFETCH_FACTOR" "4"
+echo "🚀 Starting enhanced semantic-spectral fusion training..."
+python -m spai train \
+  --cfg "/home/pnair/spai/configs/spai.yaml" \
+  --batch-size 16 \
+  --pretrained "/home/pnair/spai/weights/spai.pth" \
+  --output "/home/pnair/spai/output/train_semantic_fusion_enhanced" \
+  --data-path "/home/pnair/spai/datasets/ldm_lsun_train_val_subset.csv" \
+  --tag "semantic_fusion_enhanced" \
+  --amp-opt-level "O2" \
+  --data-workers 8 \
+  --save-all \
+  --opt "DATA.VAL_BATCH_SIZE" "128" \
+  --opt "MODEL.FEATURE_EXTRACTION_BATCH" "200" \
+  --opt "DATA.TEST_PREFETCH_FACTOR" "2" \
+  --opt "DATA.AUGMENTED_VIEWS" "4"
 
 # echo "🔍 Testing FLUX"
 
@@ -139,4 +143,4 @@ export CUDA_LAUNCH_BLOCKING=0
 #   --test-csv "/home/pnair/spai/datasets/lsun_test.csv"
 
 # # SD3-5
-echo "✅ Job finished at: $(date)"
+echo "✅ Training completed at: $(date)"

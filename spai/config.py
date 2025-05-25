@@ -196,6 +196,10 @@ _C.MODEL.FRE.SEMANTIC_DIM = 512
 _C.MODEL.FRE.NUM_HEADS = 8
 _C.MODEL.FRE.EARLY_FUSION_LAYERS = [3, 6]
 _C.MODEL.FRE.DROPOUT = 0.5
+# Enhanced semantic-spectral fusion parameters
+_C.MODEL.FRE.USE_FREQUENCY_AWARE_ATTENTION = True
+_C.MODEL.FRE.USE_ADAPTIVE_GATING = True
+_C.MODEL.FRE.USE_HIERARCHICAL_FUSION = True
 
 # PatchBasedMFViT related parameters
 _C.MODEL.PATCH_VIT = CN()
@@ -274,6 +278,12 @@ _C.TRAIN.LOSS = "bce_supcont"
 _C.TRAIN.TRIPLET_LOSS_MARGIN = 0.5
 # Layer decay for fine-tuning
 _C.TRAIN.LAYER_DECAY = 1.0
+# Focal loss parameters
+_C.TRAIN.FOCAL_ALPHA = 0.25
+_C.TRAIN.FOCAL_GAMMA = 2.0
+# Semantic consistency loss weights
+_C.TRAIN.SEMANTIC_CONSISTENCY_WEIGHT = 0.1
+_C.TRAIN.FREQUENCY_CONSISTENCY_WEIGHT = 0.05
 
 # -----------------------------------------------------------------------------
 # Augmentation settings

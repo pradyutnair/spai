@@ -733,8 +733,8 @@ class ClassificationVisionTransformer(nn.Module):
 
 class FrequencyRestorationEstimator(nn.Module):
     """
-    Enhanced FrequencyRestorationEstimator with dual-branch early-to-late cross-attention.
-    Uses semantic guidance throughout the network via gated fusion and cross-attention.
+    Enhanced FrequencyRestorationEstimator with advanced semantic-spectral fusion.
+    Features: Multi-scale fusion, frequency-aware attention, adaptive gating, and hierarchical processing.
     """
     def __init__(
         self,
@@ -750,27 +750,69 @@ class FrequencyRestorationEstimator(nn.Module):
         disable_reconstruction_similarity: bool = False,
         semantic_dim: int = 512,  # Default CLIP ViT-B/16 dim
         num_heads: int = 8,
-        early_fusion_layers: List[int] = [3, 6]  # Layers for early gated fusion
+        early_fusion_layers: List[int] = [2, 4, 6, 8],  # More fusion points
+        use_frequency_aware_attention: bool = True,
+        use_adaptive_gating: bool = True,
+        use_hierarchical_fusion: bool = True
     ):
         super().__init__()
         self.input_dim = input_dim
         self.proj_dim = proj_dim
         self.semantic_dim = semantic_dim
         self.early_fusion_layers = early_fusion_layers
-        self.semantic_proj = nn.Linear(semantic_dim, input_dim, bias=False)
+        self.use_frequency_aware_attention = use_frequency_aware_attention
+        self.use_adaptive_gating = use_adaptive_gating
+        self.use_hierarchical_fusion = use_hierarchical_fusion
         
-        # Add projection for cross attention (from semantic_dim to proj_dim)
-        self.cross_attn_proj = nn.Linear(semantic_dim, proj_dim, bias=False)
+        # Enhanced semantic projection with residual connection
+        self.semantic_proj = nn.Sequential(
+            nn.Linear(semantic_dim, input_dim, bias=False),
+            nn.LayerNorm(input_dim),
+            nn.GELU(),
+            nn.Dropout(dropout * 0.5)
+        )
         
-        # Early fusion gates - create one for each layer in early_fusion_layers
+        # Multi-scale semantic projection for cross attention
+        self.cross_attn_proj = nn.Sequential(
+            nn.Linear(semantic_dim, proj_dim, bias=False),
+            nn.LayerNorm(proj_dim),
+            nn.GELU()
+        )
+        
+        # Frequency-aware semantic encoders
+        if self.use_frequency_aware_attention:
+            self.freq_semantic_encoders = nn.ModuleList([
+                nn.Sequential(
+                    nn.Linear(semantic_dim, semantic_dim // 2),
+                    nn.LayerNorm(semantic_dim // 2),
+                    nn.GELU(),
+                    nn.Linear(semantic_dim // 2, semantic_dim),
+                    nn.Dropout(dropout * 0.5)
+                ) for _ in range(3)  # For original, low_freq, hi_freq
+            ])
+        
+        # Enhanced early fusion gates with adaptive weighting
         self.early_fusion_gates = nn.ModuleList([
             nn.Sequential(
-                nn.Linear(input_dim + semantic_dim, input_dim),
+                nn.Linear(input_dim + semantic_dim, input_dim * 2),
+                nn.LayerNorm(input_dim * 2),
+                nn.GELU(),
+                nn.Linear(input_dim * 2, input_dim),
                 nn.Sigmoid()
             ) for _ in range(len(early_fusion_layers))
         ])
+        
+        # Adaptive gating mechanism
+        if self.use_adaptive_gating:
+            self.adaptive_gate = nn.Sequential(
+                nn.Linear(input_dim + semantic_dim, input_dim),
+                nn.LayerNorm(input_dim),
+                nn.GELU(),
+                nn.Linear(input_dim, 1),
+                nn.Sigmoid()
+            )
 
-        # Mid-level cross attention
+        # Multi-head cross attention with improved architecture
         self.cross_attention = nn.MultiheadAttention(
             embed_dim=proj_dim,
             num_heads=num_heads,
@@ -778,8 +820,33 @@ class FrequencyRestorationEstimator(nn.Module):
             batch_first=True
         )
         self.cross_attention_norm = nn.LayerNorm(proj_dim)
+        
+        # Additional cross-attention for frequency-specific processing
+        if self.use_frequency_aware_attention:
+            self.freq_cross_attention = nn.ModuleList([
+                nn.MultiheadAttention(
+                    embed_dim=proj_dim,
+                    num_heads=num_heads // 2,
+                    dropout=dropout,
+                    batch_first=True
+                ) for _ in range(3)  # For original, low_freq, hi_freq
+            ])
+            self.freq_attention_norms = nn.ModuleList([
+                nn.LayerNorm(proj_dim) for _ in range(3)
+            ])
 
-        # Rest of initialization remains same
+        # Hierarchical fusion module
+        if self.use_hierarchical_fusion:
+            self.hierarchical_fusion = nn.Sequential(
+                nn.Linear(proj_dim * 3, proj_dim * 2),  # Combine all frequency components
+                nn.LayerNorm(proj_dim * 2),
+                nn.GELU(),
+                nn.Dropout(dropout),
+                nn.Linear(proj_dim * 2, proj_dim),
+                nn.LayerNorm(proj_dim)
+            )
+
+        # Rest of initialization remains same but enhanced
         if proj_last_layer_activation_type == "gelu":
             proj_last_layer_activation = nn.GELU
         elif proj_last_layer_activation_type is None:
@@ -817,27 +884,55 @@ class FrequencyRestorationEstimator(nn.Module):
                 ("Frequency Reconstruction Similarity cannot be disabled without "
                  "Original Features Processor.")
 
-    def early_gated_fusion(self, spectral_feat: torch.Tensor,
-                           semantic_feat: torch.Tensor,
-                           layer_idx: int) -> torch.Tensor:
+    def enhanced_early_gated_fusion(self, spectral_feat: torch.Tensor,
+                                   semantic_feat: torch.Tensor,
+                                   layer_idx: int) -> torch.Tensor:
+        """Enhanced gated fusion with adaptive weighting and residual connections."""
         try:
             gate_idx = self.early_fusion_layers.index(layer_idx)
         except ValueError:
-            return spectral_feat                    # nothing to fuse
+            return spectral_feat  # No fusion for this layer
 
         B, L, _ = spectral_feat.shape
-        semantic_feat = semantic_feat.view(B, L, -1)          # (B,L,768)
+        semantic_feat = semantic_feat.view(B, L, -1)
 
-        # 1️⃣ projection used only for the blending term
-        semantic_mapped = self.semantic_proj(semantic_feat)   # (B,L,512)
+        # Enhanced semantic projection with residual
+        semantic_mapped = self.semantic_proj(semantic_feat)
+        
+        # Adaptive gating if enabled
+        if self.use_adaptive_gating:
+            adaptive_weight = self.adaptive_gate(
+                torch.cat([spectral_feat, semantic_feat], dim=-1)
+            )
+            semantic_mapped = semantic_mapped * adaptive_weight
 
-        # 2️⃣ gate still sees the *un-projected* vector (512+768 = 1280 dims)
+        # Enhanced gate computation
         gate = self.early_fusion_gates[gate_idx](
-            torch.cat([spectral_feat, semantic_feat], dim=-1)  # (B,L,1280)
+            torch.cat([spectral_feat, semantic_feat], dim=-1)
         )
 
-        # 3️⃣ fuse
-        return gate * spectral_feat + (1.0 - gate) * semantic_mapped
+        # Residual connection with gating
+        fused = gate * spectral_feat + (1.0 - gate) * semantic_mapped
+        
+        # Add residual connection to original spectral features
+        fused = fused + 0.1 * spectral_feat  # Small residual weight
+        
+        return fused
+
+    def frequency_aware_semantic_processing(self, semantic_vec: torch.Tensor) -> List[torch.Tensor]:
+        """Process semantic vector for different frequency components."""
+        if not self.use_frequency_aware_attention:
+            return [semantic_vec] * 3
+        
+        freq_semantics = []
+        for encoder in self.freq_semantic_encoders:
+            freq_semantic = encoder(semantic_vec)
+            # Residual connection
+            freq_semantic = freq_semantic + semantic_vec
+            freq_semantics.append(freq_semantic)
+        
+        return freq_semantics
+
     def forward(
         self,
         x: torch.Tensor,
@@ -846,72 +941,85 @@ class FrequencyRestorationEstimator(nn.Module):
         semantic_vec: Optional[torch.Tensor] = None
     ) -> torch.Tensor:
         """
-        :param x: Dimensionality B x N x L x D where N the number of intermediate layers.
-        :param low_freq: Low frequency components
-        :param hi_freq: High frequency components
-        :param semantic_vec: (B, semantic_dim) global semantic context vector
-        :returns: Dimensionality B x (6 * N) or (proj_dim + 6*N) if original_features_processor is used
+        Enhanced forward pass with multi-scale semantic-spectral fusion.
         """
-        #print("🎨 Starting FrequencyRestorationEstimator forward pass")
-        
         with torch.cuda.amp.autocast():
             if semantic_vec is None:
-                #print("⚠️ Warning: semantic_vec is None - early fusion and cross-attention will be disabled")
-                # Skip early fusion and cross attention when semantic_vec is None
+                # Fallback to original processing without semantic enhancement
                 pass
             else:
-                #print(f"✨ Using semantic vector with shape: {semantic_vec.shape}")
-                # Early fusion at specified layers
+                # Process semantic vector for frequency-aware attention
+                freq_semantics = self.frequency_aware_semantic_processing(semantic_vec)
+                
+                # Enhanced early fusion at specified layers
                 x_new = []
                 low_freq_new = []
                 hi_freq_new = []
+                
                 for layer_idx in range(x.size(1)):
-                    semantic_expanded = semantic_vec.unsqueeze(1).unsqueeze(1)  # B x 1 x 1 x D
-                    semantic_expanded = semantic_expanded.expand(-1, 1, x.size(2), -1)  # B x 1 x L x D
+                    semantic_expanded = semantic_vec.unsqueeze(1).unsqueeze(1)
+                    semantic_expanded = semantic_expanded.expand(-1, 1, x.size(2), -1)
+                    
                     if layer_idx in self.early_fusion_layers:
-                        x_new.append(self.early_gated_fusion(x[:, layer_idx], semantic_expanded.squeeze(1), layer_idx))
-                        low_freq_new.append(self.early_gated_fusion(low_freq[:, layer_idx], semantic_expanded.squeeze(1), layer_idx))
-                        hi_freq_new.append(self.early_gated_fusion(hi_freq[:, layer_idx], semantic_expanded.squeeze(1), layer_idx))
+                        x_new.append(self.enhanced_early_gated_fusion(
+                            x[:, layer_idx], semantic_expanded.squeeze(1), layer_idx))
+                        low_freq_new.append(self.enhanced_early_gated_fusion(
+                            low_freq[:, layer_idx], semantic_expanded.squeeze(1), layer_idx))
+                        hi_freq_new.append(self.enhanced_early_gated_fusion(
+                            hi_freq[:, layer_idx], semantic_expanded.squeeze(1), layer_idx))
                     else:
                         x_new.append(x[:, layer_idx])
                         low_freq_new.append(low_freq[:, layer_idx])
                         hi_freq_new.append(hi_freq[:, layer_idx])
+                
                 x = torch.stack(x_new, dim=1)
                 low_freq = torch.stack(low_freq_new, dim=1)
                 hi_freq = torch.stack(hi_freq_new, dim=1)
 
             # Project features
-            #print("📊 Projecting features")
-            orig = self.patch_projector(x)  # B x N x L x D
-            low_freq = self.patch_projector(low_freq)  # B x N x L x D
-            hi_freq = self.patch_projector(hi_freq)  # B x N x L x D
+            orig = self.patch_projector(x)
+            low_freq = self.patch_projector(low_freq)
+            hi_freq = self.patch_projector(hi_freq)
 
-            # Mid-level cross attention
+            # Enhanced cross attention with frequency-aware processing
             if semantic_vec is not None:
-                #print("🎯 Applying cross attention")
-                # Get shapes
                 B, N, L, D = orig.shape
-                #print(f"Shapes - B: {B}, N: {N}, L: {L}, D: {D}")
-                #print(f"Semantic vec shape: {semantic_vec.shape}")
                 
-                # Reshape tensors for cross attention
-                orig_reshaped = orig.reshape(B*N, L, D)  # (B*N) x L x D
-                low_freq_reshaped = low_freq.reshape(B*N, L, D)  # (B*N) x L x D
-                hi_freq_reshaped = hi_freq.reshape(B*N, L, D)  # (B*N) x L x D
+                # Prepare frequency-specific semantic contexts
+                freq_semantics = self.frequency_aware_semantic_processing(semantic_vec)
                 
-                # Project semantic context to match feature dimensions
-                semantic_context = self.cross_attn_proj(semantic_vec)  # B x proj_dim
-                semantic_context = semantic_context.unsqueeze(1)  # B x 1 x proj_dim
-                semantic_context = semantic_context.repeat(N, 1, 1)  # (B*N) x 1 x proj_dim
+                if self.use_frequency_aware_attention:
+                    # Apply frequency-specific cross attention
+                    freq_features = [orig, low_freq, hi_freq]
+                    enhanced_freq_features = []
+                    
+                    for i, (freq_feat, freq_sem, cross_attn, norm) in enumerate(
+                        zip(freq_features, freq_semantics, self.freq_cross_attention, self.freq_attention_norms)
+                    ):
+                        # Reshape for attention
+                        freq_feat_reshaped = freq_feat.reshape(B*N, L, D)
+                        semantic_context = self.cross_attn_proj(freq_sem)
+                        semantic_context = semantic_context.unsqueeze(1).repeat(N, 1, 1)
+                        
+                        # Apply frequency-specific cross attention
+                        freq_attn = cross_attn(freq_feat_reshaped, semantic_context, semantic_context)[0]
+                        freq_enhanced = norm(freq_feat_reshaped + freq_attn)
+                        enhanced_freq_features.append(freq_enhanced.reshape(B, N, L, D))
+                    
+                    orig, low_freq, hi_freq = enhanced_freq_features
                 
-                #print(f"Shapes after reshaping:")
-                #print(f"orig_reshaped: {orig_reshaped.shape}")
-                #print(f"semantic_context: {semantic_context.shape}")
+                # Global cross attention
+                orig_reshaped = orig.reshape(B*N, L, D)
+                low_freq_reshaped = low_freq.reshape(B*N, L, D)
+                hi_freq_reshaped = hi_freq.reshape(B*N, L, D)
                 
-                # Apply cross attention
+                semantic_context = self.cross_attn_proj(semantic_vec)
+                semantic_context = semantic_context.unsqueeze(1).repeat(N, 1, 1)
+                
+                # Apply global cross attention
                 orig_attn = self.cross_attention(orig_reshaped, semantic_context, semantic_context)[0]
                 orig = self.cross_attention_norm(orig_reshaped + orig_attn)
-                orig = orig.reshape(B, N, L, D)  # Reshape back to original dimensions
+                orig = orig.reshape(B, N, L, D)
                 
                 low_freq_attn = self.cross_attention(low_freq_reshaped, semantic_context, semantic_context)[0]
                 low_freq = self.cross_attention_norm(low_freq_reshaped + low_freq_attn)
@@ -921,37 +1029,56 @@ class FrequencyRestorationEstimator(nn.Module):
                 hi_freq = self.cross_attention_norm(hi_freq_reshaped + hi_freq_attn)
                 hi_freq = hi_freq.reshape(B, N, L, D)
 
+                # Hierarchical fusion of frequency components
+                if self.use_hierarchical_fusion:
+                    # Combine frequency features at patch level
+                    combined_freq = torch.cat([orig, low_freq, hi_freq], dim=-1)  # B x N x L x (3*D)
+                    combined_freq = combined_freq.reshape(B*N*L, -1)
+                    hierarchical_features = self.hierarchical_fusion(combined_freq)
+                    hierarchical_features = hierarchical_features.reshape(B, N, L, -1)
+                    
+                    # Use hierarchical features for similarity computation
+                    orig = hierarchical_features
+                    # Keep low_freq and hi_freq for similarity computation
+                    low_freq = self.patch_projector(low_freq) if hasattr(self, 'patch_projector') else low_freq
+                    hi_freq = self.patch_projector(hi_freq) if hasattr(self, 'patch_projector') else hi_freq
+
             if self.disable_reconstruction_similarity:
-                #print("🔄 Using original features processor only")
-                x = self.original_features_processor(orig)  # B x proj_dim
+                x = self.original_features_processor(orig)
             else:
-                #print("🔄 Computing reconstruction similarities")
-                sim_x_low_freq: torch.Tensor = F.cosine_similarity(orig, low_freq, dim=-1)  # B x N x L
-                sim_x_hi_freq: torch.Tensor = F.cosine_similarity(orig, hi_freq, dim=-1)  # B x N x L
-                sim_low_freq_hi_freq: torch.Tensor = F.cosine_similarity(low_freq, hi_freq, dim=-1)  # B x N x L
+                # Enhanced similarity computation with weighted combinations
+                sim_x_low_freq = F.cosine_similarity(orig, low_freq, dim=-1)
+                sim_x_hi_freq = F.cosine_similarity(orig, hi_freq, dim=-1)
+                sim_low_freq_hi_freq = F.cosine_similarity(low_freq, hi_freq, dim=-1)
 
-                sim_x_low_freq_mean: torch.Tensor = sim_x_low_freq.mean(dim=-1)  # B x N
-                sim_x_low_freq_std: torch.Tensor = sim_x_low_freq.std(dim=-1)  # B x N
-                sim_x_hi_freq_mean: torch.Tensor = sim_x_hi_freq.mean(dim=-1)  # B x N
-                sim_x_hi_freq_std: torch.Tensor = sim_x_hi_freq.std(dim=-1)  # B x N
-                sim_low_freq_hi_freq_mean: torch.Tensor = sim_low_freq_hi_freq.mean(dim=-1)  # B x N
-                sim_low_freq_hi_freq_std: torch.Tensor = sim_low_freq_hi_freq.std(dim=-1)  # B x N
+                # Enhanced statistics with additional moments
+                sim_x_low_freq_mean = sim_x_low_freq.mean(dim=-1)
+                sim_x_low_freq_std = sim_x_low_freq.std(dim=-1)
+                sim_x_low_freq_max = sim_x_low_freq.max(dim=-1)[0]
+                sim_x_low_freq_min = sim_x_low_freq.min(dim=-1)[0]
+                
+                sim_x_hi_freq_mean = sim_x_hi_freq.mean(dim=-1)
+                sim_x_hi_freq_std = sim_x_hi_freq.std(dim=-1)
+                sim_x_hi_freq_max = sim_x_hi_freq.max(dim=-1)[0]
+                sim_x_hi_freq_min = sim_x_hi_freq.min(dim=-1)[0]
+                
+                sim_low_freq_hi_freq_mean = sim_low_freq_hi_freq.mean(dim=-1)
+                sim_low_freq_hi_freq_std = sim_low_freq_hi_freq.std(dim=-1)
+                sim_low_freq_hi_freq_max = sim_low_freq_hi_freq.max(dim=-1)[0]
+                sim_low_freq_hi_freq_min = sim_low_freq_hi_freq.min(dim=-1)[0]
 
-                x: torch.Tensor = torch.cat([
-                    sim_x_low_freq_mean,
-                    sim_x_low_freq_std,
-                    sim_x_hi_freq_mean,
-                    sim_x_hi_freq_std,
-                    sim_low_freq_hi_freq_mean,
-                    sim_low_freq_hi_freq_std
-                ], dim=1)  # B x (6 * N)
+                # Combine enhanced similarity features
+                x = torch.cat([
+                    sim_x_low_freq_mean, sim_x_low_freq_std, sim_x_low_freq_max, sim_x_low_freq_min,
+                    sim_x_hi_freq_mean, sim_x_hi_freq_std, sim_x_hi_freq_max, sim_x_hi_freq_min,
+                    sim_low_freq_hi_freq_mean, sim_low_freq_hi_freq_std, 
+                    sim_low_freq_hi_freq_max, sim_low_freq_hi_freq_min
+                ], dim=1)  # B x (12 * N)
 
                 if self.original_features_processor is not None:
-                    #print("🔄 Adding original features")
-                    orig = self.original_features_processor(orig)  # B x proj_dim
-                    x = torch.cat([x, orig], dim=1)  # B x (proj_dim + 6 * N)
+                    orig_features = self.original_features_processor(orig)
+                    x = torch.cat([x, orig_features], dim=1)
 
-        #print("✅ FrequencyRestorationEstimator forward pass complete")
         return x
 
     def exportable_forward(
@@ -961,43 +1088,31 @@ class FrequencyRestorationEstimator(nn.Module):
         hi_freq: torch.Tensor,
         semantic_vec: Optional[torch.Tensor] = None
     ) -> torch.Tensor:
-        orig = self.patch_projector(x)  # B x N x L x D
-        low_freq = self.patch_projector(low_freq)  # B x N x L x D
-        hi_freq = self.patch_projector(hi_freq)  # B x N x L x D
+        # Simplified version for export - use basic similarity computation
+        orig = self.patch_projector(x)
+        low_freq = self.patch_projector(low_freq)
+        hi_freq = self.patch_projector(hi_freq)
 
-        # Semantic fusion at every patch
-        if semantic_vec is not None:
-            if semantic_vec.dim() != 2 or semantic_vec.size(0) != orig.size(0):
-                raise ValueError(f"semantic_vec must have shape (B, semantic_dim), got {semantic_vec.shape}")
-            orig = self.semantic_fusion(orig, semantic_vec)  # B x N x L x D' or D'+semantic_dim
-            low_freq = self.semantic_fusion(low_freq, semantic_vec)
-            hi_freq = self.semantic_fusion(hi_freq, semantic_vec)
+        sim_x_low_freq = F.cosine_similarity(orig, low_freq, dim=-1)
+        sim_x_hi_freq = F.cosine_similarity(orig, hi_freq, dim=-1)
+        sim_low_freq_hi_freq = F.cosine_similarity(low_freq, hi_freq, dim=-1)
 
-        sim_x_low_freq: torch.Tensor = F.cosine_similarity(orig, low_freq, dim=-1)  # B x N x L
-        sim_x_hi_freq: torch.Tensor = F.cosine_similarity(orig, hi_freq, dim=-1)  # B x N x L
-        sim_low_freq_hi_freq: torch.Tensor = F.cosine_similarity(low_freq, hi_freq,
-                                                                 dim=-1)  # B x N x L
+        sim_x_low_freq_mean = sim_x_low_freq.mean(dim=-1)
+        sim_x_low_freq_std = utils.exportable_std(sim_x_low_freq, dim=-1)
+        sim_x_hi_freq_mean = sim_x_hi_freq.mean(dim=-1)
+        sim_x_hi_freq_std = utils.exportable_std(sim_x_hi_freq, dim=-1)
+        sim_low_freq_hi_freq_mean = sim_low_freq_hi_freq.mean(dim=-1)
+        sim_low_freq_hi_freq_std = utils.exportable_std(sim_low_freq_hi_freq, dim=-1)
 
-        sim_x_low_freq_mean: torch.Tensor = sim_x_low_freq.mean(dim=-1)  # B x N
-        sim_x_low_freq_std: torch.Tensor = utils.exportable_std(sim_x_low_freq, dim=-1)  # B x N
-        sim_x_hi_freq_mean: torch.Tensor = sim_x_hi_freq.mean(dim=-1)  # B x N
-        sim_x_hi_freq_std: torch.Tensor = utils.exportable_std(sim_x_hi_freq, dim=-1)  # B x N
-        sim_low_freq_hi_freq_mean: torch.Tensor = sim_low_freq_hi_freq.mean(dim=-1)  # B x N
-        sim_low_freq_hi_freq_std: torch.Tensor = utils.exportable_std(
-            sim_low_freq_hi_freq, dim=-1
-        )  # B x N
+        x = torch.cat([
+            sim_x_low_freq_mean, sim_x_low_freq_std,
+            sim_x_hi_freq_mean, sim_x_hi_freq_std,
+            sim_low_freq_hi_freq_mean, sim_low_freq_hi_freq_std
+        ], dim=1)
 
-        x: torch.Tensor = torch.cat([
-            sim_x_low_freq_mean,
-            sim_x_low_freq_std,
-            sim_x_hi_freq_mean,
-            sim_x_hi_freq_std,
-            sim_low_freq_hi_freq_mean,
-            sim_low_freq_hi_freq_std
-        ], dim=1)  # B x (6 * N)
-
-        orig = self.original_features_processor.exportable_forward(orig)  # B x proj_dim
-        x = torch.cat([x, orig], dim=1)  # B x (proj_dim + 6 * N)
+        if self.original_features_processor is not None:
+            orig = self.original_features_processor.exportable_forward(orig)
+            x = torch.cat([x, orig], dim=1)
 
         return x
 
@@ -1361,7 +1476,7 @@ def build_mf_vit(config) -> MFViT:
     vit: backbones.CLIPBackbone = backbones.CLIPBackbone(device=device)
     initialization_scope: str = "local"
 
-    # Build features processor.
+    # Build enhanced features processor with new parameters
     fre: FrequencyRestorationEstimator = FrequencyRestorationEstimator(
         features_num=len(config.MODEL.VIT.INTERMEDIATE_LAYERS),
         input_dim=config.MODEL.VIT.EMBED_DIM,
@@ -1375,10 +1490,17 @@ def build_mf_vit(config) -> MFViT:
         disable_reconstruction_similarity=config.MODEL.FRE.DISABLE_RECONSTRUCTION_SIMILARITY,
         semantic_dim=config.MODEL.FRE.SEMANTIC_DIM,
         num_heads=config.MODEL.FRE.NUM_HEADS,
-        early_fusion_layers=config.MODEL.FRE.EARLY_FUSION_LAYERS
+        early_fusion_layers=config.MODEL.FRE.EARLY_FUSION_LAYERS,
+        # Enhanced semantic-spectral fusion parameters
+        use_frequency_aware_attention=getattr(config.MODEL.FRE, 'USE_FREQUENCY_AWARE_ATTENTION', True),
+        use_adaptive_gating=getattr(config.MODEL.FRE, 'USE_ADAPTIVE_GATING', True),
+        use_hierarchical_fusion=getattr(config.MODEL.FRE, 'USE_HIERARCHICAL_FUSION', True)
     )
 
-    cls_vector_dim: int = 6 * len(config.MODEL.VIT.INTERMEDIATE_LAYERS)
+    # Calculate enhanced cls_vector_dim with additional similarity features
+    base_similarity_features = 12 * len(config.MODEL.VIT.INTERMEDIATE_LAYERS)  # Enhanced from 6 to 12
+    cls_vector_dim: int = base_similarity_features
+    
     if (config.MODEL.FRE.ORIGINAL_IMAGE_FEATURES_BRANCH
             and config.MODEL.FRE.DISABLE_RECONSTRUCTION_SIMILARITY):
         cls_vector_dim = config.MODEL.VIT.PROJECTION_DIM
@@ -1389,7 +1511,7 @@ def build_mf_vit(config) -> MFViT:
     if config.TRAIN.MODE == "contrastive":
         cls_head = None
     elif config.TRAIN.MODE == "supervised":
-        # Build classification head.
+        # Build enhanced classification head
         cls_head = ClassificationHead(
             input_dim=cls_vector_dim,
             num_classes=config.MODEL.NUM_CLASSES if config.MODEL.NUM_CLASSES > 2 else 1,
@@ -1414,10 +1536,10 @@ def build_mf_vit(config) -> MFViT:
             cls_head,
             masking_radius=config.MODEL.FRE.MASKING_RADIUS,
             img_patch_size=config.DATA.IMG_SIZE,
-            img_patch_stride=config.MODEL.PATCH_VIT.PATCH_STRIDE,
+            img_patch_stride=getattr(config.MODEL.PATCH_VIT, 'PATCH_STRIDE', 112),
             cls_vector_dim=cls_vector_dim,
-            attn_embed_dim=config.MODEL.PATCH_VIT.ATTN_EMBED_DIM,
-            num_heads=config.MODEL.PATCH_VIT.NUM_HEADS,
+            attn_embed_dim=getattr(config.MODEL.PATCH_VIT, 'ATTN_EMBED_DIM', 1024),
+            num_heads=getattr(config.MODEL.PATCH_VIT, 'NUM_HEADS', 16),
             dropout=config.MODEL.SID_DROPOUT,
             minimum_patches=config.MODEL.PATCH_VIT.MINIMUM_PATCHES,
             initialization_scope=initialization_scope

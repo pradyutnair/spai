@@ -19,6 +19,154 @@ from torch import nn
 from torch.nn import functional as F
 
 
+class FocalLoss(nn.Module):
+    """
+    Focal Loss for addressing class imbalance and improving AUC performance.
+    Reference: https://arxiv.org/abs/1708.02002
+    """
+    def __init__(self, alpha=0.25, gamma=2.0, reduction='mean'):
+        super(FocalLoss, self).__init__()
+        self.alpha = alpha
+        self.gamma = gamma
+        self.reduction = reduction
+
+    def forward(self, inputs, targets):
+        """
+        inputs: (N,) logits
+        targets: (N,) binary targets
+        """
+        # Convert logits to probabilities
+        p = torch.sigmoid(inputs)
+        
+        # Calculate focal loss
+        ce_loss = F.binary_cross_entropy_with_logits(inputs, targets, reduction='none')
+        p_t = p * targets + (1 - p) * (1 - targets)
+        alpha_t = self.alpha * targets + (1 - self.alpha) * (1 - targets)
+        focal_weight = alpha_t * (1 - p_t) ** self.gamma
+        focal_loss = focal_weight * ce_loss
+        
+        if self.reduction == 'mean':
+            return focal_loss.mean()
+        elif self.reduction == 'sum':
+            return focal_loss.sum()
+        else:
+            return focal_loss
+
+
+class SemanticConsistencyLoss(nn.Module):
+    """
+    Semantic consistency loss to ensure semantic features are consistent
+    across different frequency components.
+    """
+    def __init__(self, temperature=0.1):
+        super().__init__()
+        self.temperature = temperature
+        
+    def forward(self, semantic_orig, semantic_low, semantic_high):
+        """
+        semantic_orig: (B, D) semantic features from original image
+        semantic_low: (B, D) semantic features from low frequency image  
+        semantic_high: (B, D) semantic features from high frequency image
+        """
+        # Normalize features
+        semantic_orig = F.normalize(semantic_orig, dim=-1)
+        semantic_low = F.normalize(semantic_low, dim=-1)
+        semantic_high = F.normalize(semantic_high, dim=-1)
+        
+        # Compute cosine similarities
+        sim_orig_low = F.cosine_similarity(semantic_orig, semantic_low, dim=-1)
+        sim_orig_high = F.cosine_similarity(semantic_orig, semantic_high, dim=-1)
+        sim_low_high = F.cosine_similarity(semantic_low, semantic_high, dim=-1)
+        
+        # Encourage high similarity (minimize negative similarity)
+        consistency_loss = -(sim_orig_low + sim_orig_high + sim_low_high).mean()
+        
+        return consistency_loss
+
+
+class FrequencyConsistencyLoss(nn.Module):
+    """
+    Frequency consistency loss to ensure frequency domain features
+    maintain semantic relationships.
+    """
+    def __init__(self, temperature=0.1):
+        super().__init__()
+        self.temperature = temperature
+        
+    def forward(self, freq_features_orig, freq_features_low, freq_features_high):
+        """
+        freq_features_*: (B, N, L, D) frequency domain features
+        """
+        # Pool features across patches
+        orig_pooled = freq_features_orig.mean(dim=(1, 2))  # (B, D)
+        low_pooled = freq_features_low.mean(dim=(1, 2))    # (B, D)
+        high_pooled = freq_features_high.mean(dim=(1, 2))  # (B, D)
+        
+        # Normalize
+        orig_pooled = F.normalize(orig_pooled, dim=-1)
+        low_pooled = F.normalize(low_pooled, dim=-1)
+        high_pooled = F.normalize(high_pooled, dim=-1)
+        
+        # Compute similarities
+        sim_orig_low = F.cosine_similarity(orig_pooled, low_pooled, dim=-1)
+        sim_orig_high = F.cosine_similarity(orig_pooled, high_pooled, dim=-1)
+        
+        # Encourage consistency
+        consistency_loss = -(sim_orig_low + sim_orig_high).mean()
+        
+        return consistency_loss
+
+
+class EnhancedSemanticSpectralLoss(nn.Module):
+    """
+    Enhanced loss combining focal loss with semantic and frequency consistency.
+    """
+    def __init__(
+        self, 
+        focal_alpha=0.25, 
+        focal_gamma=2.0,
+        semantic_weight=0.1,
+        frequency_weight=0.05
+    ):
+        super().__init__()
+        self.focal_loss = FocalLoss(alpha=focal_alpha, gamma=focal_gamma)
+        self.semantic_consistency = SemanticConsistencyLoss()
+        self.frequency_consistency = FrequencyConsistencyLoss()
+        self.semantic_weight = semantic_weight
+        self.frequency_weight = frequency_weight
+        
+    def forward(self, predictions, targets, semantic_features=None, frequency_features=None):
+        """
+        predictions: (B,) model predictions
+        targets: (B,) binary targets
+        semantic_features: dict with 'orig', 'low', 'high' semantic features
+        frequency_features: dict with 'orig', 'low', 'high' frequency features
+        """
+        # Primary focal loss
+        focal_loss = self.focal_loss(predictions, targets)
+        total_loss = focal_loss
+        
+        # Add semantic consistency if available
+        if semantic_features is not None:
+            semantic_loss = self.semantic_consistency(
+                semantic_features['orig'],
+                semantic_features['low'], 
+                semantic_features['high']
+            )
+            total_loss += self.semantic_weight * semantic_loss
+            
+        # Add frequency consistency if available
+        if frequency_features is not None:
+            freq_loss = self.frequency_consistency(
+                frequency_features['orig'],
+                frequency_features['low'],
+                frequency_features['high']
+            )
+            total_loss += self.frequency_weight * freq_loss
+            
+        return total_loss
+
+
 class SupConLoss(nn.Module):
     """Supervised Contrastive Learning: https://arxiv.org/pdf/2004.11362.pdf.
     It also supports the unsupervised contrastive loss in SimCLR"""
@@ -153,22 +301,39 @@ class BCESupConWithLogits(nn.Module):
 
 
 def build_loss(config) -> nn.Module:
-    # if config.AUG.MIXUP > 0.:
-    #     # smoothing is handled with mixup label transform
-    #     # criterion = SoftTargetCrossEntropy()
-    #     criterion = torch.nn.BCEWithLogitsLoss()
-    # elif config.MODEL.LABEL_SMOOTHING > 0.:
-    #     criterion = LabelSmoothingCrossEntropy(smoothing=config.MODEL.LABEL_SMOOTHING)
-    # else:
-
-    if config.TRAIN.LOSS == "bce_supcont":
+    """Build loss function based on configuration."""
+    
+    if config.TRAIN.LOSS == "focal":
+        # Enhanced focal loss for better AUC optimization
+        focal_alpha = getattr(config.TRAIN, 'FOCAL_ALPHA', 0.25)
+        focal_gamma = getattr(config.TRAIN, 'FOCAL_GAMMA', 2.0)
+        criterion = FocalLoss(alpha=focal_alpha, gamma=focal_gamma)
+        
+    elif config.TRAIN.LOSS == "enhanced_semantic_spectral":
+        # Enhanced loss with semantic and frequency consistency
+        focal_alpha = getattr(config.TRAIN, 'FOCAL_ALPHA', 0.25)
+        focal_gamma = getattr(config.TRAIN, 'FOCAL_GAMMA', 2.0)
+        semantic_weight = getattr(config.TRAIN, 'SEMANTIC_CONSISTENCY_WEIGHT', 0.1)
+        frequency_weight = getattr(config.TRAIN, 'FREQUENCY_CONSISTENCY_WEIGHT', 0.05)
+        criterion = EnhancedSemanticSpectralLoss(
+            focal_alpha=focal_alpha,
+            focal_gamma=focal_gamma,
+            semantic_weight=semantic_weight,
+            frequency_weight=frequency_weight
+        )
+        
+    elif config.TRAIN.LOSS == "bce_supcont":
        criterion = BCESupConWithLogits()
+       
     elif config.TRAIN.LOSS == "bce":
         criterion = nn.BCEWithLogitsLoss()
+        
     elif config.TRAIN.LOSS == "triplet":
         criterion = nn.TripletMarginLoss(margin=config.TRAIN.TRIPLET_LOSS_MARGIN)
+        
     elif config.TRAIN.LOSS == "supcont":
         criterion = SupConLoss()
+        
     else:
         raise RuntimeError(f"Unknown loss type: {config.TRAIN.LOSS}")
 

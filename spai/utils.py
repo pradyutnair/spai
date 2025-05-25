@@ -334,12 +334,57 @@ def remap_pretrained_keys_vit(model, checkpoint_model, logger):
                 # LayerNorm defaults: weights = 1.0, biases = 0.0
                 init = torch.ones if name.endswith("weight") else torch.zeros
                 adapted = init(new.shape, dtype=old.dtype, device=old.device)
-                adapted[:old.shape[0]] = old
+                
+                # Handle both expansion and contraction
+                min_size = min(old.shape[0], new.shape[0])
+                adapted[:min_size] = old[:min_size]
+                
                 checkpoint_model[name] = adapted
-                logger.info(f"Expanded `{name}` from {tuple(old.shape)} → {tuple(new.shape)}")
+                logger.info(f"Adapted `{name}` from {tuple(old.shape)} → {tuple(new.shape)}")
 
+    # 4) ——— Handle enhanced semantic-spectral fusion components ———
+    # Only remove components that have actual shape mismatches, not all semantic components
+    model_state = model.state_dict()
+    
+    # Check each key individually for shape mismatches
+    keys_to_remove = []
+    for key in list(checkpoint_model.keys()):
+        if key in model_state:
+            old_shape = checkpoint_model[key].shape
+            new_shape = model_state[key].shape
+            if old_shape != new_shape:
+                logger.info(f"🔄 Shape mismatch for {key}: {old_shape} → {new_shape}, removing for random init")
+                keys_to_remove.append(key)
+        else:
+            # Key exists in checkpoint but not in current model - this is fine, just skip it
+            logger.info(f"🔄 Key {key} exists in checkpoint but not in current model, skipping")
+    
+    # Remove only the keys with actual shape mismatches
+    for key in keys_to_remove:
+        checkpoint_model.pop(key)
+    
+    # 5) ——— Handle new semantic fusion components ———
+    # These are completely new components that don't exist in the original checkpoint
+    # They will be randomly initialized, which is correct for new components
+    new_semantic_components = [
+        "semantic_proj",
+        "cross_attn_proj", 
+        "early_fusion_gates",
+        "adaptive_gate",
+        "freq_semantic_encoders",
+        "freq_cross_attention",
+        "freq_attention_norms",
+        "hierarchical_fusion"
+    ]
+    
+    # Log which new components will be randomly initialized (this is expected)
+    for component in new_semantic_components:
+        component_keys = [k for k in model_state.keys() if component in k]
+        if component_keys:
+            logger.info(f"🆕 New semantic component '{component}' will be randomly initialized")
+
+    logger.info("✅ Enhanced semantic-spectral fusion model weights adapted successfully")
     return checkpoint_model
-
 
 
 def remove_imagenet_norm(image: np.ndarray) -> np.ndarray:
