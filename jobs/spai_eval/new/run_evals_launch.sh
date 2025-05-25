@@ -1,28 +1,34 @@
 #!/bin/bash
 
 # Path to project root (if needed)
-ROOT_DIR="/home/azywot/DL2/spai"
+USER=$(whoami) # should be user instead of scur2690 everythwere 
+ROOT_DIR="/home/scur2690/spai"
 MODEL_DIR="/scratch-shared/dl2_spai_models/finetune"
-MAX_JOBS=1       # Max concurrent jobs allowed
+MAX_JOBS=4       # Max concurrent jobs allowed
 SLEEP_TIME=60    # Seconds to wait before checking again
 
 # Test sets
 declare -A TEST_SETS=(
-  ["flux"]="test_set_flux.csv"
-  ["gigagan"]="test_set_gigagan.csv"
-  ["midjourney"]="test_set_midjourney-v6_1.csv"
-  ["sd3"]="test_set_sd3_fixed.csv"
+  # ["flux"]="test_set_flux.csv"
+  # ["gigagan"]="test_set_gigagan.csv"
+  # ["midjourney"]="test_set_midjourney-v6_1.csv"
+  # ["sd3"]="test_set_sd3_fixed.csv"
+  ["dalle2"]="test_set_dalle2.csv"
+  ["dalle3"]="test_set_dalle3.csv"
+  ["sd1_4"]="test_set_sd1_4.csv"
+  ["sdxl"]="test_set_sdxl.csv"
+
 )
 
 # Model -> Model path
 declare -A MODELS=(
-  ["dino_cross_attn_after_sca"]="$MODEL_DIR/23_05_train_dino_cross_attn_after_sca_ldm_lsun/ckpt_best.pth"
+  # ["dino_cross_attn_after_sca"]="$MODEL_DIR/23_05_train_dino_cross_attn_after_sca_ldm_lsun/ckpt_best.pth"
   # # CHAMELEON
-  # ["clip_cross_attn_after_sca_chameleon"]="$MODEL_DIR/train_clip_cross_attn_after_sca_chameleon/ckpt_best.pth"
+  ["clip_cross_attn_after_sca_chameleon"]="$MODEL_DIR/train_clip_cross_attn_after_sca_chameleon/ckpt_best.pth" # NOTE: TO BE RUN
   # ["clip_cross_attn_before_sca_chameleon"]="$MODEL_DIR/train_clip_cross_attn_before_sca_chameleon/ckpt_best.pth"
   # ["clip_dual_cross_attn_after_sca_chameleon"]="$MODEL_DIR/train_clip_dual_cross_attn_after_sca_chameleon/ckpt_best.pth"
   # ["clip_dual_cross_attn_before_sca_chameleon"]="$MODEL_DIR/train_clip_dual_cross_attn_before_sca_chameleon/ckpt_best.pth"
-  # ["convnext_cross_attn_after_sca_chameleon"]="$MODEL_DIR/train_convnext_cross_attn_after_sca_chameleon/ckpt_best.pth"
+  ["convnext_cross_attn_after_sca_chameleon"]="$MODEL_DIR/train_convnext_cross_attn_after_sca_chameleon/ckpt_best.pth" # NOTE: TO BE RUN
   # ["convnext_cross_attn_before_sca_chameleon"]="$MODEL_DIR/train_convnext_cross_attn_before_sca_chameleon/ckpt_best.pth"
   # ["convnext_dual_cross_attn_after_sca_chameleon"]="$MODEL_DIR/train_convnext_dual_cross_attn_after_sca_chameleon/ckpt_best.pth"
   # ["convnext_dual_cross_attn_before_sca_chameleon"]="$MODEL_DIR/train_convnext_dual_cross_attn_before_sca_chameleon/ckpt_best.pth"
@@ -36,11 +42,11 @@ declare -A MODELS=(
   # ["convnext_dual_cross_attn_after_sca_ldm"]="$MODEL_DIR/train_convnext_dual_cross_attn_after_sca_ldm/ckpt_best.pth"
   # ["convnext_dual_cross_attn_before_sca_ldm"]="$MODEL_DIR/train_convnext_dual_cross_attn_before_sca_ldm/ckpt_best.pth"
   # # LDM + LSUN
-  # ["clip_cross_attn_after_sca_ldm_lsun"]="$MODEL_DIR/train_clip_cross_attn_after_sca_ldm_lsun/ckpt_best.pth"
+  # ["clip_cross_attn_after_sca_ldm_lsun"]="$MODEL_DIR/train_clip_cross_attn_after_sca_ldm_lsun/ckpt_best.pth" # NOTE: RUN BY AGATA
   # ["clip_cross_attn_before_sca_ldm_lsun"]="$MODEL_DIR/train_clip_cross_attn_before_sca_ldm_lsun/ckpt_best.pth"
   # ["clip_dual_cross_attn_after_sca_ldm_lsun"]="$MODEL_DIR/train_clip_dual_cross_attn_after_sca_ldm_lsun/ckpt_best.pth"
   # ["clip_dual_cross_attn_before_sca_ldm_lsun"]="$MODEL_DIR/train_clip_dual_cross_attn_before_sca_ldm_lsun/ckpt_best.pth"
-  # ["convnext_cross_attn_after_sca_ldm_lsun"]="$MODEL_DIR/train_convnext_cross_attn_after_sca_ldm_lsun/ckpt_best.pth"
+  # ["convnext_cross_attn_after_sca_ldm_lsun"]="$MODEL_DIR/train_convnext_cross_attn_after_sca_ldm_lsun/ckpt_best.pth" # NOTE: RUN BY AGATA
   # ["convnext_cross_attn_before_sca_ldm_lsun"]="$MODEL_DIR/train_convnext_cross_attn_before_sca_ldm_lsun/ckpt_best.pth"
   # ["convnext_dual_cross_attn_after_sca_ldm_lsun"]="$MODEL_DIR/train_convnext_dual_cross_attn_after_sca_ldm_lsun/ckpt_best.pth"
   # ["convnext_dual_cross_attn_before_sca_ldm_lsun"]="$MODEL_DIR/train_convnext_dual_cross_attn_before_sca_ldm_lsun/ckpt_best.pth"
@@ -48,33 +54,34 @@ declare -A MODELS=(
 
 # Model -> Config path
 declare -A CONFIGS=(
-  ["dino_cross_attn_after_sca"]="/home/azywot/DL2/spai/configs/dino_spai_after_sca.yaml"
+  # ["dino_cross_attn_after_sca"]="/home/scur2690/spai/configs/dino_spai_after_sca.yaml"
   # # CHAMELEON
-  # ["clip_cross_attn_before_sca_chameleon"]="/home/azywot/DL2/spai/configs/clip_spai_before_sca.yaml"
-  # ["clip_dual_cross_attn_after_sca_chameleon"]="/home/azywot/DL2/spai/configs/clip_spai_dual_after_sca.yaml"
-  # ["clip_dual_cross_attn_before_sca_chameleon"]="/home/azywot/DL2/spai/configs/clip_spai_dual_before_sca.yaml"
-  # ["convnext_cross_attn_after_sca_chameleon"]="/home/azywot/DL2/spai/configs/convnext_spai_after_sca.yaml"
-  # ["convnext_cross_attn_before_sca_chameleon"]="/home/azywot/DL2/spai/configs/convnext_spai_before_sca.yaml"
-  # ["convnext_dual_cross_attn_after_sca_chameleon"]="/home/azywot/DL2/spai/configs/convnext_spai_dual_after_sca.yaml"
-  # ["convnext_dual_cross_attn_before_sca_chameleon"]="/home/azywot/DL2/spai/configs/convnext_spai_dual_before_sca.yaml"
+  ["clip_cross_attn_after_sca_chameleon"]="/home/scur2690/spai/configs/clip_spai_after_sca.yaml" # NOTE: TO BE RUN
+  # ["clip_cross_attn_before_sca_chameleon"]="/home/scur2690/spai/configs/clip_spai_before_sca.yaml"
+  # ["clip_dual_cross_attn_after_sca_chameleon"]="/home/scur2690/spai/configs/clip_spai_dual_after_sca.yaml"
+  # ["clip_dual_cross_attn_before_sca_chameleon"]="/home/scur2690/spai/configs/clip_spai_dual_before_sca.yaml"
+  ["convnext_cross_attn_after_sca_chameleon"]="/home/scur2690/spai/configs/convnext_spai_after_sca.yaml" # NOTE: TO BE RUN
+  # ["convnext_cross_attn_before_sca_chameleon"]="/home/scur2690/spai/configs/convnext_spai_before_sca.yaml"
+  # ["convnext_dual_cross_attn_after_sca_chameleon"]="/home/scur2690/spai/configs/convnext_spai_dual_after_sca.yaml"
+  # ["convnext_dual_cross_attn_before_sca_chameleon"]="/home/scur2690/spai/configs/convnext_spai_dual_before_sca.yaml"
   # # LDM
-  # ["clip_cross_attn_after_sca_ldm"]="/home/azywot/DL2/spai/configs/clip_spai_after_sca.yaml"
-  # ["clip_cross_attn_before_sca_ldm"]="/home/azywot/DL2/spai/configs/clip_spai_before_sca.yaml"
-  # ["clip_dual_cross_attn_after_sca_ldm"]="/home/azywot/DL2/spai/configs/clip_spai_dual_after_sca.yaml"
-  # ["clip_dual_cross_attn_before_sca_ldm"]="/home/azywot/DL2/spai/configs/clip_spai_dual_before_sca.yaml"
-  # ["convnext_cross_attn_after_sca_ldm"]="/home/azywot/DL2/spai/configs/convnext_spai_after_sca.yaml"
-  # ["convnext_cross_attn_before_sca_ldm"]="/home/azywot/DL2/spai/configs/convnext_spai_before_sca.yaml"
-  # ["convnext_dual_cross_attn_after_sca_ldm"]="/home/azywot/DL2/spai/configs/convnext_spai_dual_after_sca.yaml"
-  # ["convnext_dual_cross_attn_before_sca_ldm"]="/home/azywot/DL2/spai/configs/convnext_spai_dual_before_sca.yaml"
+  # ["clip_cross_attn_after_sca_ldm"]="/home/scur2690/spai/configs/clip_spai_after_sca.yaml"
+  # ["clip_cross_attn_before_sca_ldm"]="/home/scur2690/spai/configs/clip_spai_before_sca.yaml"
+  # ["clip_dual_cross_attn_after_sca_ldm"]="/home/scur2690/spai/configs/clip_spai_dual_after_sca.yaml"
+  # ["clip_dual_cross_attn_before_sca_ldm"]="/home/scur2690/spai/configs/clip_spai_dual_before_sca.yaml"
+  # ["convnext_cross_attn_after_sca_ldm"]="/home/scur2690/spai/configs/convnext_spai_after_sca.yaml"
+  # ["convnext_cross_attn_before_sca_ldm"]="/home/scur2690/spai/configs/convnext_spai_before_sca.yaml"
+  # ["convnext_dual_cross_attn_after_sca_ldm"]="/home/scur2690/spai/configs/convnext_spai_dual_after_sca.yaml"
+  # ["convnext_dual_cross_attn_before_sca_ldm"]="/home/scur2690/spai/configs/convnext_spai_dual_before_sca.yaml"
   # # LDM + LSUN
-  # ["clip_cross_attn_after_sca_ldm_lsun"]="/home/azywot/DL2/spai/configs/clip_spai_after_sca.yaml"
-  # ["clip_cross_attn_before_sca_ldm_lsun"]="/home/azywot/DL2/spai/configs/clip_spai_before_sca.yaml"
-  # ["clip_dual_cross_attn_after_sca_ldm_lsun"]="/home/azywot/DL2/spai/configs/clip_spai_dual_after_sca.yaml"
-  # ["clip_dual_cross_attn_before_sca_ldm_lsun"]="/home/azywot/DL2/spai/configs/clip_spai_dual_before_sca.yaml"
-  # ["convnext_cross_attn_after_sca_ldm_lsun"]="/home/azywot/DL2/spai/configs/convnext_spai_after_sca.yaml"
-  # ["convnext_cross_attn_before_sca_ldm_lsun"]="/home/azywot/DL2/spai/configs/convnext_spai_before_sca.yaml"
-  # ["convnext_dual_cross_attn_after_sca_ldm_lsun"]="/home/azywot/DL2/spai/configs/convnext_spai_dual_after_sca.yaml"
-  # ["convnext_dual_cross_attn_before_sca_ldm_lsun"]="/home/azywot/DL2/spai/configs/convnext_spai_dual_before_sca.yaml"
+  # ["clip_cross_attn_after_sca_ldm_lsun"]="/home/scur2690/spai/configs/clip_spai_after_sca.yaml" # NOTE: RUN BY AGATA
+  # ["clip_cross_attn_before_sca_ldm_lsun"]="/home/scur2690/spai/configs/clip_spai_before_sca.yaml"
+  # ["clip_dual_cross_attn_after_sca_ldm_lsun"]="/home/scur2690/spai/configs/clip_spai_dual_after_sca.yaml"
+  # ["clip_dual_cross_attn_before_sca_ldm_lsun"]="/home/scur2690/spai/configs/clip_spai_dual_before_sca.yaml"
+  # ["convnext_cross_attn_after_sca_ldm_lsun"]="/home/scur2690/spai/configs/convnext_spai_after_sca.yaml" # NOTE: RUN BY AGATA
+  # ["convnext_cross_attn_before_sca_ldm_lsun"]="/home/scur2690/spai/configs/convnext_spai_before_sca.yaml"
+  # ["convnext_dual_cross_attn_after_sca_ldm_lsun"]="/home/scur2690/spai/configs/convnext_spai_dual_after_sca.yaml"
+  # ["convnext_dual_cross_attn_before_sca_ldm_lsun"]="/home/scur2690/spai/configs/convnext_spai_dual_before_sca.yaml"
 )
 
 
@@ -107,13 +114,13 @@ for model_name in "${!MODELS[@]}"; do
 
     wait_for_available_slot
 
-    sleep 1
+    sleep 2
     TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
     echo "[$TIMESTAMP] 📤 Submitting job: model=$SAFE_MODEL_NAME, test_set=$test_name"
 
     sbatch \
       --job-name=eval_${SAFE_MODEL_NAME}_${SAFE_CSV_NAME} \
-      --output=/home/azywot/DL2/spai/jobs/out_files_eval/eval_${SAFE_MODEL_NAME}_${SAFE_CSV_NAME}_%A.out \
+      --output=/home/scur2690/spai/jobs/out_files_eval/eval_${SAFE_MODEL_NAME}_${SAFE_CSV_NAME}_%A.out \
       --partition=gpu_h100 \
       --gpus-per-node=1 \
       --cpus-per-task=16 \
@@ -121,6 +128,6 @@ for model_name in "${!MODELS[@]}"; do
       --mem=180G \
       --hint=nomultithread \
       --export=ALL,MODEL_PATH="$MODEL_PATH",MODEL_NAME="$model_name",CSV_NAME="$CSV",CONFIG_PATH="$CONFIG_PATH",ROOT_DIR="$ROOT_DIR" \
-      /home/azywot/DL2/spai/jobs/spai_eval/new/run_eval.job
+      /home/scur2690/spai/jobs/spai_eval/new/run_eval.job
   done
 done
