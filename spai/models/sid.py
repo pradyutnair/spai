@@ -106,9 +106,9 @@ class PatchBasedMFViT(nn.Module):
 
         if self.use_semantic_cross_attn_sca in ["before", "after"]:
             # Trainable fusion gate to explicitly learn how much semantic context should affect the decision
-            self.semantic_fusion_gate = nn.Parameter(
-                torch.tensor(0.5)
-            )  # scalar gate - [0, 1]
+            # self.semantic_fusion_gate = nn.Parameter(
+            #     torch.tensor(0.5)
+            # )  # scalar gate - [0, 1]
 
             print(f"Using semantic cross-attention: {self.use_semantic_cross_attn_sca}")
             self.semantic_mha = nn.MultiheadAttention(
@@ -138,12 +138,15 @@ class PatchBasedMFViT(nn.Module):
                 assert (
                     self.semantic_embed_dim is not None
                 ), "semantic_embed_dim must be set for CLIP"
-                self.semantic_projection = nn.Sequential(
-                    nn.LayerNorm(self.semantic_embed_dim),
-                    nn.Linear(self.semantic_embed_dim, cls_vector_dim),
-                    nn.ReLU(),
-                    nn.Linear(cls_vector_dim, cls_vector_dim),
+                self.semantic_projection = nn.Linear(
+                    self.semantic_embed_dim, cls_vector_dim
                 )
+                # self.semantic_projection = nn.Sequential(
+                    # nn.LayerNorm(self.semantic_embed_dim),
+                    # nn.Linear(self.semantic_embed_dim, cls_vector_dim),
+                    # nn.ReLU(),
+                    # nn.Linear(cls_vector_dim, cls_vector_dim),
+                # )
                 self.semantic_projection.requires_grad_(True)  # make trainable
 
             elif self.semantic_encoder_type == "convnext":
@@ -342,11 +345,13 @@ class PatchBasedMFViT(nn.Module):
             else:
                 x_out = attn_output
 
-            fusion_gate = torch.sigmoid(self.semantic_fusion_gate)
-            print(f"[Fusion Gate (after)] = {fusion_gate.item():.4f}")
+            # fusion_gate = torch.sigmoid(self.semantic_fusion_gate)
+            # print(f"[Fusion Gate (after)] = {fusion_gate.item():.4f}")
             print(f"[Semantic Attn Mean (after)] = {attn_weights.mean().item():.4f}")
 
-            x = self.semantic_layer_norm((1 - fusion_gate) * x + fusion_gate * x_out)
+            # x = self.semantic_layer_norm((1 - fusion_gate) * x + fusion_gate * x_out)
+            # dont use fusion gate
+            x = self.semantic_layer_norm(x + x_out)
 
         x = self.cls_head(x)  # B x 1
 
