@@ -7,7 +7,7 @@
 #SBATCH --time=5:00:00
 #SBATCH --mem=180G
 #SBATCH --hint=nomultithread
-#SBATCH --output=/home/scur2605/spai/jobs/outputs/semantic/baseline%A.out
+#SBATCH --output=/home/scur2605/spai/jobs/outputs/semantic/test-pope%A.out
 
 cd /home/scur2605/spai
 export PYTHONPATH=/home/scur2605:$PYTHONPATH
@@ -22,14 +22,17 @@ source activate spai_2
 # python -m spai test \
 # --cfg "./configs/spai.yaml" \
 # --batch-size 8 \
-# --model "/home/scur2605/spai/weights/spai.pth" \
-# --output "./output/spai/test" \
+# --model "/home/scur2605/spai/output/resnet/finetune/fused_run/ckpt_epoch_9.pth" \
+# --output "./output/semantic_test" \
 # --tag "spai" \
 # --opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
 # --opt "DATA.NUM_WORKERS" "8" \
 # --opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
 # --opt "DATA.TEST_PREFETCH_FACTOR" "1" \
-# --test-csv "/home/scur2605/spai/data/test_set_dalle2.csv" 
+# --test-csv "/home/scur2605/spai/data/original_sampled_generated_i_real_images.csv" \
+# --opt "PRINT_FREQ" "2" \
+# --opt "MODEL.SEMANTIC_CONTEXT.SPAI_INPUT_SIZE" "[1024, 1024]" 
+
 
 
 # python -m spai test \

@@ -1,0 +1,36 @@
+#!/bin/bash
+#SBATCH --partition=gpu_h100
+#SBATCH --gpus=1
+#SBATCH --job-name=eval_ff
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=16
+#SBATCH --time=0:20:00
+#SBATCH --mem=180G
+#SBATCH --hint=nomultithread
+#SBATCH --output=/home/scur2605/spai/jobs/outputs/semantic/test-pope%A.out
+
+cd /home/scur2605/spai
+export PYTHONPATH=/home/scur2605:$PYTHONPATH
+export NEPTUNE_API_TOKEN="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiJjZWZkYTNkZC02Y2VmLTRjZWYtYjQwMy1kNGZiMzAwYzg3NjgifQ=="
+export NEPTUNE_PROJECT="iwkooo/spai"
+module purge
+module load 2023
+module load Anaconda3/2023.07-2
+
+source activate spai_2
+
+
+
+python -m spai infer \
+--input /scratch-shared/dl2_spai_datasets/intermiate_medium_test/ \
+--opt "MODEL.SEMANTIC_CONTEXT.SPAI_INPUT_SIZE" "None" \
+--model "/home/scur2605/spai/output/resnet/finetune/fused_run/ckpt_epoch_9.pth" \
+--output "./output/semantic_test" \
+--tag "spai" \
+--opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
+--opt "DATA.NUM_WORKERS" "8" \
+--opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
+--opt "DATA.TEST_PREFETCH_FACTOR" "1" \
+--cfg "./configs/spai.yaml" 
+
+
