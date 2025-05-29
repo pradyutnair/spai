@@ -43,6 +43,7 @@ def build_cls_model(config):
     elif model_type == "vit" and task_type == "freq_restoration":
         model = build_mf_vit(config)
     elif model_type == "vit" and task_type == "semantic_context":
+        print("Building semantic context model")
         model = build_semantic_context_model(config)
     else:
         raise NotImplementedError(f"Unknown cls model: {model_type}")

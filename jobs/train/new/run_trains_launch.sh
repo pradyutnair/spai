@@ -9,22 +9,14 @@ SLEEP_TIME=60    # Seconds to wait before checking again
 
 # Models -> config files
 declare -A CONFIGS=(
-  ["dino_cross_attn_after_sca"]="${ROOT_DIR}/configs/dino_spai_after_sca.yaml"
-  # ["clip_cross_attn_after_sca"]="${ROOT_DIR}/configs/clip_spai_after_sca.yaml"
-  # ["clip_cross_attn_before_sca"]="${ROOT_DIR}/configs/clip_spai_before_sca.yaml"
-  # ["clip_dual_cross_attn_after_sca"]="${ROOT_DIR}/configs/clip_spai_dual_after_sca.yaml"
-  # ["clip_dual_cross_attn_before_sca"]="${ROOT_DIR}/configs/clip_spai_dual_before_sca.yaml"
-  # ["convnext_cross_attn_after_sca"]="${ROOT_DIR}/configs/convnext_spai_after_sca.yaml"
-  # ["convnext_cross_attn_before_sca"]="${ROOT_DIR}/configs/convnext_spai_before_sca.yaml"
-  # ["convnext_dual_cross_attn_after_sca"]="${ROOT_DIR}/configs/convnext_spai_dual_after_sca.yaml"
-  # ["convnext_dual_cross_attn_before_sca"]="${ROOT_DIR}/configs/convnext_spai_dual_before_sca.yaml"
+  ["clip_cross_attn_after_sca"]="${ROOT_DIR}/configs/clip_spai_after_sca.yaml"
+  ["semantic_context"]="${ROOT_DIR}/configs/spai.yaml"
 )
 
 # Dataset splits or CSVs (can add more)
 declare -A DATASETS=(
-  # ["ldm"]="${ROOT_DIR}/datasets/ldm_train_val_subset.csv"
-  ["ldm_lsun"]="${ROOT_DIR}/datasets/ldm_lsun_train_val_subset.csv"
-  # ["chameleon"]="${ROOT_DIR}/datasets/chameleon_dataset_split.csv"
+  # ["ldm_lsun"]="${ROOT_DIR}/datasets/ldm_lsun_train_val_subset.csv"
+  ["chameleon"]="${ROOT_DIR}/datasets/chameleon_dataset_split.csv"
 )
 
 sanitize() {
@@ -63,7 +55,10 @@ for model_name in "${!CONFIGS[@]}"; do
       --partition=gpu_h100 \
       --gpus-per-node=1 \
       --cpus-per-task=16 \
-      --time=02:00:00 \
+      --time=00:10:00 \
       --mem=180G \
       --hint=nomultithread \
-      --e
+      --export=ALL,ROOT_DIR="$ROOT_DIR",CONFIG_PATH="$CONFIG_PATH",PRETRAINED="$PRETRAINED",OUTPUT_DIR="$OUTPUT_DIR",DATA_PATH="$DATA_PATH",TAG="$TAG" \
+      "${ROOT_DIR}/jobs/train/new/run_train.job"
+  done
+done

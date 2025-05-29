@@ -252,16 +252,19 @@ def train(
             else:
                 param.requires_grad = False
 
-    # Freeze ALL of convnext_model (CLIP) if present
-    if hasattr(model.semantic_encoder, "convnext_model"):
-        for param in model.semantic_encoder.convnext_model.parameters():
+    ################# NOTE: temporary for the final_merge to make sure we train only 
+    # Freeze ALL of convnext_model if present
+    if hasattr(model, "semantic_encoder") and hasattr(model.semantic_encoder, "convnext_model"):
+        logger.info("Freezing convnext_model")
+        for name, param in model.semantic_encoder.convnext_model.named_parameters():
             param.requires_grad = False
-
-    n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
     # Show the parameters that are trainable and the number of parameters
     for name, param in model.named_parameters():
+        if "semantic_backbone" in name:
+            param.requires_grad = False
         if param.requires_grad:
             logger.info(f"Trainable parameter: {name}, requires_grad: {param.requires_grad}, Number of parameters: {param.numel()}")
+    n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
     logger.info(f"Number of params: {n_parameters}")
     if hasattr(model_without_ddp, 'flops'):
         flops = model_without_ddp.flops()

@@ -1611,6 +1611,8 @@ class SemanticContextModel(nn.Module):
         """
         print("Note: unfreeze_backbone() called but semantic model backbones remain frozen by design")
         pass
+
+
 def build_semantic_context_model(config) -> SemanticContextModel:
     """
     Factory function to build a semantic context model.
@@ -1644,7 +1646,7 @@ def build_semantic_context_model(config) -> SemanticContextModel:
 
 
 
-    class SemanticPipeline(nn.Module):
+class SemanticPipeline(nn.Module):
     """
     Semantic understanding pipeline that extracts rich semantic features from images
     using a ConvNeXt-XXL backbone.
