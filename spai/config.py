@@ -229,6 +229,17 @@ _C.MODEL.SEMANTIC_CONTEXT.HIDDEN_DIMS = [1024, 512]
 _C.MODEL.SEMANTIC_CONTEXT.DROPOUT = 0.5
 
 _C.MODEL.SEMANTIC_CONTEXT.SPAI_INPUT_SIZE = [224, 224]  # <-- Add this line!
+
+
+# Semantic cross-attention parameters
+_C.MODEL.SEMANTIC = CN()
+_C.MODEL.SEMANTIC.CROSS_ATTN_SCA = None
+_C.MODEL.SEMANTIC.DUAL_CROSS_ATTN_SCA = False
+_C.MODEL.SEMANTIC.EMBED_DIM = 768
+_C.MODEL.SEMANTIC.NUM_HEADS = None
+_C.MODEL.SEMANTIC.FREEZE_BACKBONE = True
+_C.MODEL.SEMANTIC.SEMANTIC_ENCODER = "clip"
+
 # -----------------------------------------------------------------------------
 # Training settings
 # -----------------------------------------------------------------------------

@@ -147,6 +147,55 @@ class TestPatchBasedMFViT(unittest.TestCase):
         out: torch.Tensor = model(x, batch_size)
 
         self.assertEqual(out.shape, torch.Size([batch_size, 1]))
+    
+    def test_semantic_cross_attention(self):
+        """Test semantic cross-attention with specific setup."""
+        # Specific setup for semantic cross-attention tests
+        batch_size = 2
+        img_patch_size = 224
+        img_patch_stride = 224
+        masking_radius = 16
+        features_num = 12
+        input_dim = 768
+        cls_vector_dim = 6 * features_num
+        num_heads = 8
+        attn_embed_dim = 1536
+        proj_dim = 1024
+        proj_layers = 2
+        semantic_embed_dim = 512
+
+
+        vit = backbones.CLIPBackbone().cpu()
+
+        for use_semantic_cross_attn_sca in ["before", "after"]:
+            features_processor = sid.FrequencyRestorationEstimator(
+                features_num=features_num,
+                input_dim=input_dim,
+                proj_dim=proj_dim,
+                proj_layers=proj_layers,
+                patch_projection=True,
+                patch_projection_per_feature=True,
+            )
+            cls_head = sid.ClassificationHead(cls_vector_dim, 1, mlp_ratio=4)
+            model = sid.PatchBasedMFViT(
+                vit=vit,
+                features_processor=features_processor,
+                cls_head=cls_head,
+                masking_radius=masking_radius,
+                img_patch_size=img_patch_size,
+                img_patch_stride=img_patch_stride,
+                cls_vector_dim=cls_vector_dim,
+                num_heads=num_heads,
+                attn_embed_dim=attn_embed_dim,
+                use_semantic_cross_attn_sca=use_semantic_cross_attn_sca,
+                semantic_embed_dim=semantic_embed_dim,
+            )
+
+            x = torch.randn((batch_size, 3, img_patch_size, img_patch_size))
+            model.eval()
+            with torch.no_grad():
+                out = model(x)
+            self.assertEqual(out.shape, torch.Size([batch_size, 1]))
 
 
 class TestMFViT(unittest.TestCase):

@@ -16,7 +16,7 @@
 
 import dataclasses
 import pathlib
-from typing import Optional, Union
+from typing import Literal, Optional, Union
 
 import numpy as np
 import torch
@@ -36,6 +36,8 @@ from spai.utils import save_image_with_attention_overlay
 
 from typing import Union, List
 
+from . import backbones, filters, utils, vision_transformer
+import torchvision.transforms as transforms
 
 class PatchBasedMFViT(nn.Module):
     def __init__(
@@ -51,10 +53,15 @@ class PatchBasedMFViT(nn.Module):
         cls_vector_dim: int,
         num_heads: int,
         attn_embed_dim: int,
-        dropout: float = .0,
+        dropout: float = 0.0,
         frozen_backbone: bool = True,
         minimum_patches: int = 0,
-        initialization_scope: str = "all"
+        initialization_scope: str = "all",
+        use_semantic_cross_attn_sca: Union[Literal["before", "after"], None] = None,
+        use_dual_cross_attn_sca: bool = False,
+        semantic_embed_dim: Optional[int] = None,
+        semantic_heads: Optional[int] = None,
+        semantic_encoder: str = "clip",  # "clip" or "convnext"
     ) -> None:
         super().__init__()
 
@@ -89,6 +96,85 @@ class PatchBasedMFViT(nn.Module):
 
         self.norm = nn.LayerNorm(cls_vector_dim)
         self.cls_head = cls_head
+        # adding semantic cross-attention before or after the SCA module or not using it at all
+        self.use_semantic_cross_attn_sca = use_semantic_cross_attn_sca
+        self.use_dual_cross_attn_sca = use_dual_cross_attn_sca
+        self.semantic_embed_dim = semantic_embed_dim
+        self.semantic_heads = (
+            semantic_heads if semantic_heads is not None else num_heads
+        )
+
+        self.semantic_encoder_type = semantic_encoder
+
+        if self.use_semantic_cross_attn_sca in ["before", "after"]:
+
+            print(f"Using semantic cross-attention: {self.use_semantic_cross_attn_sca}")
+            self.semantic_mha = nn.MultiheadAttention(
+                embed_dim=cls_vector_dim, num_heads=self.semantic_heads, dropout=dropout
+            )
+            self.semantic_layer_norm = nn.LayerNorm(cls_vector_dim)
+
+            if self.use_dual_cross_attn_sca:
+                print("Using dual cross-attention SCA")
+                self.semantic_mha2 = nn.MultiheadAttention(
+                    embed_dim=cls_vector_dim,
+                    num_heads=self.semantic_heads,
+                    dropout=dropout,
+                )
+
+            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            if self.semantic_encoder_type == "clip":
+                print("Using CLIP backbone for semantic encoding")
+                self.semantic_encoder = backbones.CLIPBackbone(
+                    device=self.device
+                ).float()
+                self.semantic_encoder.eval()
+                for param in self.semantic_encoder.parameters():
+                    param.requires_grad = False
+
+                assert (
+                    self.semantic_embed_dim is not None
+                ), "semantic_embed_dim must be set for CLIP"
+                self.semantic_projection = nn.Linear(
+                    self.semantic_embed_dim, cls_vector_dim
+                )
+                # self.semantic_projection = nn.Sequential(
+                    # nn.LayerNorm(self.semantic_embed_dim),
+                    # nn.Linear(self.semantic_embed_dim, cls_vector_dim),
+                    # nn.ReLU(),
+                    # nn.Linear(cls_vector_dim, cls_vector_dim),
+                # )
+                self.semantic_projection.requires_grad_(True)  # make trainable
+
+            elif self.semantic_encoder_type == "convnext":
+                print("Using ConvNeXt backbone for semantic encoding")
+                self.semantic_encoder = SemanticPipeline(output_dim=cls_vector_dim).to(
+                    self.device
+                )
+                self.semantic_encoder.backbone.eval()
+                for param in self.semantic_encoder.backbone.parameters():
+                    param.requires_grad = False
+                for param in self.semantic_encoder.convnext_proj.parameters():
+                    param.requires_grad = True
+            elif self.semantic_encoder_type == "dino":
+                print("Using DINOv2 backbone for semantic encoding")
+                self.semantic_encoder = backbones.DINOv2FeatureEmbedding()
+                self.semantic_encoder.eval()
+                for param in self.semantic_encoder.parameters():
+                    param.requires_grad = False
+                self.semantic_embed_dim = self.semantic_encoder.output_dim
+                print(f"Using DINOv2 backbone for semantic encoding with output dim: {self.semantic_embed_dim}")
+                self.semantic_projection = nn.Sequential(
+                    nn.LayerNorm(self.semantic_embed_dim),
+                    nn.Linear(self.semantic_embed_dim, cls_vector_dim),
+                    nn.ReLU(),
+                    nn.Linear(cls_vector_dim, cls_vector_dim),
+                )
+                self.semantic_projection.requires_grad_(True)
+            else:
+                raise ValueError(
+                    f"Unknown semantic_encoder: {self.semantic_encoder_type}"
+                )
 
         if initialization_scope == "all":
             self.apply(_init_weights)
@@ -157,20 +243,105 @@ class PatchBasedMFViT(nn.Module):
             return x
 
     def forward_batch(self, x: torch.Tensor) -> torch.Tensor:
+        # print(f"Input shape: {x.shape}")
+        # Compute global image encoding before patchifying
+        if self.use_semantic_cross_attn_sca in ["before", "after"]:
+            # Get the global image encoding from the CLIP backbone
+            # Resize the image to 224x224 for CLIP
+            x_resized = F.interpolate(
+                x, size=(224, 224), mode="bilinear", align_corners=False
+            )
+
+            # CLIP
+            if self.semantic_encoder_type == "clip":
+                # Get the global image encoding from the CLIP backbone
+                global_image_encoding = self.semantic_encoder.get_image_embedding(
+                    x_resized.float()
+                )
+                # Project global image encoding to match the cross-attention query dimension
+                global_image_encoding = self.semantic_projection(
+                    global_image_encoding.float()
+                )  # B x D
+            elif self.semantic_encoder_type == "dino":
+                # Get the global image encoding from the DINOv2 backbone
+                global_image_encoding = self.semantic_encoder(
+                    x_resized.float()
+                )
+                # Project global image encoding to match the cross-attention query dimension
+                global_image_encoding = self.semantic_projection(
+                    global_image_encoding.float()
+                )
+            # ConvNeXt
+            else:
+                # Get the global image encoding from the ConvNeXt backbone
+                global_image_encoding = self.semantic_encoder(x_resized.float())
+
+        # Patchify the input image
         x = utils.patchify_image(
             x,
             (self.img_patch_size, self.img_patch_size),
             (self.img_patch_stride, self.img_patch_stride)
         )  # B x L x C x H x W
 
+        # Extract patch features
         patch_features: list[torch.Tensor] = []
         for i in range(x.size(1)):
             patch_features.append(self.mfvit(x[:, i]))
         x = torch.stack(patch_features, dim=1)  # B x L x D
         del patch_features
 
+        # Spectral-semantic cross-attention
+        if self.use_semantic_cross_attn_sca == "before":
+            semantic_enc = global_image_encoding.unsqueeze(1).expand(
+                -1, x.size(1), -1
+            )  # B x L x D
+
+            attn_output, attn_weights = self.semantic_mha(
+                query=x, key=semantic_enc, value=semantic_enc, need_weights=True
+            )
+
+            if self.use_dual_cross_attn_sca:
+                attn_output2, _ = self.semantic_mha2(
+                    query=semantic_enc, key=x, value=x, need_weights=True
+                )
+                x_out = (attn_output + attn_output2) / 2
+            else:
+                x_out = attn_output
+
+            # 💡 Apply fusion gate
+            fusion_gate = torch.sigmoid(self.semantic_fusion_gate)
+            print(f"[Fusion Gate (before)] = {fusion_gate.item():.4f}")
+            print(f"[Semantic Attn Mean (before)] = {attn_weights.mean().item():.4f}")
+
+            x = self.semantic_layer_norm((1 - fusion_gate) * x + fusion_gate * x_out)
+
+        # Spectral context attention (SCA)
         x = self.patches_attention(x)  # B x D
         x = self.norm(x)  # B x D
+
+        if self.use_semantic_cross_attn_sca == "after":
+            semantic_enc = global_image_encoding  # B x D
+
+            attn_output, attn_weights = self.semantic_mha(
+                query=x, key=semantic_enc, value=semantic_enc, need_weights=True
+            )
+
+            if self.use_dual_cross_attn_sca:
+                attn_output2, _ = self.semantic_mha2(
+                    query=semantic_enc, key=x, value=x, need_weights=True
+                )
+                x_out = (attn_output + attn_output2) / 2
+            else:
+                x_out = attn_output
+
+            # fusion_gate = torch.sigmoid(self.semantic_fusion_gate)
+            # print(f"[Fusion Gate (after)] = {fusion_gate.item():.4f}")
+            print(f"[Semantic Attn Mean (after)] = {attn_weights.mean().item():.4f}")
+
+            # x = self.semantic_layer_norm((1 - fusion_gate) * x + fusion_gate * x_out)
+            # dont use fusion gate
+            x = self.semantic_layer_norm(x + x_out)
+
         x = self.cls_head(x)  # B x 1
 
         return x
@@ -925,7 +1096,7 @@ class FeatureImportanceProjector(nn.Module):
         input_dim: int,
         proj_dim: int,
         proj_layers: int,
-        dropout: float = 0.5
+        dropout: float = 0.5,
     ) -> None:
         super().__init__()
         self.alpha = nn.Parameter(torch.randn([1, intermediate_features_num, proj_dim]))
@@ -1250,7 +1421,12 @@ def build_mf_vit(config) -> MFViT:
             num_heads=config.MODEL.PATCH_VIT.NUM_HEADS,
             dropout=config.MODEL.SID_DROPOUT,
             minimum_patches=config.MODEL.PATCH_VIT.MINIMUM_PATCHES,
-            initialization_scope=initialization_scope
+            initialization_scope=initialization_scope,
+            use_semantic_cross_attn_sca=config.MODEL.SEMANTIC.CROSS_ATTN_SCA,
+            semantic_embed_dim=config.MODEL.SEMANTIC.EMBED_DIM,
+            semantic_heads=config.MODEL.SEMANTIC.NUM_HEADS,
+            use_dual_cross_attn_sca=config.MODEL.SEMANTIC.DUAL_CROSS_ATTN_SCA,
+            semantic_encoder=config.MODEL.SEMANTIC.SEMANTIC_ENCODER,
         )
     else:
         raise RuntimeError(f"Unsupported resolution mode: {config.MODEL.RESOLUTION_MODE}")
@@ -1463,3 +1639,112 @@ def build_semantic_context_model(config) -> SemanticContextModel:
     )
     
     return model
+
+
+
+
+
+    class SemanticPipeline(nn.Module):
+    """
+    Semantic understanding pipeline that extracts rich semantic features from images
+    using a ConvNeXt-XXL backbone.
+    """
+
+    def __init__(
+        self, 
+        convnext_path: Optional[str] = None,
+        output_dim: int = 1096,
+        freeze_backbone: bool = True
+    ):
+        """
+        Initialize the semantic pipeline.
+        
+        Args:
+            convnext_path: Path to pretrained ConvNeXt-XXL weights
+            output_dim: Dimension of output semantic features
+            freeze_backbone: Whether to freeze the ConvNeXt backbone
+        """
+        super(SemanticPipeline, self).__init__()
+
+        print("Building semantic understanding pipeline with ConvNeXt-XXL")
+
+        # Create the ConvNeXt model
+        self.convnext_model, _, _ = open_clip.create_model_and_transforms(
+            "convnext_xxlarge", pretrained="laion2b_s34b_b82k_augreg"  # or other available OpenCLIP weights
+        )
+
+        # Extract just the visual backbone
+        self.backbone = self.convnext_model.visual.trunk
+
+        # Replace pooling with identity to access the feature maps
+        self.backbone.head.global_pool = nn.Identity()
+        self.backbone.head.flatten = nn.Identity()
+
+        # Add a global pooling layer
+        self.global_pool = nn.AdaptiveAvgPool2d((1, 1))
+
+        # This matches the implementation in AIDE_Model
+        self.convnext_proj = nn.Sequential(
+            nn.Linear(3072, output_dim),
+        )
+
+        # Freeze the backbone if specified
+        if freeze_backbone:
+            self.backbone.eval()
+            for param in self.backbone.parameters():
+                param.requires_grad = False
+
+        # Register normalization parameters as buffers
+        self.register_buffer('clip_mean', torch.tensor([0.48145466, 0.4578275, 0.40821073]).view(3, 1, 1))
+        self.register_buffer('clip_std', torch.tensor([0.26862954, 0.26130258, 0.27577711]).view(3, 1, 1))
+        self.register_buffer('imagenet_mean', torch.tensor([0.485, 0.456, 0.406]).view(3, 1, 1))
+        self.register_buffer('imagenet_std', torch.tensor([0.229, 0.224, 0.225]).view(3, 1, 1))
+
+    def normalize_input(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Normalize input images to match ConvNeXt expectations.
+        
+        Args:
+            x: Input tensor of shape [B, C, H, W]
+            
+        Returns:
+            Normalized tensor
+        """
+        return x * (self.imagenet_std / self.clip_std) + (self.imagenet_mean - self.clip_mean) / self.clip_std
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Extract semantic features from input images.
+        
+        Args:
+            x: Input tensor of shape [B, C, H, W]
+            
+        Returns:
+            Semantic features of shape [B, output_dim]
+        """
+        # Apply normalization for ConvNeXt
+        x = self.normalize_input(x)
+
+        # Extract features - use no_grad if backbone is frozen
+        if not any(p.requires_grad for p in self.backbone.parameters()):
+            with torch.no_grad():
+                features = self.backbone(x)  # [B, 3072, H/32, W/32]
+                # Verify shape matches AIDE implementation
+                assert features.size()[1] == 3072, f"Expected 3072 channels, got {features.size()[1]}"
+        else:
+            features = self.backbone(x)
+
+        # Apply global pooling and reshape
+        pooled_features = self.global_pool(features).view(x.size(0), -1)  # [B, 3072]
+
+        # Project to lower dimension using the projection layer
+        semantic_features = self.convnext_proj(pooled_features)  # [B, output_dim]
+
+        return semantic_features
+
+    def is_pretrained(self):
+        """
+        Check if the model is using pretrained weights.
+        """
+        # This is a simple check - we could make this more sophisticated
+        return hasattr(self, 'convnext_model') and hasattr(self.convnext_model, '_pretrained')
