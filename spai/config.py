@@ -221,6 +221,25 @@ _C.MODEL.FREQ_LOSS.WITH_MATRIX = False
 _C.MODEL.FREQ_LOSS.LOG_MATRIX = False
 _C.MODEL.FREQ_LOSS.BATCH_MATRIX = False
 
+# Semantic Context Addition !
+_C.MODEL.SEMANTIC_CONTEXT = CN()
+_C.MODEL.SEMANTIC_CONTEXT.SPAI_MODEL_PATH = './weights/spai.pth'
+_C.MODEL.SEMANTIC_CONTEXT.OUTPUT_DIM = 1096
+_C.MODEL.SEMANTIC_CONTEXT.HIDDEN_DIMS = [1024, 512]
+_C.MODEL.SEMANTIC_CONTEXT.DROPOUT = 0.5
+
+_C.MODEL.SEMANTIC_CONTEXT.SPAI_INPUT_SIZE = [224, 224]  # <-- Add this line!
+
+
+# Semantic cross-attention parameters
+_C.MODEL.SEMANTIC_CROSS_ATTN = CN()
+_C.MODEL.SEMANTIC_CROSS_ATTN.CROSS_ATTN_SCA = None
+_C.MODEL.SEMANTIC_CROSS_ATTN.DUAL_CROSS_ATTN_SCA = False
+_C.MODEL.SEMANTIC_CROSS_ATTN.EMBED_DIM = 768
+_C.MODEL.SEMANTIC_CROSS_ATTN.NUM_HEADS = None
+_C.MODEL.SEMANTIC_CROSS_ATTN.FREEZE_BACKBONE = True
+_C.MODEL.SEMANTIC_CROSS_ATTN.SEMANTIC_ENCODER = "clip"
+
 # -----------------------------------------------------------------------------
 # Training settings
 # -----------------------------------------------------------------------------

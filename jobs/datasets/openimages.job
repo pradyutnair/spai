@@ -1,0 +1,71 @@
+#!/bin/bash
+#SBATCH --partition=gpu_a100
+#SBATCH --gpus=1
+#SBATCH --job-name=download_fo_oi
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --time=01:00:00
+#SBATCH --output=/home/scur2605/spai/jobs/outputs/datasets/fiftyone_%A.out
+
+# Go to working directory
+cd $HOME/spai
+
+# Load Anaconda
+module purge
+module load 2023
+module load Anaconda3/2023.07-2
+
+# Activate existing environment
+source activate spai_2
+
+# Ensure FiftyOne is installed (optional, can remove if already installed)
+pip install fiftyone
+
+# Run the Python script to download and export Open Images
+python <<EOF
+import fiftyone as fo
+import fiftyone.zoo as foz
+import os
+from pathlib import Path
+
+# Load 10,000 images from Open Images validation set
+print("Downloading Open Images (validation split)...")
+dataset = foz.load_zoo_dataset(
+    "open-images-v7",
+    split="validation",
+    max_samples=10000,
+    seed=42,
+    shuffle=True
+)
+
+# Create the output directory
+output_dir = Path("/home/scur2605/spai/data/openimages_10k")
+output_dir.mkdir(parents=True, exist_ok=True)
+
+# Create a CSV file for SPAI testing
+csv_path = Path("/home/scur2605/spai/data/openimages_test.csv")
+with open(csv_path, "w") as f:
+    f.write("image,class,split\n")
+    
+    # Process each sample
+    for sample in dataset:
+        # Get the source filepath
+        src_path = sample.filepath
+        # Get just the filename
+        filename = os.path.basename(src_path)
+        # Path where image will be stored
+        dst_path = output_dir / filename
+        
+        # Copy the image file
+        import shutil
+        shutil.copy(src_path, dst_path)
+        
+        # Write the entry to the CSV
+        rel_path = f"openimages_10k/{filename}"
+        f.write(f"{rel_path},0,test\n")
+        
+        print(f"Copied {filename}")
+
+print(f"Created CSV file at {csv_path}")
+print("Download and export complete.")
+EOF

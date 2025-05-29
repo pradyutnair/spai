@@ -1,0 +1,22 @@
+#!/bin/bash
+#SBATCH --partition=gpu_a100
+#SBATCH --gpus=1
+#SBATCH --job-name=semantic_pipeline
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --time=01:00:00
+#SBATCH --output=/home/scur2605/spai/jobs/outputs/semantic/combined_%A.out
+
+cd $HOME/spai
+
+module purge
+module load 2023
+module load Anaconda3/2023.07-2
+
+source activate spai_2
+export NEPTUNE_MODE=offline
+# pip install open-clip-torch
+# pip install timm --upgrade
+
+# srun python -m semantic_pipeline.semantic
+srun python -m semantic_pipeline.combined_model

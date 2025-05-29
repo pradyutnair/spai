@@ -162,7 +162,8 @@ def train(
         "learning_rate": learning_rate,
         "data_path": str(data_path),
         "csv_root_dir": str(csv_root_dir),
-        "lmdb_path": str(lmdb_path),
+        # "lmdb_path": str(lmdb_path),
+        "lmdb_path":None,
         "pretrained": str(pretrained) if pretrained is not None else None,
         "resume": resume,
         "accumulation_steps": accumulation_steps,
@@ -239,8 +240,32 @@ def train(
         model, optimizer = amp.initialize(model, optimizer, opt_level=config.AMP_OPT_LEVEL)
     model_without_ddp = model
 
+    # freeze all but the semantic projections and cls_head 
+    if config.MODEL.SEMANTIC_CROSS_ATTN.FREEZE_BACKBONE:
+        logger.info("Freezing all but the semantic projections and cls_head")
+        n_params_before = sum(p.numel() for p in model.parameters() if p.requires_grad)
+        logger.info(f"Number of trainable params before: {n_params_before}")
+        for name, param in model.named_parameters():
+            if "semantic" in name or "cls_head" in name or "convnext_proj" in name:
+                if not "semantic_encoder" in name:
+                    param.requires_grad = True
+            else:
+                param.requires_grad = False
+
+    ################# NOTE: temporary for the final_merge to make sure we train only 
+    # Freeze ALL of convnext_model if present
+    if hasattr(model, "semantic_encoder") and hasattr(model.semantic_encoder, "convnext_model"):
+        logger.info("Freezing convnext_model")
+        for name, param in model.semantic_encoder.convnext_model.named_parameters():
+            param.requires_grad = False
+    # Show the parameters that are trainable and the number of parameters
+    for name, param in model.named_parameters():
+        if "semantic_backbone" in name:
+            param.requires_grad = False
+        if param.requires_grad:
+            logger.info(f"Trainable parameter: {name}, requires_grad: {param.requires_grad}, Number of parameters: {param.numel()}")
     n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    logger.info(f"number of params: {n_parameters}")
+    logger.info(f"Number of params: {n_parameters}")
     if hasattr(model_without_ddp, 'flops'):
         flops = model_without_ddp.flops()
         logger.info(f"number of GFLOPs: {flops / 1e9}")
@@ -248,9 +273,9 @@ def train(
     lr_scheduler = build_scheduler(config, optimizer, len(data_loader_train))
     criterion: nn.Module = losses.build_loss(config)
     logger.info(f"Loss: \n{criterion}")
-
     if config.PRETRAINED:
-        load_pretrained(config, model_without_ddp.get_vision_transformer(), logger)
+        model_ckpt: pathlib.Path = find_pretrained_checkpoints(config)[0]
+        load_pretrained(config, model, logger, checkpoint_path=model_ckpt, verbose=True)
     else:
         model_without_ddp.unfreeze_backbone()
         logger.info(f"No pretrained model. Backbone parameters are trainable.")
@@ -370,6 +395,7 @@ def test(
         name=config.TAG,
         tags=neptune_tags
     )
+
 
     test_datasets_names, test_datasets, test_loaders = build_loader_test(config, logger,
                                                                          split=split)

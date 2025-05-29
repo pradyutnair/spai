@@ -1,0 +1,24 @@
+#!/bin/bash
+#SBATCH --partition=gpu_a100
+#SBATCH --gpus=1
+#SBATCH --job-name=inference
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=9
+#SBATCH --time=08:00:00
+#SBATCH --output=outputs/dna_%A.out
+
+cd $HOME/spai
+
+module purge
+module load 2023
+module load Anaconda3/2023.07-2
+
+
+conda create -n spai_2 python=3.11
+conda activate spai_2
+pip install filetype
+conda install pytorch torchvision torchaudio pytorch-cuda=12.4 -c pytorch -c nvidia
+pip install -r requirements.txt
+
+
+srun python -m spai infer --input '/home/scur2605/spai/data/fake_mjv61.csv' --output '/home/scur2605/spai/output_runs' --model 'weights/spai.pth'

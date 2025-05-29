@@ -1,0 +1,25 @@
+#!/bin/bash
+#SBATCH --partition=gpu_mig
+#SBATCH --gpus=1
+#SBATCH --job-name=semantic_pipeline
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --time=04:00:00
+#SBATCH --output=/home/scur2605/spai/jobs/outputs/semantic/createcsv_%A.out
+
+cd $HOME/spai
+
+module purge
+module load 2023
+module load Anaconda3/2023.07-2
+
+source activate spai_2
+export NEPTUNE_MODE=offline
+
+srun python -m spai.tools.create_dmid_ldm_train_val_csv \
+  --train_dir "/scratch-shared/dl2_spai/datasets/latent_diffusion_trainingset/train" \
+  --val_dir "/scratch-shared/dl2_spai/datasets/latent_diffusion_trainingset/valid" \
+  --coco_dir "/gpfs/scratch1/shared/dl2_spai/datasets/coco/images" \
+  --lsun_dir "/gpfs/scratch1/shared/dl2_spai/datasets/LSUN" \
+  --csv_root_dir "/" \
+  -o "/home/scur2605/spai/data/train/ldm_train_val_first-trainset.csv"

@@ -1,0 +1,102 @@
+#!/bin/bash
+#SBATCH --partition=gpu_a100
+#SBATCH --gpus=1
+#SBATCH --job-name=prep_Chameleon
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --time=01:00:00
+#SBATCH --output=outputs/setup_Chameleon_%A.out
+
+# Go to working directory
+cd $HOME/spai
+
+# Load Anaconda
+module purge
+module load 2023
+module load Anaconda3/2023.07-2
+
+# Activate existing environment
+source activate spai
+
+# Ensure FiftyOne is installed (optional, can remove if already installed)
+# pip install fiftyone
+
+python <<EOF
+import os
+import csv
+import random
+from pathlib import Path
+
+def get_image_paths_with_labels(dataset_root):
+    """Get all image paths with their corresponding labels (0 for 0_real, 1 for 1_fake)"""
+    image_paths = []
+    
+    # Process 0_real folder
+    real_dir = os.path.join(dataset_root, "0_real")
+    if os.path.exists(real_dir):
+        for root, _, files in os.walk(real_dir):
+            for file in files:
+                if file.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff')):
+                    image_paths.append((os.path.abspath(os.path.join(root, file)), 0))
+    
+    # Process 1_fake folder
+    fake_dir = os.path.join(dataset_root, "1_fake")
+    if os.path.exists(fake_dir):
+        for root, _, files in os.walk(fake_dir):
+            for file in files:
+                if file.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff')):
+                    image_paths.append((os.path.abspath(os.path.join(root, file)), 1))
+    
+    return image_paths
+
+def split_data(image_paths, train_ratio=0.8):
+    """Split data into training and validation sets while maintaining class balance"""
+    # Separate images by class
+    class0 = [item for item in image_paths if item[1] == 0]
+    class1 = [item for item in image_paths if item[1] == 1]
+    
+    # Shuffle each class
+    random.shuffle(class0)
+    random.shuffle(class1)
+    
+    # Calculate split points
+    split0 = int(len(class0) * train_ratio)
+    split1 = int(len(class1) * train_ratio)
+    
+    # Create splits
+    train_data = class0[:split0] + class1[:split1]
+    val_data = class0[split0:] + class1[split1:]
+    
+    return train_data, val_data
+
+# Configuration
+dataset_root = "/scratch-shared/dl2_spai_datasets/Chameleon/test"  # Update this path if needed
+output_csv = "chameleon_dataset_split.csv"
+train_ratio = 0.8  # 80% training, 20% validation
+
+# Get all image paths with labels
+image_paths = get_image_paths_with_labels(dataset_root)
+print(f"Found {len(image_paths)} images total")
+
+# Split into training and validation
+train_data, val_data = split_data(image_paths, train_ratio)
+print(f"Training samples: {len(train_data)}")
+print(f"Validation samples: {len(val_data)}")
+
+# Write to CSV
+with open(output_csv, 'w', newline='') as csvfile:
+    csvwriter = csv.writer(csvfile)
+    csvwriter.writerow(['image', 'class', 'split'])  # Write header
+    
+    # Write training data
+    for path, label in train_data:
+        csvwriter.writerow([path, label, 'train'])
+    
+    # Write validation data
+    for path, label in val_data:
+        csvwriter.writerow([path, label, 'val'])
+
+print(f"\nCSV file generated: {output_csv}")
+print(f"Split: {train_ratio*100:.0f}% training, {(1-train_ratio)*100:.0f}% validation")
+
+EOF
