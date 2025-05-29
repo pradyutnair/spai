@@ -1422,11 +1422,11 @@ def build_mf_vit(config) -> MFViT:
             dropout=config.MODEL.SID_DROPOUT,
             minimum_patches=config.MODEL.PATCH_VIT.MINIMUM_PATCHES,
             initialization_scope=initialization_scope,
-            use_semantic_cross_attn_sca=config.MODEL.SEMANTIC.CROSS_ATTN_SCA,
-            semantic_embed_dim=config.MODEL.SEMANTIC.EMBED_DIM,
-            semantic_heads=config.MODEL.SEMANTIC.NUM_HEADS,
-            use_dual_cross_attn_sca=config.MODEL.SEMANTIC.DUAL_CROSS_ATTN_SCA,
-            semantic_encoder=config.MODEL.SEMANTIC.SEMANTIC_ENCODER,
+            use_semantic_cross_attn_sca=config.MODEL.SEMANTIC_CROSS_ATTN.CROSS_ATTN_SCA,
+            semantic_embed_dim=config.MODEL.SEMANTIC_CROSS_ATTN.EMBED_DIM,
+            semantic_heads=config.MODEL.SEMANTIC_CROSS_ATTN.NUM_HEADS,
+            use_dual_cross_attn_sca=config.MODEL.SEMANTIC_CROSS_ATTN.DUAL_CROSS_ATTN_SCA,
+            semantic_encoder=config.MODEL.SEMANTIC_CROSS_ATTN.SEMANTIC_ENCODER,
         )
     else:
         raise RuntimeError(f"Unsupported resolution mode: {config.MODEL.RESOLUTION_MODE}")

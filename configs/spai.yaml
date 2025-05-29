@@ -1,6 +1,5 @@
 MODEL:
-  # SID_APPROACH: "freq_restoration"
-  SID_APPROACH: "semantic_context"
+  SID_APPROACH: "semantic_context" # change to "freq_restoration" and fill SEMANTIC_CROSS_ATTN to use semantic cross attention
   TYPE: vit
   NAME: finetune
   DROP_PATH_RATE: 0.1
@@ -33,13 +32,15 @@ MODEL:
     MASKING_RADIUS: 16
     PROJECTOR_LAST_LAYER_ACTIVATION_TYPE: None
     ORIGINAL_IMAGE_FEATURES_BRANCH: True
-  SEMANTIC:
+  ######### USE ONLY FOR SEMANTIC CROSS ATTENTION #########
+  SEMANTIC_CROSS_ATTN:
     CROSS_ATTN_SCA: None # None/before/after
     DUAL_CROSS_ATTN_SCA: False # True/False
     EMBED_DIM: 512
     NUM_HEADS: 8
     FREEZE_BACKBONE: True
     SEMANTIC_ENCODER: "clip"
+  ############ END OF SEMANTIC CROSS ATTENTION ############
   CLS_HEAD:
     MLP_RATIO: 3
   PATCH_VIT:
