@@ -372,17 +372,6 @@ def test(
         tags=neptune_tags
     )
 
-    # # Comment out Neptune initialization - Iwo Addition
-
-    # # Create a simple mock instead 
-    # class MockNeptuneRun:
-    #     def __init__(self): pass
-    #     def __getitem__(self, key): return self
-    #     def append(self, *args, **kwargs): pass
-    #     def sync(self): pass
-    #     def __setitem__(self, key, value): pass
-
-    # neptune_run = MockNeptuneRun()
 
     test_datasets_names, test_datasets, test_loaders = build_loader_test(config, logger,
                                                                          split=split)
