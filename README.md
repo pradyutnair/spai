@@ -111,7 +111,6 @@ Based on our training pipeline (`jobs/semantic/semantic.job`):
 Our enhanced models demonstrate the effectiveness of semantic integration:
 
 ### **Quantitative Results**
-> 📝 *[Results section would be linked to Jupyter notebook analysis]*
 
 **Key findings include:**
 - 🌍 **Improved Generalization**: Semantic-enhanced models show better cross-dataset performance
@@ -157,6 +156,8 @@ spai/
 - **Dependencies**: Requires both SPAI pre-trained weights and ConvNeXt-XXL from OpenCLIP
 
 ### 💻 **Usage**
+
+> Jupyter Notebook: https://github.com/pradyutnair/spai/dl2_team_13.ipynb
 
 ```bash
 # 🧩 Train semantic context model (late fusion)
