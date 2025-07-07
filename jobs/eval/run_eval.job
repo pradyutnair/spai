@@ -1,32 +1,61 @@
 #!/bin/bash
+#SBATCH --job-name=spai_eval
+#SBATCH --output=spai_eval_%A.out
+#SBATCH --partition=gpu_h100
+#SBATCH --gpus-per-node=1
+#SBATCH --cpus-per-task=16
+#SBATCH --time=14:00:00
+#SBATCH --mem=180G
+#SBATCH --hint=nomultithread
 
+# --- Environment Setup ---
 echo "✅ Job started at: $(date)"
+echo "✅ Running on node: $(hostname)"
+echo "✅ CUDA_VISIBLE_DEVICES: $CUDA_VISIBLE_DEVICES"
+
 module purge
 module load 2023
 module load Anaconda3/2023.07-2
 module load CUDA/12.1.1
-
 source activate spai
 
+# --- Job Info ---
+echo "--- JOB PARAMETERS ---"
+echo "ROOT_DIR: $ROOT_DIR"
+echo "CONFIG_PATH: $CONFIG_PATH"
+echo "MODEL_PATH: $MODEL_PATH"
+echo "MODEL_NAME: $MODEL_NAME"
+echo "TEST_CSV: $TEST_CSV_PATH"
+echo "OUTPUT_DIR: $OUTPUT_DIR"
+echo "NEPTUNE_TAG: $NEPTUNE_TAG"
+echo "BATCH_SIZE: $BATCH_SIZE"
+echo "NUM_WORKERS: $NUM_WORKERS"
+echo "----------------------"
+
+# --- Set Python Environment ---
 cd "$ROOT_DIR"
-export NEPTUNE_API_TOKEN="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiJjMGEzN2M5OS0zYjQ3LTRlYTQtOTdhNy1hMGM3ZTFlZTU1MzYifQ=="
-export NEPTUNE_PROJECT="dl2-spai/beast-mode"
 export PYTHONPATH=$PYTHONPATH:"$ROOT_DIR"
 export NCCL_DEBUG=INFO
 export CUDA_LAUNCH_BLOCKING=0
 
+# --- Define Python Command Options ---
+# These are built from environment variables passed by the launcher
 COMMON_OPTS=(
   --cfg "$CONFIG_PATH"
-  --batch-size 8
-  --tag "clip_spai_ldm_cross_attn_after_sca"
-  --opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4"
-  --opt "DATA.NUM_WORKERS" "8"
-  --opt "MODEL.FEATURE_EXTRACTION_BATCH" "400"
-  --opt "DATA.TEST_PREFETCH_FACTOR" "1"
+  --batch-size "$BATCH_SIZE"
+  --tag "$NEPTUNE_TAG"
+  --opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "$MIN_PATCHES"
+  --opt "DATA.NUM_WORKERS" "$NUM_WORKERS"
+  --opt "MODEL.FEATURE_EXTRACTION_BATCH" "$FEATURE_BATCH"
+  --opt "DATA.TEST_PREFETCH_FACTOR" "$PREFETCH_FACTOR"
 )
 
+# --- Execute the Evaluation ---
+echo "🚀 Starting Python evaluation script..."
 python -m spai test \
   "${COMMON_OPTS[@]}" \
   --model "$MODEL_PATH" \
-  --output "$ROOT_DIR/output/17_05_2025/${MODEL_NAME}/test_${CSV_NAME%.csv}" \
-  --test-csv "$ROOT_DIR/datasets/${CSV_NAME}"
+  --output "$OUTPUT_DIR" \
+  --test-csv "$TEST_CSV_PATH"
+
+echo "✅ Job finished at: $(date)"
