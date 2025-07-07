@@ -1,12 +1,14 @@
-# Evaluation
+# SPAI Training and Evaluation Workflow
 
-## ⚙️ Setup and Configuration
+## ⚙️ Initial Setup
 
-Follow these steps to get the system ready for use.
+Follow these steps once to prepare the system.
 
 ### 1. Create the `.env` File
 
-In the root directory, create a file named `.env`. This file will store your Neptune credentials.
+In the root of your project repository (e.g., `~/DL2/spai/`), create a file named `.env`.
+
+> 🛡️ **Security Warning**: Add `.env` to your `.gitignore` file immediately to prevent accidentally committing your secrets.
 
 **`.env` template:**
 ```dotenv
@@ -15,69 +17,92 @@ NEPTUNE_API_TOKEN="your-long-neptune-api-token"
 NEPTUNE_PROJECT="your-neptune-project-name"
 ```
 
-### 2. Configure the Launcher Script
+### 2. Make Launchers Executable
 
-Open `run_evals_launch.sh` and edit the **`SCRIPT CONFIGURATION`** section at the top.
-
--   **Job Control**: Set `MAX_JOBS` to limit the number of concurrently queued jobs.
--   **Slurm Parameters**: Adjust `PARTITION`, `TIME_LIMIT`, `MEMORY`, etc., to match your cluster's requirements.
--   **Python Script Parameters**: Change default values for `BATCH_SIZE`, `NUM_WORKERS`, etc.
--   **Experiment Definitions**: Add new models, test sets, or config files to the `MODELS`, `TEST_SETS`, and `CONFIGS` associative arrays. The key (e.g., `"dalle2"`) is what you'll use in the command line.
-
-### 3. Make the Launcher Executable
-
-Before running the script for the first time, you need to give it execute permissions:
-
+Give execute permissions to both launcher scripts:
 ```bash
-chmod +x run_evals_launch.sh
+chmod +x jobs/train/run_trains_launch.sh
+chmod +x jobs/eval/run_evals_launch.sh
 ```
 
-## 💡 Usage
+---
 
-You run all commands from the directory containing `run_evals_launch.sh`. The script's behavior changes based on the command-line arguments you provide.
+## 🚀 Training Workflow
 
-### Run All Experiments
-To submit a job for every defined model against every defined test set:
+### 1. Configure Training Runs
+Open `jobs/train/run_trains_launch.sh` and edit the **`SCRIPT CONFIGURATION`** section.
+
+-   **Job Control & Slurm**: Adjust `MAX_JOBS`, `PARTITION`, `TIME_LIMIT`, etc.
+-   **Python Script Parameters**: Set default training hyperparameters like `BATCH_SIZE`.
+-   **Experiment Definitions**: Define your training runs by adding key-value pairs to the `CONFIGS` and `DATASETS` arrays. The key (e.g., `"clip_cross_attn_after_sca"`) is the short name you'll use from the command line.
+
+### 2. Launch Training Jobs
+
+Navigate to your project root (`~/DL2/spai`) and run the launcher.
+
+**Run all defined training jobs:**
 ```bash
-./run_evals_launch.sh
+./jobs/train/run_trains_launch.sh
 ```
 
-### Run on a Specific Model
-To evaluate a single model against all available test sets:
+**Run jobs for a specific configuration on all datasets:**
+```bash
+# The argument must be a key from the CONFIGS array
+./jobs/train/run_trains_launch.sh clip_cross_attn_after_sca
+```
+
+**Run jobs for a specific dataset with all configs:**
+```bash
+# The argument must be a key from the DATASETS array
+./jobs/train/run_trains_launch.sh chameleon
+```
+
+**Run a specific, targeted training job:**
+```bash
+./jobs/train/run_trains_launch.sh clip_cross_attn_after_sca chameleon
+```
+
+---
+
+## 🔬 Evaluation Workflow
+
+### 1. Configure Evaluation Runs
+Open `jobs/eval/run_evals_launch.sh` and edit the **`SCRIPT CONFIGURATION`** section.
+
+-   **Job Control & Slurm**: Adjust `MAX_JOBS`, `PARTITION`, etc.
+-   **Python Script Parameters**: Set default evaluation parameters like `BATCH_SIZE`.
+-   **Experiment Definitions**: Define your evaluation runs by adding key-value pairs to the `MODELS` and `TEST_SETS` arrays. The key is the short name you'll use from the command line.
+
+### 2. Launch Evaluation Jobs
+
+Navigate to your project root (`~/DL2/spai`) and run the launcher.
+
+**Run all defined evaluation jobs:**
+```bash
+./jobs/eval/run_evals_launch.sh
+```
+
+**Run evaluations for a specific model on all test sets:**
 ```bash
 # The argument must be a key from the MODELS array
-./run_evals_launch.sh clip_cross_attn_after_sca_chameleon
+./jobs/eval/run_evals_launch.sh clip_cross_attn_after_sca_chameleon
 ```
 
-### Run on a Specific Test Set
-To evaluate all models against a single test set:
+**Run evaluations on a specific test set for all models:**
 ```bash
 # The argument must be a key from the TEST_SETS array
-./run_evals_launch.sh dalle3
+./jobs/eval/run_evals_launch.sh dalle3
 ```
 
-### Run a Specific Model-Test Combination
-To run a single, targeted evaluation:
-```bash
-./run_evals_launch.sh clip_cross_attn_after_sca_chameleon dalle3
-```
+---
 
-### Run Multiple Specific Selections
-You can combine multiple model and test set keys. The script will generate jobs for every valid combination of the specified arguments.
-```bash
-# Runs `clip_...` on `dalle3` and `sdxl`.
-# Runs `convnext_...` on `dalle3` and `sdxl`.
-./run_evals_launch.sh clip_cross_attn_after_sca_chameleon convnext_cross_attn_after_sca_chameleon dalle3 sdxl
-```
-
-## 📊 Monitoring Jobs
+## 📊 Monitoring All Jobs
 
 -   **Check the Slurm Queue**: See your currently running or pending jobs.
     ```bash
     squeue -u $USER
     ```
--   **Check the Output Logs**: The stdout and stderr from each job are saved in the `jobs/out_files_eval/` directory. The files are named according to the job name and ID, for example:
-    -   `eval_clip_cross_attn_after_sca_chameleon_dalle3_12345.out`
-    -   `eval_clip_cross_attn_after_sca_chameleon_dalle3_12345.err`
-
--   **Check the Python Results**: The actual evaluation artifacts (CSVs, images, etc.) are saved in the `output/` directory, organized by timestamp, model, and test set.
+-   **Check the Output Logs**: Stdout from each job are saved in the `jobs/out_files_train/` and `jobs/out_files_eval/` directories.
+-   **Check the Results**:
+    -   **Training artifacts** (checkpoints, etc.) are saved in subfolders within `/scratch-shared/dl2_spai_models/finetune/`.
+    -   **Evaluation artifacts** are saved in subfolders within the `output/` directory.

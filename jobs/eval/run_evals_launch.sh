@@ -135,7 +135,6 @@ for model_name in "${MODELS_TO_RUN[@]}"; do
     sbatch \
       --job-name="$JOB_NAME" \
       --output="${ROOT_DIR}/jobs/out_files_eval/${JOB_NAME}_%A.out" \
-      --error="${ROOT_DIR}/jobs/out_files_eval/${JOB_NAME}_%A.err" \
       --partition="$PARTITION" \
       --gpus-per-node="$GPUS_PER_NODE" \
       --cpus-per-task="$CPUS_PER_TASK" \

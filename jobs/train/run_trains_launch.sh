@@ -1,64 +1,145 @@
 #!/bin/bash
+# set -e
+# set -o pipefail
 
-USER_NAME=$(whoami)
-ROOT_DIR="/home/${USER_NAME}/spai"
-PRETRAINED="${ROOT_DIR}/weights/spai.pth"
-OUTPUT_DIR="/scratch-shared/dl2_spai_models"
-MAX_JOBS=4       # Max concurrent jobs allowed
-SLEEP_TIME=60    # Seconds to wait before checking again
+# ==============================================================================
+# SCRIPT SELF-LOCATION
+# This makes the script runnable from any directory
+# ==============================================================================
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-# Models -> config files
+# ==============================================================================
+# SCRIPT CONFIGURATION
+# ==============================================================================
+
+# --- Job Control ---
+MAX_JOBS=4
+SLEEP_TIME=60
+
+# --- SLURM Parameters ---
+PARTITION="gpu_h100"
+TIME_LIMIT="14:00:00" # 2 days
+GPUS_PER_NODE=1
+CPUS_PER_TASK=16
+MEMORY="180G"
+
+# --- Python Script Parameters ---
+BATCH_SIZE=192
+NUM_WORKERS=16
+VAL_BATCH_SIZE=256
+AMP_OPT_LEVEL="O0"
+FEATURE_BATCH=400
+PREFETCH_FACTOR=4
+
+# --- Path Configuration ---
+USER=$(whoami)
+HOME_DIR="/home/${USER}/DL2"
+ROOT_DIR="${HOME_DIR}/spai"
+PRETRAINED_PATH="${ROOT_DIR}/weights/spai.pth"
+OUTPUT_DIR_BASE="/scratch-shared/dl2_spai_models/finetune" # Base path for outputs
+
+# --- Experiment Definitions ---
+# Short Name -> Config File Path
 declare -A CONFIGS=(
   ["clip_cross_attn_after_sca"]="${ROOT_DIR}/configs/clip_spai_after_sca.yaml"
   ["semantic_context"]="${ROOT_DIR}/configs/spai.yaml"
 )
 
-# Dataset splits or CSVs (can add more)
+# Short Name -> Dataset CSV Path
 declare -A DATASETS=(
-  # ["ldm_lsun"]="${ROOT_DIR}/datasets/ldm_lsun_train_val_subset.csv"
   ["chameleon"]="${ROOT_DIR}/datasets/chameleon_dataset_split.csv"
+  # ["ldm_lsun"]="${ROOT_DIR}/datasets/ldm_lsun_train_val_subset.csv"
 )
 
+# ==============================================================================
+# SCRIPT LOGIC
+# ==============================================================================
+
+# --- Load Environment Variables from .env file in project root ---
+ENV_FILE="${ROOT_DIR}/.env"
+if [ -f "$ENV_FILE" ]; then
+  export $(grep -v '^#' "$ENV_FILE" | xargs)
+  echo "✅ Loaded environment variables from ${ENV_FILE}"
+else
+  echo "⚠️ Warning: .env file not found at ${ENV_FILE}. Neptune credentials may be missing."
+fi
+
+# --- Helper Functions ---
 sanitize() {
   echo "$1" | tr -cd 'a-zA-Z0-9._-'
 }
 
 wait_for_available_slot() {
   while true; do
-    CURRENT_JOBS=$(squeue -u "$USER_NAME" -h | wc -l)
+    CURRENT_JOBS=$(squeue -u "$USER" -h --partition "$PARTITION" | wc -l)
     if (( CURRENT_JOBS < MAX_JOBS )); then
       break
     fi
     TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
-    echo "[$TIMESTAMP] ⏳ Too many jobs queued ($CURRENT_JOBS). Waiting for available slot..."
+    echo "[$TIMESTAMP] ⏳ Too many jobs queued ($CURRENT_JOBS/$MAX_JOBS). Waiting for a slot..."
     sleep "$SLEEP_TIME"
   done
 }
 
-for model_name in "${!CONFIGS[@]}"; do
-  CONFIG_PATH="${CONFIGS[$model_name]}"
+# --- Determine which models and datasets to run ---
+if [ "$#" -eq 0 ]; then
+  CONFIGS_TO_RUN=("${!CONFIGS[@]}")
+  DATASETS_TO_RUN=("${!DATASETS[@]}")
+  echo "🚀 No specific jobs provided. Running all ${#CONFIGS_TO_RUN[@]} configs on all ${#DATASETS_TO_RUN[@]} datasets."
+else
+  CONFIGS_TO_RUN=()
+  DATASETS_TO_RUN=()
+  for arg in "$@"; do
+    [[ -v CONFIGS[$arg] ]] && CONFIGS_TO_RUN+=("$arg")
+    [[ -v DATASETS[$arg] ]] && DATASETS_TO_RUN+=("$arg")
+  done
+  if [ ${#CONFIGS_TO_RUN[@]} -eq 0 ]; then CONFIGS_TO_RUN=("${!CONFIGS[@]}"); fi
+  if [ ${#DATASETS_TO_RUN[@]} -eq 0 ]; then DATASETS_TO_RUN=("${!DATASETS[@]}"); fi
+  echo "🚀 Running selected configs: [${CONFIGS_TO_RUN[*]}] on selected datasets: [${DATASETS_TO_RUN[*]}]"
+fi
 
-  for ds_name in "${!DATASETS[@]}"; do
-    DATA_PATH="${DATASETS[$ds_name]}"
-    SAFE_MODEL_NAME=$(sanitize "$model_name")
-    SAFE_DS_NAME=$(sanitize "$ds_name")
-
-    TAG="train_${SAFE_MODEL_NAME}_${SAFE_DS_NAME}"
-
+# --- Main Job Submission Loop ---
+for config_name in "${CONFIGS_TO_RUN[@]}"; do
+  for ds_name in "${DATASETS_TO_RUN[@]}"; do
+    
     wait_for_available_slot
 
-    echo "📤 Submitting training job: model=$SAFE_MODEL_NAME, dataset=$SAFE_DS_NAME"
+    # --- Prepare Job-Specific Variables ---
+    CONFIG_PATH="${CONFIGS[$config_name]}"
+    DATA_PATH="${DATASETS[$ds_name]}"
+    
+    SAFE_CONFIG_NAME=$(sanitize "$config_name")
+    SAFE_DS_NAME=$(sanitize "$ds_name")
+    
+    # Create a unique tag and output directory for this specific run
+    NEPTUNE_TAG="train_${SAFE_CONFIG_NAME}_${SAFE_DS_NAME}"
+    OUTPUT_DIR="${OUTPUT_DIR_BASE}/${NEPTUNE_TAG}"
+    JOB_NAME="$NEPTUNE_TAG"
+
+    echo "-----------------------------------------------------"
+    echo "📤 Submitting job: $JOB_NAME"
+    echo "   Config: $config_name"
+    echo "   Dataset: $ds_name"
+    echo "   Output Dir: $OUTPUT_DIR"
+    echo "-----------------------------------------------------"
+
+    # Export all variables the job script will need
+    export ROOT_DIR CONFIG_PATH PRETRAINED_PATH DATA_PATH OUTPUT_DIR NEPTUNE_TAG
+    export BATCH_SIZE NUM_WORKERS VAL_BATCH_SIZE AMP_OPT_LEVEL FEATURE_BATCH PREFETCH_FACTOR
 
     sbatch \
-      --job-name="$TAG" \
-      --output="${ROOT_DIR}/jobs/out_files_train/${TAG}_%A.out" \
-      --partition=gpu_h100 \
-      --gpus-per-node=1 \
-      --cpus-per-task=16 \
-      --time=00:10:00 \
-      --mem=180G \
-      --hint=nomultithread \
-      --export=ALL,ROOT_DIR="$ROOT_DIR",CONFIG_PATH="$CONFIG_PATH",PRETRAINED="$PRETRAINED",OUTPUT_DIR="$OUTPUT_DIR",DATA_PATH="$DATA_PATH",TAG="$TAG" \
-      "${ROOT_DIR}/jobs/train/new/run_train.job"
+      --job-name="$JOB_NAME" \
+      --output="${ROOT_DIR}/jobs/out_files_train/${JOB_NAME}_%A.out" \
+      --partition="$PARTITION" \
+      --gpus-per-node="$GPUS_PER_NODE" \
+      --cpus-per-task="$CPUS_PER_TASK" \
+      --time="$TIME_LIMIT" \
+      --mem="$MEMORY" \
+      --export=ALL \
+      "${SCRIPT_DIR}/run_train.job"
+
+    sleep 2 # Stagger submissions slightly
   done
 done
+
+echo "🎉 All specified training jobs have been submitted."

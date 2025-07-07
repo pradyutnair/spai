@@ -1,32 +1,56 @@
 #!/bin/bash
+#SBATCH --job-name=spai_train
+#SBATCH --output=spai_train_%A.out
+#SBATCH --partition=gpu_h100
+#SBATCH --gpus-per-node=1
+#SBATCH --cpus-per-task=16
+#SBATCH --time=2-00:00:00
+#SBATCH --mem=180G
+#SBATCH --hint=nomultithread
 
+# --- Environment Setup ---
 echo "✅ Job started at: $(date)"
+echo "✅ Running on node: $(hostname)"
+echo "✅ CUDA_VISIBLE_DEVICES: $CUDA_VISIBLE_DEVICES"
 
 module purge
 module load 2023
 module load Anaconda3/2023.07-2
 module load CUDA/12.1.1
-
 source activate spai
 
-cd "$ROOT_DIR"
+# --- Job Info ---
+echo "--- JOB PARAMETERS ---"
+echo "ROOT_DIR: $ROOT_DIR"
+echo "CONFIG_PATH: $CONFIG_PATH"
+echo "PRETRAINED_PATH: $PRETRAINED_PATH"
+echo "DATA_PATH: $DATA_PATH"
+echo "OUTPUT_DIR: $OUTPUT_DIR"
+echo "NEPTUNE_TAG: $NEPTUNE_TAG"
+echo "BATCH_SIZE: $BATCH_SIZE"
+echo "NUM_WORKERS: $NUM_WORKERS"
+echo "----------------------"
 
-export NEPTUNE_API_TOKEN="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiJjMGEzN2M5OS0zYjQ3LTRlYTQtOTdhNy1hMGM3ZTFlZTU1MzYifQ=="
-export NEPTUNE_PROJECT="dl2-spai/beast-mode"
+# --- Set Python Environment ---
+cd "$ROOT_DIR"
 export PYTHONPATH=$PYTHONPATH:"$ROOT_DIR"
 export NCCL_DEBUG=INFO
 export CUDA_LAUNCH_BLOCKING=0
 
+# --- Execute the Training ---
+echo "🚀 Starting Python training script..."
 python -m spai train \
   --cfg "$CONFIG_PATH" \
-  --batch-size 192 \
-  --pretrained "$PRETRAINED" \
+  --batch-size "$BATCH_SIZE" \
+  --pretrained "$PRETRAINED_PATH" \
   --output "$OUTPUT_DIR" \
   --data-path "$DATA_PATH" \
-  --tag "$TAG" \
-  --amp-opt-level "O0" \
-  --data-workers 16 \
+  --tag "$NEPTUNE_TAG" \
+  --amp-opt-level "$AMP_OPT_LEVEL" \
+  --data-workers "$NUM_WORKERS" \
   --save-all \
-  --opt "DATA.VAL_BATCH_SIZE" "256" \
-  --opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
-  --opt "DATA.TEST_PREFETCH_FACTOR" "4"
+  --opt "DATA.VAL_BATCH_SIZE" "$VAL_BATCH_SIZE" \
+  --opt "MODEL.FEATURE_EXTRACTION_BATCH" "$FEATURE_BATCH" \
+  --opt "DATA.TEST_PREFETCH_FACTOR" "$PREFETCH_FACTOR"
+
+echo "✅ Job finished at: $(date)"
