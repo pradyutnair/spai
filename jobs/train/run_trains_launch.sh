@@ -18,7 +18,7 @@ SLEEP_TIME=60
 
 # --- SLURM Parameters ---
 PARTITION="gpu_h100"
-TIME_LIMIT="14:00:00" # 2 days
+TIME_LIMIT="10:00:00"
 GPUS_PER_NODE=1
 CPUS_PER_TASK=16
 MEMORY="180G"
@@ -32,23 +32,23 @@ FEATURE_BATCH=400
 PREFETCH_FACTOR=4
 
 # --- Path Configuration ---
-USER=$(whoami)
-HOME_DIR="/home/${USER}/DL2"
-ROOT_DIR="${HOME_DIR}/spai"
+USER="azywot" # NOTE: hange this to your username!
+ROOT_DIR="$HOME/$USER/spai"
 PRETRAINED_PATH="${ROOT_DIR}/weights/spai.pth"
-OUTPUT_DIR_BASE="/scratch-shared/dl2_spai_models/finetune" # Base path for outputs
+OUTPUT_DIR_BASE="/scratch-shared/dl2_spai_models/original_spai" # Base path for outputs
 
 # --- Experiment Definitions ---
 # Short Name -> Config File Path
 declare -A CONFIGS=(
-  ["clip_cross_attn_after_sca"]="${ROOT_DIR}/configs/clip_spai_after_sca.yaml"
-  ["semantic_context"]="${ROOT_DIR}/configs/spai.yaml"
+  ["og_spai"]="${ROOT_DIR}/configs/spai.yaml"
+  # ["clip_cross_attn_after_sca"]="${ROOT_DIR}/configs/clip_spai_after_sca.yaml"
+  # ["semantic_context"]="${ROOT_DIR}/configs/spai.yaml"
 )
 
 # Short Name -> Dataset CSV Path
 declare -A DATASETS=(
-  ["chameleon"]="${ROOT_DIR}/datasets/chameleon_dataset_split.csv"
-  # ["ldm_lsun"]="${ROOT_DIR}/datasets/ldm_lsun_train_val_subset.csv"
+  ["ldm_coco_lsun"]="/scratch-shared/dl2_all_data/ldm_train_val_trainset.csv"
+  # NOTE: add more datasets as needed
 )
 
 # ==============================================================================
@@ -71,7 +71,7 @@ sanitize() {
 
 wait_for_available_slot() {
   while true; do
-    CURRENT_JOBS=$(squeue -u "$USER" -h --partition "$PARTITION" | wc -l)
+    CURRENT_JOBS=$(squeue -u "$(whoami)" -h --partition "$PARTITION" | wc -l)
     if (( CURRENT_JOBS < MAX_JOBS )); then
       break
     fi
@@ -129,7 +129,7 @@ for config_name in "${CONFIGS_TO_RUN[@]}"; do
 
     sbatch \
       --job-name="$JOB_NAME" \
-      --output="${ROOT_DIR}/jobs/out_files_train/${JOB_NAME}_%A.out" \
+      --output="${ROOT_DIR}/outputs/files_train/${JOB_NAME}_%A.out" \
       --partition="$PARTITION" \
       --gpus-per-node="$GPUS_PER_NODE" \
       --cpus-per-task="$CPUS_PER_TASK" \
