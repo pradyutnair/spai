@@ -24,27 +24,30 @@ FEATURE_BATCH=400
 PREFETCH_FACTOR=1
 
 # --- Path Configuration ---
-USER=$(whoami)
-HOME_DIR="/home/${USER}/DL2"
-ROOT_DIR="${HOME_DIR}/spai"
+USER="azywot" # NOTE: hange this to your username!
+ROOT_DIR="$HOME/$USER/spai"
 MODEL_DIR="/scratch-shared/dl2_spai_models/finetune"
+DATASET_DIR="/scratch-shared/dl2_all_data/testsets"
 
 # --- Experiment Definitions ---
 declare -A TEST_SETS=(
-  ["dalle2"]="test_set_dalle2.csv"
-  ["dalle3"]="test_set_dalle3.csv"
-  ["sd1_4"]="test_set_sd1_4.csv"
-  ["sdxl"]="test_set_sdxl.csv"
+  ["Trash-1000"]="$DATASET_DIR/test_set_TestSet_.Trash-1000.csv"
+  # ["dalle2"]="test_set_dalle2.csv"
+  # ["dalle3"]="test_set_dalle3.csv"
+  # ["sd1_4"]="test_set_sd1_4.csv"
+  # ["sdxl"]="test_set_sdxl.csv"
 )
 
 declare -A MODELS=(
-  ["clip_cross_attn_after_sca_chameleon"]="$MODEL_DIR/train_clip_cross_attn_after_sca_chameleon/ckpt_best.pth"
-  ["convnext_cross_attn_after_sca_chameleon"]="$MODEL_DIR/train_convnext_cross_attn_after_sca_chameleon/ckpt_best.pth"
+  ["test"]="$ROOT_DIR/weights/spai.pth"
+  # ["clip_cross_attn_after_sca_chameleon"]="$MODEL_DIR/train_clip_cross_attn_after_sca_chameleon/ckpt_best.pth"
+  # ["convnext_cross_attn_after_sca_chameleon"]="$MODEL_DIR/train_convnext_cross_attn_after_sca_chameleon/ckpt_best.pth"
 )
 
 declare -A CONFIGS=(
-  ["clip_cross_attn_after_sca_chameleon"]="$ROOT_DIR/configs/clip_spai_after_sca.yaml"
-  ["convnext_cross_attn_after_sca_chameleon"]="$ROOT_DIR/configs/convnext_spai_after_sca.yaml"
+  ["test"]="$ROOT_DIR/configs/spai.yaml"
+  # ["clip_cross_attn_after_sca_chameleon"]="$ROOT_DIR/configs/clip_spai_after_sca.yaml"
+  # ["convnext_cross_attn_after_sca_chameleon"]="$ROOT_DIR/configs/convnext_spai_after_sca.yaml"
 )
 
 # ==============================================================================
@@ -68,7 +71,7 @@ sanitize() {
 
 wait_for_available_slot() {
   while true; do
-    CURRENT_JOBS=$(squeue -u "$USER" -h --partition "$PARTITION" | wc -l)
+    CURRENT_JOBS=$(squeue -u "$(whoami)" -h --partition "$PARTITION" | wc -l)
     if (( CURRENT_JOBS < MAX_JOBS )); then
       break
     fi
@@ -129,12 +132,12 @@ for model_name in "${MODELS_TO_RUN[@]}"; do
     # sbatch will pass these to the job's environment
     export MODEL_PATH CONFIG_PATH CSV_NAME MODEL_NAME="$model_name"
     export ROOT_DIR OUTPUT_DIR NEPTUNE_TAG
-    export TEST_CSV_PATH="$ROOT_DIR/datasets/${CSV_NAME}"
+    export TEST_CSV_PATH="${CSV_NAME}"
     export BATCH_SIZE NUM_WORKERS MIN_PATCHES FEATURE_BATCH PREFETCH_FACTOR
 
     sbatch \
       --job-name="$JOB_NAME" \
-      --output="${ROOT_DIR}/jobs/out_files_eval/${JOB_NAME}_%A.out" \
+      --output="${ROOT_DIR}/outputs/files_eval/${JOB_NAME}_%A.out" \
       --partition="$PARTITION" \
       --gpus-per-node="$GPUS_PER_NODE" \
       --cpus-per-task="$CPUS_PER_TASK" \
