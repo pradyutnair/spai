@@ -38,7 +38,7 @@ Open `jobs/train/run_trains_launch.sh` and edit the **`SCRIPT CONFIGURATION`** s
 
 ### 2. Launch Training Jobs
 
-Navigate to your project root (`~/DL2/spai`) and run the launcher.
+Navigate to your spai project root and run the launcher.
 
 **Run all defined training jobs:**
 ```bash
@@ -75,7 +75,7 @@ Open `jobs/eval/run_evals_launch.sh` and edit the **`SCRIPT CONFIGURATION`** sec
 
 ### 2. Launch Evaluation Jobs
 
-Navigate to your project root (`~/DL2/spai`) and run the launcher.
+Navigate to your spai project root and run the launcher.
 
 **Run all defined evaluation jobs:**
 ```bash
@@ -98,11 +98,7 @@ Navigate to your project root (`~/DL2/spai`) and run the launcher.
 
 ## 📊 Monitoring All Jobs
 
--   **Check the Slurm Queue**: See your currently running or pending jobs.
-    ```bash
-    squeue -u $USER
-    ```
--   **Check the Output Logs**: Stdout from each job are saved in the `jobs/out_files_train/` and `jobs/out_files_eval/` directories.
+-   **Check the Output Logs**: Stdout from each job are saved in the `outputs/files_train` and `outputs/files_eval/` directories.
 -   **Check the Results**:
     -   **Training artifacts** (checkpoints, etc.) are saved in subfolders within `/scratch-shared/dl2_spai_models/finetune/`.
     -   **Evaluation artifacts** are saved in subfolders within the `output/` directory.

@@ -60,4 +60,7 @@ python -m spai train \
   --opt "MODEL.FEATURE_EXTRACTION_BATCH" "$FEATURE_BATCH" \
   --opt "DATA.TEST_PREFETCH_FACTOR" "$PREFETCH_FACTOR"
 
+chmod -R 777 "$OUTPUT_DIR"
+echo "🔐 Permissions set to 777 for contents of $OUTPUT_DIR"
+
 echo "✅ Job finished at: $(date)"

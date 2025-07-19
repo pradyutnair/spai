@@ -35,7 +35,7 @@ PREFETCH_FACTOR=4
 USER="azywot" # NOTE: change this to your username!
 ROOT_DIR="$HOME/$USER/spai"
 PRETRAINED_PATH="${ROOT_DIR}/weights/spai.pth"
-OUTPUT_DIR_BASE="/scratch-shared/dl2_spai_models/original_spai" # Base path for outputs
+OUTPUT_DIR="/scratch-shared/dl2_spai_models/ft_original_spai" # Base path for outputs
 
 # --- Experiment Definitions ---
 # Short Name -> Config File Path
@@ -47,8 +47,11 @@ declare -A CONFIGS=(
 
 # Short Name -> Dataset CSV Path
 declare -A DATASETS=(
-  ["ldm_coco_lsun"]="/scratch-shared/dl2_all_data/ldm_train_val_trainset.csv"
+  # ["ldm_coco_lsun"]="/scratch-shared/dl2_all_data/ldm_train_val_trainset.csv"
+  # ["ldm_coco_lsun_20pct"]="/scratch-shared/dl2_all_data/ldm_train_val_trainset_20pct.csv"
+  # ["ldm_coco_lsun_50pct"]="/scratch-shared/dl2_all_data/ldm_train_val_trainset_50pct.csv"
   # NOTE: add more datasets as needed
+  ["chameleon"]="/gpfs/home1/azywot1/azywot/spai/datasets/chameleon_dataset_split_new.csv"
 )
 
 # ==============================================================================
@@ -113,7 +116,6 @@ for config_name in "${CONFIGS_TO_RUN[@]}"; do
     
     # Create a unique tag and output directory for this specific run
     NEPTUNE_TAG="train_${SAFE_CONFIG_NAME}_${SAFE_DS_NAME}"
-    OUTPUT_DIR="${OUTPUT_DIR_BASE}/${NEPTUNE_TAG}"
     JOB_NAME="$NEPTUNE_TAG"
 
     echo "-----------------------------------------------------"

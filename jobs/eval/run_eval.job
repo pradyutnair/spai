@@ -38,6 +38,13 @@ export PYTHONPATH=$PYTHONPATH:"$ROOT_DIR"
 export NCCL_DEBUG=INFO
 export CUDA_LAUNCH_BLOCKING=0
 
+# ✅ Check CUDA availability
+python - <<'EOF'
+import torch
+print("CUDA available?", torch.cuda.is_available())
+print("Device name:", torch.cuda.get_device_name(0) if torch.cuda.is_available() else None)
+EOF
+
 # --- Define Python Command Options ---
 # These are built from environment variables passed by the launcher
 COMMON_OPTS=(
@@ -57,5 +64,8 @@ python -m spai test \
   --model "$MODEL_PATH" \
   --output "$OUTPUT_DIR" \
   --test-csv "$TEST_CSV_PATH"
+
+chmod -R 777 "$OUTPUT_DIR"
+echo "🔐 Permissions set to 777 for contents of $OUTPUT_DIR"
 
 echo "✅ Job finished at: $(date)"
