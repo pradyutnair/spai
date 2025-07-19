@@ -10,7 +10,7 @@ pyyaml~=6.0.1
 scipy~=1.14.0
 tensorboard
 termcolor~=2.4.0
-timm==0.4.12
+timm
 yacs~=0.1.8
 numpy~=1.26.4
 torchmetrics~=1.4.0.post0
@@ -30,3 +30,4 @@ einops~=0.8.0
 git+https://github.com/openai/CLIP.git
 onnx
 onnxscript
+open_clip_torch

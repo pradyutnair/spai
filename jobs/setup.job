@@ -1,0 +1,54 @@
+#!/bin/bash
+
+#SBATCH --gpus=1
+#SBATCH --job-name=setup_fact_env
+#SBATCH --partition=gpu_h100
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --time=00:30:00
+#SBATCH --output=outputs/setup_spai_env_%A.out
+
+echo "🐍 Starting Conda environment setup on $(hostname) at $(date)"
+
+# Load required modules
+module purge
+module load 2023
+module load Anaconda3/2023.07-2
+module load CUDA/12.1.1
+
+# Define environment name and base path
+ENV_NAME="spai"
+REQUIREMENTS_FILE="requirements.txt"
+HOME_DIR="/home/azywot1/azywot/spai"
+
+cd "$HOME_DIR" || exit
+echo "Working directory: $(pwd)"
+
+
+# Create the conda environment
+echo "📦 Creating environment: $ENV_NAME"
+# delete the environment if it exists
+conda remove -y -n $ENV_NAME --all || true
+conda create -y -n $ENV_NAME python=3.11
+
+# Activate environment
+source activate $ENV_NAME
+
+# originally (from https://github.com/mever-team/spai/blob/main/README.md):
+# conda install pytorch torchvision torchaudio pytorch-cuda=12.4 -c pytorch -c nvidia
+
+# Install PyTorch with CUDA 12.1 (good match for H100)
+echo "🔧 Installing PyTorch and dependencies (CUDA 12.1)..."
+conda install -y pytorch==2.2.2 torchvision==0.17.2 torchaudio pytorch-cuda=12.1 -c pytorch -c nvidia
+
+
+# Install packages
+# echo "📄 Installing from $REQUIREMENTS_FILE"
+pip install -r $REQUIREMENTS_FILE
+
+echo "✅ Environment '$ENV_NAME' setup complete at $(date)"
+# export CUDA_VISIBLE_DEVICES=0
+
+# ✅ Test CUDA availability
+echo "🚀 Testing PyTorch CUDA availability..."
+python -c "import torch; print('Torch version:', torch.__version__, '| CUDA available:', torch.cuda.is_available()); print('CUDA device:', torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'No GPU')"
