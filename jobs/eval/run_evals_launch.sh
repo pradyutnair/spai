@@ -24,7 +24,7 @@ FEATURE_BATCH=400
 PREFETCH_FACTOR=1
 
 # --- Path Configuration ---
-USER="azywot" # NOTE: hange this to your username!
+USER="azywot" # NOTE: change this to your username!
 ROOT_DIR="$HOME/$USER/spai"
 MODEL_DIR="/scratch-shared/dl2_spai_models/finetune"
 DATASET_DIR="/scratch-shared/dl2_all_data/testsets"

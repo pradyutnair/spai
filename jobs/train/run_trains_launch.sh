@@ -32,7 +32,7 @@ FEATURE_BATCH=400
 PREFETCH_FACTOR=4
 
 # --- Path Configuration ---
-USER="azywot" # NOTE: hange this to your username!
+USER="azywot" # NOTE: change this to your username!
 ROOT_DIR="$HOME/$USER/spai"
 PRETRAINED_PATH="${ROOT_DIR}/weights/spai.pth"
 OUTPUT_DIR_BASE="/scratch-shared/dl2_spai_models/original_spai" # Base path for outputs
