@@ -19,6 +19,8 @@ module load Anaconda3/2023.07-2
 module load CUDA/12.1.1
 source activate spai
 
+pip install filetype
+
 # --- Job Info ---
 echo "--- JOB PARAMETERS ---"
 echo "ROOT_DIR: $ROOT_DIR"
@@ -37,6 +39,7 @@ cd "$ROOT_DIR"
 export PYTHONPATH=$PYTHONPATH:"$ROOT_DIR"
 export NCCL_DEBUG=INFO
 export CUDA_LAUNCH_BLOCKING=0
+
 
 # --- Define Python Command Options ---
 # These are built from environment variables passed by the launcher

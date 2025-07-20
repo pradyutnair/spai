@@ -19,7 +19,7 @@ module load CUDA/12.1.1
 # Define environment name and base path
 ENV_NAME="spai"
 REQUIREMENTS_FILE="requirements.txt"
-HOME_DIR="/home/azywot1/azywot/spai"
+HOME_DIR="/home/igodzwon/spai"
 
 cd "$HOME_DIR" || exit
 echo "Working directory: $(pwd)"

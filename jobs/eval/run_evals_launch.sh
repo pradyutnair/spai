@@ -24,22 +24,22 @@ FEATURE_BATCH=400
 PREFETCH_FACTOR=1
 
 # --- Path Configuration ---
-USER="azywot" # NOTE: hange this to your username!
-ROOT_DIR="$HOME/$USER/spai"
+USER="igodzwon" # NOTE: hange this to your username!
+ROOT_DIR="$HOME/spai"
 MODEL_DIR="/scratch-shared/dl2_spai_models/finetune"
 DATASET_DIR="/scratch-shared/dl2_all_data/testsets"
 
 # --- Experiment Definitions ---
 declare -A TEST_SETS=(
-  ["Trash-1000"]="$DATASET_DIR/test_set_TestSet_.Trash-1000.csv"
-  # ["dalle2"]="test_set_dalle2.csv"
+  ["dalle2"]="$DATASET_DIR/test_set_TestSet_dalle_2.csv"
+
   # ["dalle3"]="test_set_dalle3.csv"
   # ["sd1_4"]="test_set_sd1_4.csv"
   # ["sdxl"]="test_set_sdxl.csv"
 )
 
 declare -A MODELS=(
-  ["test"]="$ROOT_DIR/weights/spai.pth"
+  ["test"]="$ROOT_DIR/weights/ckpt_epoch_9.pth" 
   # ["clip_cross_attn_after_sca_chameleon"]="$MODEL_DIR/train_clip_cross_attn_after_sca_chameleon/ckpt_best.pth"
   # ["convnext_cross_attn_after_sca_chameleon"]="$MODEL_DIR/train_convnext_cross_attn_after_sca_chameleon/ckpt_best.pth"
 )
