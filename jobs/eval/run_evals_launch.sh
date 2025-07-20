@@ -39,7 +39,7 @@ declare -A TEST_SETS=(
 )
 
 declare -A MODELS=(
-  ["test"]="$ROOT_DIR/weights/ckpt_epoch_9.pth" 
+  ["test"]="$ROOT_DIR/multispai_weights/ckpt_epoch_9.pth" 
   # ["clip_cross_attn_after_sca_chameleon"]="$MODEL_DIR/train_clip_cross_attn_after_sca_chameleon/ckpt_best.pth"
   # ["convnext_cross_attn_after_sca_chameleon"]="$MODEL_DIR/train_convnext_cross_attn_after_sca_chameleon/ckpt_best.pth"
 )
