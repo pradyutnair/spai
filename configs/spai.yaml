@@ -12,7 +12,7 @@ MODEL:
     OUTPUT_DIM: 1096
     HIDDEN_DIMS: [1024, 512]
     DROPOUT: 0.5
-    SPAI_INPUT_SIZE: [1024, 1024] # 1024x1024 for testing and 224 x 224 for training
+    SPAI_INPUT_SIZE: [224, 224] # 1024x1024 for testing and 224 x 224 for training
   VIT:
     EMBED_DIM: 768
     DEPTH: 12
