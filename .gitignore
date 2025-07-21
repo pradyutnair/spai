@@ -110,6 +110,7 @@ ENV/
 env.bak/
 venv.bak/
 
+
 # Spyder project settings
 .spyderproject
 .spyproject
@@ -141,3 +142,4 @@ pretrains/
 # My additions
 data/
 outputs/
+multispai_weights/
