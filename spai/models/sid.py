@@ -1450,44 +1450,64 @@ def _init_weights(m: nn.Module) -> None:
 
 ##### The following code is the addition of MoE model with semantic context
 
-class SemanticContextModel(nn.Module):
+class SemanticContextModel(PatchBasedMFViT):
     """
     Combines SPAI's spectral features with ConvNeXt semantic features using residual connections
     to structurally bias the model toward spectral features.
+    Inherits from PatchBasedMFViT for unified model loading/checkpointing.
     """
     def __init__(
         self,
-        spai_model_path: str,
-        semantic_output_dim: int = 1096,
-        projection_dim: int = 256,
-        hidden_dims: List[int] = [512, 256],
-        dropout: float = 0.5,
-        spai_input_size:tuple = (224,224)
+        # PatchBasedMFViT args:
+        vit,
+        features_processor,
+        cls_head,
+        masking_radius,
+        img_patch_size,
+        img_patch_stride,
+        cls_vector_dim,
+        num_heads,
+        attn_embed_dim,
+        dropout=0.0,
+        frozen_backbone=True,
+        minimum_patches=0,
+        initialization_scope="all",
+        use_semantic_cross_attn_sca=None,
+        use_dual_cross_attn_sca=False,
+        semantic_embed_dim=None,
+        semantic_heads=None,
+        semantic_encoder="clip",
+        # Semantic context args:
+        semantic_output_dim=1096,
+        projection_dim=256,
+        hidden_dims=[512, 256],
+        fusion_dropout=0.5,
+        spai_input_size=(224, 224),
     ):
-        super().__init__()
+        super().__init__(
+            vit=vit,
+            features_processor=features_processor,
+            cls_head=cls_head,
+            masking_radius=masking_radius,
+            img_patch_size=img_patch_size,
+            img_patch_stride=img_patch_stride,
+            cls_vector_dim=cls_vector_dim,
+            num_heads=num_heads,
+            attn_embed_dim=attn_embed_dim,
+            dropout=dropout,
+            frozen_backbone=frozen_backbone,
+            minimum_patches=minimum_patches,
+            initialization_scope=initialization_scope,
+            use_semantic_cross_attn_sca=use_semantic_cross_attn_sca,
+            use_dual_cross_attn_sca=use_dual_cross_attn_sca,
+            semantic_embed_dim=semantic_embed_dim,
+            semantic_heads=semantic_heads,
+            semantic_encoder=semantic_encoder,
+        )
         self.spai_input_size = spai_input_size
-        print(f'Input size for resizing SPAI model: {self.spai_input_size}')
-
-        # === Load and freeze SPAI model ===
-        from spai.models.build import build_mf_vit
-        from spai.config import get_config
-
-        cfg = get_config({"cfg": "configs/spai.yaml"})
-        self.spai_model = build_mf_vit(cfg)
-
-        checkpoint = torch.load(spai_model_path, map_location="cpu", weights_only=False)
-        self.spai_model.load_state_dict(checkpoint.get("model", checkpoint))
-        print(f"Loaded SPAI model from {spai_model_path}") 
-        load_result = self.spai_model.load_state_dict(checkpoint.get("model", checkpoint), strict=False)
-        print(f"Loaded SPAI model from {spai_model_path}")
-        print("Missing keys (randomly initialized):", load_result.missing_keys)
-        print("Unexpected keys (in checkpoint, not in model):", load_result.unexpected_keys)
-        for param in self.spai_model.parameters():
-            param.requires_grad = False
-        self.spai_model.eval()
-
-        spectral_features_dim = 1096  # known output dim from SPAI feature extractor
-
+        self.semantic_output_dim = semantic_output_dim
+        self.projection_dim = projection_dim
+        self.fusion_dropout = fusion_dropout
         # === Load and freeze ConvNeXt-XXL from OpenCLIP ===
         import open_clip
         convnext_model, _, _ = open_clip.create_model_and_transforms(
@@ -1497,54 +1517,45 @@ class SemanticContextModel(nn.Module):
         self.semantic_backbone.head.global_pool = nn.Identity()
         self.semantic_backbone.head.flatten = nn.Identity()
         self.global_pool = nn.AdaptiveAvgPool2d((1, 1))
-
         for param in self.semantic_backbone.parameters():
             param.requires_grad = False
         self.semantic_backbone.eval()
-
         # === Projections (raw -> aligned dimensions) ===
         self.semantic_projection = nn.Sequential(
             nn.LayerNorm(3072),
             nn.Linear(3072, projection_dim),
             nn.GELU(),
-            nn.Dropout(dropout)
+            nn.Dropout(fusion_dropout)
         )
-
-        # === Added: fusion layer to process combined features ===
+        # === Fusion layer ===
         self.fusion_layer = nn.Sequential(
-            nn.Linear(1096 + projection_dim, 512),
+            nn.Linear(cls_vector_dim + projection_dim, 512),
             nn.GELU(),
-            nn.Dropout(dropout)
+            nn.Dropout(fusion_dropout)
         )
-        
-        # === Modified: classifier with residual connection ===
-        # Takes both spectral features directly and fusion output
+        # === Classifier with residual connection ===
         self.classifier = nn.Sequential(
-            nn.Linear(1096 + 512, 512),  # spectral features + fusion features
+            nn.Linear(cls_vector_dim + 512, 512), # spectral features + fusion features
             nn.GELU(),
-            nn.Dropout(dropout),
+            nn.Dropout(fusion_dropout),
             nn.Linear(512, 1)
         )
-
         # === Initialization ===
         self.semantic_projection.apply(_init_weights)
         self.fusion_layer.apply(_init_weights)
         self.classifier.apply(_init_weights)
 
-    def forward(self, x: Union[torch.Tensor, List[torch.Tensor]], feature_extraction_batch_size: Optional[int] = None
-    ) -> torch.Tensor:
+    def forward(self, x: Union[torch.Tensor, List[torch.Tensor]], feature_extraction_batch_size: Optional[int] = None, export_dirs: Optional[list[pathlib.Path]] = None) -> torch.Tensor:
         """
         Forward pass with residual connection for spectral features.
         """
         device = next(self.parameters()).device
         normalize = transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD)
         convnext_resize = transforms.Resize((224, 224), antialias=True)
-
         if self.spai_input_size:
             spai_resize = transforms.Resize(self.spai_input_size, antialias=True)
         else:
             spai_resize = lambda x: x  # identity function, does nothing
-
         # === Validation/inference mode: list of images ===
         if isinstance(x, list):
             spai_input, convnext_input = [], []
@@ -1558,13 +1569,9 @@ class SemanticContextModel(nn.Module):
                 img_spai = spai_resize(img)
                 img_convnext = convnext_resize(img)
                 spai_input.append(img_spai)
-                #spai_input.append(img)
                 convnext_input.append(normalize(img_convnext))
             x_spai = torch.stack(spai_input).to(device).float()
             x_convnext = torch.stack(convnext_input).to(device).float()
-
-
-        # === Training mode: batched tensor ===
         else:
             if x.dim() != 4:
                 raise ValueError(f"Expected batched input (B×C×H×W), got {x.shape}")
@@ -1572,43 +1579,30 @@ class SemanticContextModel(nn.Module):
                 x = x / 255.0
             x_spai = x.to(device).float()
             x_convnext = normalize(x).to(device).float()
-
         # === Feature extraction ===
         with torch.no_grad():
-            # SPAI – remove classification head temporarily
-            original_cls_head = self.spai_model.cls_head
-            self.spai_model.cls_head = nn.Identity()
-            spectral_features = self.spai_model(x_spai)
-            self.spai_model.cls_head = original_cls_head
-
+            # SPAI features (remove classification head if present)
+            original_cls_head = self.cls_head
+            self.cls_head = nn.Identity()
+            spectral_features = super().forward(x_spai, feature_extraction_batch_size=feature_extraction_batch_size, export_dirs=export_dirs)
+            self.cls_head = original_cls_head
             # ConvNeXt
             semantic_features = self.semantic_backbone(x_convnext)
             semantic_features = self.global_pool(semantic_features).flatten(1)
-
         # === Semantic projection ===
-        semantic_proj = self.semantic_projection(semantic_features)  # e.g. 3072 → 256
-
+        semantic_proj = self.semantic_projection(semantic_features)
         # === Combined features with weighting ===
         combined = torch.cat([spectral_features, semantic_proj], dim=1)
-        # === Process combined features ===
         fused_features = self.fusion_layer(combined)
-        
         # === RESIDUAL CONNECTION: concatenate raw spectral features with fusion output ===
         final_features = torch.cat([spectral_features, fused_features], dim=1)
-        
         # === Final classification ===
         output = self.classifier(final_features)
-
         if not self.training:
             torch.cuda.empty_cache()
-
         return output
 
     def unfreeze_backbone(self) -> None:
-        """
-        Implements unfreeze_backbone for compatibility with SPAI training code.
-        Since we want to keep backbones frozen in semantic model, this is a no-op.
-        """
         print("Note: unfreeze_backbone() called but semantic model backbones remain frozen by design")
         pass
 
@@ -1616,30 +1610,41 @@ class SemanticContextModel(nn.Module):
 def build_semantic_context_model(config) -> SemanticContextModel:
     """
     Factory function to build a semantic context model.
-    
     Args:
         config: Configuration object with model parameters
-        
     Returns:
         Initialized SemanticContextModel
     """
-    # Extract configuration parameters
-    spai_model_path = config.MODEL.SEMANTIC_CONTEXT.SPAI_MODEL_PATH
-    semantic_output_dim = config.MODEL.SEMANTIC_CONTEXT.OUTPUT_DIM
-    hidden_dims = config.MODEL.SEMANTIC_CONTEXT.HIDDEN_DIMS
-    dropout = config.MODEL.SEMANTIC_CONTEXT.DROPOUT
-    spai_input_size = config.MODEL.SEMANTIC_CONTEXT.SPAI_INPUT_SIZE
-    spai_input_size = tuple(spai_input_size) if spai_input_size is not None else None
-    # Build and return the model
-    model = SemanticContextModel(
-        spai_model_path=spai_model_path,
-        semantic_output_dim=semantic_output_dim,
-        hidden_dims=hidden_dims,
-        dropout=dropout,
-        spai_input_size = spai_input_size
-
-    )
-    
+    # Build PatchBasedMFViT as base
+    if config.MODEL.RESOLUTION_MODE == "arbitrary":
+        base_model = build_mf_vit(config)  # This returns PatchBasedMFViT
+        # Extract all PatchBasedMFViT constructor args from base_model
+        args = dict(
+            vit=base_model.mfvit.vit,
+            features_processor=base_model.mfvit.features_processor,
+            cls_head=base_model.cls_head,
+            masking_radius=base_model.mfvit.frequencies_mask.shape[-1]//2,  # approximate
+            img_patch_size=base_model.img_patch_size,
+            img_patch_stride=base_model.img_patch_stride,
+            cls_vector_dim=base_model.cls_vector_dim,
+            num_heads=base_model.heads,
+            attn_embed_dim=base_model.heads * (base_model.patch_aggregator.shape[-1]),
+            dropout=base_model.dropout.p,
+            frozen_backbone=base_model.mfvit.frozen_backbone,
+            minimum_patches=base_model.minimum_patches,
+            initialization_scope="local",  # avoid reinit
+        )
+    else:
+        raise RuntimeError("SemanticContextModel currently only supports arbitrary resolution mode.")
+    # Add semantic context args
+    args.update(dict(
+        semantic_output_dim=config.MODEL.SEMANTIC_CONTEXT.OUTPUT_DIM,
+        projection_dim=config.MODEL.SEMANTIC_CONTEXT.OUTPUT_DIM,  # or config.MODEL.SEMANTIC_CONTEXT.PROJECTION_DIM if present
+        hidden_dims=config.MODEL.SEMANTIC_CONTEXT.HIDDEN_DIMS,
+        fusion_dropout=config.MODEL.SEMANTIC_CONTEXT.DROPOUT,
+        spai_input_size=tuple(config.MODEL.SEMANTIC_CONTEXT.SPAI_INPUT_SIZE) if config.MODEL.SEMANTIC_CONTEXT.SPAI_INPUT_SIZE is not None else (224,224),
+    ))
+    model = SemanticContextModel(**args)
     return model
 
 

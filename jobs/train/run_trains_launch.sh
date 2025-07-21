@@ -35,12 +35,15 @@ PREFETCH_FACTOR=4
 USER="azywot" # NOTE: change this to your username!
 ROOT_DIR="$HOME/$USER/spai"
 PRETRAINED_PATH="${ROOT_DIR}/weights/spai.pth"
-OUTPUT_DIR="/scratch-shared/dl2_spai_models/ft_original_spai" # Base path for outputs
+OUTPUT_DIR="/gpfs/home1/azywot1/azywot/spai/test_models_output" # Base path for outputs
 
 # --- Experiment Definitions ---
 # Short Name -> Config File Path
 declare -A CONFIGS=(
-  ["og_spai"]="${ROOT_DIR}/configs/spai.yaml"
+  # ["og_spai"]="${ROOT_DIR}/configs/spai.yaml"
+  ["semantic_context"]="${ROOT_DIR}/configs/spai_semantic_context.yaml"
+  ["convnext_spai_after_sca"]="${ROOT_DIR}/configs/convnext_spai_after_sca.yaml"
+  ["clip_spai_after_sca"]="${ROOT_DIR}/configs/clip_spai_after_sca.yaml"
   # ["clip_cross_attn_after_sca"]="${ROOT_DIR}/configs/clip_spai_after_sca.yaml"
   # ["semantic_context"]="${ROOT_DIR}/configs/spai.yaml"
 )
@@ -51,7 +54,7 @@ declare -A DATASETS=(
   # ["ldm_coco_lsun_20pct"]="/scratch-shared/dl2_all_data/ldm_train_val_trainset_20pct.csv"
   # ["ldm_coco_lsun_50pct"]="/scratch-shared/dl2_all_data/ldm_train_val_trainset_50pct.csv"
   # NOTE: add more datasets as needed
-  ["chameleon"]="/gpfs/home1/azywot1/azywot/spai/datasets/chameleon_dataset_split_new.csv"
+  ["chameleon"]="/gpfs/home1/azywot1/azywot/spai/datasets/chameleon_dataset_split.csv"
 )
 
 # ==============================================================================
