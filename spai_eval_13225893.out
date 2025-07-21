@@ -1,0 +1,52 @@
+✅ Job started at: Sun Jul 20 10:59:31 CEST 2025
+✅ Running on node: gcn111.local.snellius.surf.nl
+✅ CUDA_VISIBLE_DEVICES: 0
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+Requirement already satisfied: filetype in /home/igodzwon/.conda/envs/spai/lib/python3.11/site-packages (1.2.0)
+--- JOB PARAMETERS ---
+ROOT_DIR: 
+CONFIG_PATH: 
+MODEL_PATH: 
+MODEL_NAME: 
+TEST_CSV: 
+OUTPUT_DIR: 
+NEPTUNE_TAG: 
+BATCH_SIZE: 
+NUM_WORKERS: 
+----------------------
+🚀 Starting Python evaluation script...
+/home/igodzwon/.conda/envs/spai/lib/python3.11/site-packages/albumentations/__init__.py:13: UserWarning: A new version of Albumentations is available: 2.0.8 (you have 1.4.14). Upgrade using: pip install -U albumentations. To disable automatic update checks, set the environment variable NO_ALBUMENTATIONS_UPDATE to 1.
+  check_for_updates()
+Usage: python -m spai test [OPTIONS]
+Try 'python -m spai test --help' for help.
+
+Error: Invalid value for '--cfg': File '' does not exist.
+✅ Job finished at: Sun Jul 20 10:59:49 CEST 2025
+
+JOB STATISTICS
+==============
+Job ID: 13225893
+Cluster: snellius
+User/Group: igodzwon/igodzwon
+State: COMPLETED (exit code 0)
+Nodes: 1
+Cores per node: 16
+CPU Utilized: 00:00:12
+CPU Efficiency: 2.88% of 00:06:56 core-walltime
+Job Wall-clock time: 00:00:26
+Memory Utilized: 1.75 MB
+Memory Efficiency: 0.00% of 180.00 GB (180.00 GB/node)

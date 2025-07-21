@@ -1,0 +1,1684 @@
+/var/spool/slurm/slurmd/job13228843/slurm_script: line 12: cd: /home/scur2605/spai: Permission denied
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+/home/igodzwon/.conda/envs/spai/lib/python3.11/site-packages/albumentations/__init__.py:13: UserWarning: A new version of Albumentations is available: 2.0.8 (you have 1.4.14). Upgrade using: pip install -U albumentations. To disable automatic update checks, set the environment variable NO_ALBUMENTATIONS_UPDATE to 1.
+  check_for_updates()
+=> merge config from configs/spai.yaml
+[2025-07-20 22:30:10 finetune](__main__.py 363): INFO Full config saved to output/semantic_test/finetune/spai/config.json
+[2025-07-20 22:30:10 finetune](__main__.py 366): INFO AMP_OPT_LEVEL: ''
+AUG:
+  AUTO_AUGMENT: rand-m9-mstd0.5-inc1
+  BLUR_PROB: 0.25
+  COLOR_JITTER: 0.0
+  COLOR_JITTER_BRIGHTNESS_RANGE: &id001
+  - 0.8
+  - 1.2
+  COLOR_JITTER_CONTRAST_RANGE: *id001
+  COLOR_JITTER_HUE_RANGE:
+  - -0.1
+  - 0.1
+  COLOR_JITTER_SATURATION_RANGE: *id001
+  CUTMIX: 1.0
+  CUTMIX_MINMAX: null
+  GAUSSIAN_BLUR_LIMIT:
+  - 3
+  - 9
+  GAUSSIAN_BLUR_PROB: 0.5
+  GAUSSIAN_BLUR_SIGMA:
+  - 0.01
+  - 0.5
+  GAUSSIAN_NOISE_PROB: 0.5
+  HORIZONTAL_FLIP_PROB: 0.5
+  JPEG_COMPRESSION_PROB: 0.5
+  JPEG_MAX_QUALITY: 100
+  JPEG_MIN_QUALITY: 50
+  MAX_CROP_AREA: 1.0
+  MIN_CROP_AREA: 0.2
+  MIXUP: 0.8
+  MIXUP_MODE: batch
+  MIXUP_PROB: 1.0
+  MIXUP_SWITCH_PROB: 0.5
+  RECOUNT: 1
+  REMODE: pixel
+  REPROB: 0.25
+  ROTATION_DEGREES: 90
+  ROTATION_PROB: 0.5
+  SHARPEN_ALPHA_RANGE:
+  - 0.01
+  - 0.4
+  SHARPEN_LIGHTNESS_RANGE:
+  - 0.95
+  - 1
+  SHARPEN_PROB: 0.0
+  VERTICAL_FLIP_PROB: 0.5
+  WEBP_COMPRESSION_PROB: 0.0
+  WEBP_MAX_QUALITY: 100
+  WEBP_MIN_QUALITY: 50
+BASE:
+- ''
+DATA:
+  AUGMENTED_VIEWS: 4
+  BATCH_SIZE: 8
+  BLUR:
+    BETA_GAUSSIAN:
+    - 0.5
+    - 4
+    BETA_PLATEAU:
+    - 1
+    - 2
+    KERNEL_LIST:
+    - iso
+    - aniso
+    - generalized_iso
+    - generalized_aniso
+    - plateau_iso
+    - plateau_aniso
+    - sinc
+    KERNEL_PROB:
+    - 0.405
+    - 0.225
+    - 0.108
+    - 0.027
+    - 0.108
+    - 0.027
+    - 0.1
+    KERNEL_SIZE:
+    - 7
+    - 9
+    - 11
+    - 13
+    - 15
+    - 17
+    - 19
+    - 21
+    ROTATE_ANGLE:
+    - -3.1416
+    - 3.1416
+    SIGMA_X:
+    - 0.2
+    - 3
+    SIGMA_Y:
+    - 0.2
+    - 3
+  CSV_ROOT: ''
+  DATASET: csv_sid
+  DATA_PATH: ''
+  FILTER_TYPE: mfm
+  IMG_SIZE: 224
+  INTERPOLATION: bicubic
+  LMDB_PATH: null
+  MASK_RADIUS1: 16
+  MASK_RADIUS2: 999
+  MIN_CROP_SCALE: 0.2
+  NOISE:
+    GAUSSIAN_GRAY_NOISE_PROB: 0.4
+    GAUSSIAN_SIGMA:
+    - 1
+    - 30
+    POISSON_GRAY_NOISE_PROB: 0.4
+    POISSON_SCALE:
+    - 0.05
+    - 3
+    PROB:
+    - 0.5
+    - 0.5
+    TYPE:
+    - gaussian
+    - poisson
+  NUM_WORKERS: 8
+  PIN_MEMORY: true
+  PREFETCH_FACTOR: 2
+  SAMPLE_RATIO: 0.5
+  SR_FACTOR: 8
+  TEST_BATCH_SIZE: null
+  TEST_DATA_CSV_ROOT: []
+  TEST_DATA_PATH:
+  - /scratch-shared/dl2_all_data/testsets/test_set_spai_test_images_flux.csv
+  TEST_PREFETCH_FACTOR: 1
+  VAL_BATCH_SIZE: null
+  VAL_PREFETCH_FACTOR: null
+EVAL_MODE: false
+LOCAL_RANK: 0
+MODEL:
+  CLS_HEAD:
+    MLP_RATIO: 3
+  DROP_PATH_RATE: 0.1
+  DROP_RATE: 0.0
+  FEATURE_EXTRACTION_BATCH: 400
+  FRE:
+    DISABLE_RECONSTRUCTION_SIMILARITY: false
+    MASKING_RADIUS: 16
+    ORIGINAL_IMAGE_FEATURES_BRANCH: true
+    PROJECTOR_LAST_LAYER_ACTIVATION_TYPE: null
+  FREQ_LOSS:
+    AVE_SPECTRUM: false
+    BATCH_MATRIX: false
+    LOG_MATRIX: false
+    LOSS_GAMMA: 1.0
+    MATRIX_GAMMA: 1.0
+    PATCH_FACTOR: 1
+    WITH_MATRIX: false
+  LABEL_SMOOTHING: 0.1
+  NAME: finetune
+  NUM_CLASSES: 2
+  PATCH_VIT:
+    ATTN_EMBED_DIM: 1536
+    MINIMUM_PATCHES: 4
+    NUM_HEADS: 12
+    PATCH_STRIDE: 224
+  RECOVER_TARGET_TYPE: normal
+  REQUIRED_NORMALIZATION: positive_0_1
+  RESNET:
+    IN_CHANS: 3
+    LAYERS:
+    - 3
+    - 4
+    - 6
+    - 3
+  RESOLUTION_MODE: arbitrary
+  RESUME: ''
+  SEMANTIC_CONTEXT:
+    DROPOUT: 0.5
+    HIDDEN_DIMS:
+    - 1024
+    - 512
+    OUTPUT_DIM: 1096
+    SPAI_INPUT_SIZE:
+    - 1024
+    - 1024
+    SPAI_MODEL_PATH: ./weights/spai.pth
+  SID_APPROACH: semantic_context
+  SID_DROPOUT: 0.5
+  SWIN:
+    APE: false
+    DEPTHS:
+    - 2
+    - 2
+    - 6
+    - 2
+    EMBED_DIM: 96
+    IN_CHANS: 3
+    MLP_RATIO: 4.0
+    NUM_HEADS:
+    - 3
+    - 6
+    - 12
+    - 24
+    PATCH_NORM: true
+    PATCH_SIZE: 4
+    QKV_BIAS: true
+    QK_SCALE: null
+    WINDOW_SIZE: 7
+  TYPE: vit
+  VIT:
+    DECODER:
+      DEPTH: 0
+      EMBED_DIM: 512
+      NUM_HEADS: 16
+    DEPTH: 12
+    EMBED_DIM: 768
+    FEATURES_PROCESSOR: rine
+    INIT_VALUES: null
+    INTERMEDIATE_LAYERS:
+    - 0
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    IN_CHANS: 3
+    MLP_RATIO: 4
+    NUM_HEADS: 12
+    PATCH_POOLING: mean
+    PATCH_PROJECTION: true
+    PATCH_PROJECTION_PER_FEATURE: true
+    PATCH_SIZE: 16
+    PROJECTION_DIM: 1024
+    PROJECTION_LAYERS: 2
+    QKV_BIAS: true
+    USE_APE: true
+    USE_FPE: false
+    USE_INTERMEDIATE_LAYERS: true
+    USE_MEAN_POOLING: true
+    USE_RPB: false
+    USE_SHARED_RPB: false
+MODEL_WEIGHTS: mfm
+OUTPUT: output/semantic_test/finetune/spai
+PRETRAINED: /home/igodzwon/spai/multispai_weights/ckpt_epoch_9.pth
+PRINT_FREQ: 2
+SAVE_FREQ: 10
+SEED: 0
+TAG: spai
+TEST:
+  CROP: true
+  EXPORT_IMAGE_PATCHES: false
+  GAUSSIAN_BLUR: false
+  GAUSSIAN_BLUR_KERNEL_SIZE: 3
+  GAUSSIAN_NOISE: false
+  GAUSSIAN_NOISE_SIGMA: 1.0
+  JPEG_COMPRESSION: false
+  JPEG_QUALITY: 100
+  MAX_SIZE: null
+  ORIGINAL_RESOLUTION: true
+  SCALE: false
+  SCALE_FACTOR: 1.0
+  VIEWS_GENERATION_APPROACH: null
+  VIEWS_REDUCTION_APPROACH: mean
+  WEBP_COMPRESSION: false
+  WEBP_QUALITY: 100
+THROUGHPUT_MODE: false
+TRAIN:
+  ACCUMULATION_STEPS: 1
+  AUTO_RESUME: true
+  BASE_LR: 0.0005
+  CLIP_GRAD: null
+  EPOCHS: 35
+  LAYER_DECAY: 0.8
+  LOSS: bce
+  LR_SCHEDULER:
+    DECAY_EPOCHS: 30
+    DECAY_RATE: 0.1
+    GAMMA: 0.1
+    MULTISTEPS: []
+    NAME: cosine
+  MIN_LR: 2.5e-07
+  MODE: supervised
+  OPTIMIZER:
+    BETAS:
+    - 0.9
+    - 0.999
+    EPS: 1.0e-08
+    MOMENTUM: 0.9
+    NAME: adamw
+  SCALE_LR: false
+  START_EPOCH: 0
+  TRIPLET_LOSS_MARGIN: 0.5
+  USE_CHECKPOINT: false
+  WARMUP_EPOCHS: 0
+  WARMUP_LR: 2.5e-07
+  WEIGHT_DECAY: 0.05
+
+[neptune] [info   ] Neptune initialized. Open in the app: https://app.neptune.ai/iwkooo/spai/e/SPAI-302
+[2025-07-20 22:30:11 finetune](data_finetune.py 482): INFO Data transform | mode: supervised | split: test:
+Compose([
+  ImageCompression(p=0.0, quality_range=(100, 100), compression_type=0),
+  ImageCompression(p=0.0, quality_range=(100, 100), compression_type=1),
+  GaussianBlur(p=0.0, blur_limit=(3, 3), sigma_limit=(0, 0)),
+  GaussNoise(p=0.0, var_limit=(1.0, 1.0), per_channel=True, mean=0.0, noise_scale_factor=1.0),
+  RandomScale(p=0.0, interpolation=1, scale_limit=(0.0, 0.0)),
+  PadIfNeeded(p=1.0, min_height=224, min_width=224, pad_height_divisor=None, pad_width_divisor=None, position=PositionType.CENTER, border_mode=4, value=None, mask_value=None),
+  Normalize(p=1.0, mean=0.0, std=1.0, max_pixel_value=255.0, normalization='standard'),
+  ToTensorV2(p=1.0, transpose_mask=False),
+], p=1.0, bbox_params=None, keypoint_params=None, additional_targets={}, is_check_shapes=True)
+[2025-07-20 22:30:11 finetune](data_finetune.py 449): INFO Dataset 'test_set_spai_test_images_flux' | Split: test | Total images: 5999 | Source: /scratch-shared/dl2_all_data/testsets
+[2025-07-20 22:30:11 finetune](__main__.py 394): INFO Creating model:vit/finetune
+Input size for resizing SPAI model: (1024, 1024)
+=> merge config from configs/spai.yaml
+Loaded SPAI model from ./weights/spai.pth
+Loaded SPAI model from ./weights/spai.pth
+Missing keys (randomly initialized): []
+Unexpected keys (in checkpoint, not in model): []
+[2025-07-20 22:30:28 finetune](__main__.py 398): INFO SemanticContextModel(
+  (spai_model): PatchBasedMFViT(
+    (mfvit): MFViT(
+      (vit): VisionTransformer(
+        (patch_embed): PatchEmbed(
+          (proj): Conv2d(3, 768, kernel_size=(16, 16), stride=(16, 16))
+        )
+        (pos_drop): Dropout(p=0.0, inplace=False)
+        (blocks): ModuleList(
+          (0): Block(
+            (norm1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+            (attn): Attention(
+              (qkv): Linear(in_features=768, out_features=2304, bias=False)
+              (attn_drop): Dropout(p=0.0, inplace=False)
+              (proj): Linear(in_features=768, out_features=768, bias=True)
+              (proj_drop): Dropout(p=0.0, inplace=False)
+            )
+            (drop_path): Identity()
+            (norm2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=768, out_features=3072, bias=True)
+              (act): GELU(approximate='none')
+              (fc2): Linear(in_features=3072, out_features=768, bias=True)
+              (drop): Dropout(p=0.0, inplace=False)
+            )
+          )
+          (1): Block(
+            (norm1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+            (attn): Attention(
+              (qkv): Linear(in_features=768, out_features=2304, bias=False)
+              (attn_drop): Dropout(p=0.0, inplace=False)
+              (proj): Linear(in_features=768, out_features=768, bias=True)
+              (proj_drop): Dropout(p=0.0, inplace=False)
+            )
+            (drop_path): DropPath(drop_prob=0.009)
+            (norm2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=768, out_features=3072, bias=True)
+              (act): GELU(approximate='none')
+              (fc2): Linear(in_features=3072, out_features=768, bias=True)
+              (drop): Dropout(p=0.0, inplace=False)
+            )
+          )
+          (2): Block(
+            (norm1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+            (attn): Attention(
+              (qkv): Linear(in_features=768, out_features=2304, bias=False)
+              (attn_drop): Dropout(p=0.0, inplace=False)
+              (proj): Linear(in_features=768, out_features=768, bias=True)
+              (proj_drop): Dropout(p=0.0, inplace=False)
+            )
+            (drop_path): DropPath(drop_prob=0.018)
+            (norm2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=768, out_features=3072, bias=True)
+              (act): GELU(approximate='none')
+              (fc2): Linear(in_features=3072, out_features=768, bias=True)
+              (drop): Dropout(p=0.0, inplace=False)
+            )
+          )
+          (3): Block(
+            (norm1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+            (attn): Attention(
+              (qkv): Linear(in_features=768, out_features=2304, bias=False)
+              (attn_drop): Dropout(p=0.0, inplace=False)
+              (proj): Linear(in_features=768, out_features=768, bias=True)
+              (proj_drop): Dropout(p=0.0, inplace=False)
+            )
+            (drop_path): DropPath(drop_prob=0.027)
+            (norm2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=768, out_features=3072, bias=True)
+              (act): GELU(approximate='none')
+              (fc2): Linear(in_features=3072, out_features=768, bias=True)
+              (drop): Dropout(p=0.0, inplace=False)
+            )
+          )
+          (4): Block(
+            (norm1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+            (attn): Attention(
+              (qkv): Linear(in_features=768, out_features=2304, bias=False)
+              (attn_drop): Dropout(p=0.0, inplace=False)
+              (proj): Linear(in_features=768, out_features=768, bias=True)
+              (proj_drop): Dropout(p=0.0, inplace=False)
+            )
+            (drop_path): DropPath(drop_prob=0.036)
+            (norm2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=768, out_features=3072, bias=True)
+              (act): GELU(approximate='none')
+              (fc2): Linear(in_features=3072, out_features=768, bias=True)
+              (drop): Dropout(p=0.0, inplace=False)
+            )
+          )
+          (5): Block(
+            (norm1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+            (attn): Attention(
+              (qkv): Linear(in_features=768, out_features=2304, bias=False)
+              (attn_drop): Dropout(p=0.0, inplace=False)
+              (proj): Linear(in_features=768, out_features=768, bias=True)
+              (proj_drop): Dropout(p=0.0, inplace=False)
+            )
+            (drop_path): DropPath(drop_prob=0.045)
+            (norm2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=768, out_features=3072, bias=True)
+              (act): GELU(approximate='none')
+              (fc2): Linear(in_features=3072, out_features=768, bias=True)
+              (drop): Dropout(p=0.0, inplace=False)
+            )
+          )
+          (6): Block(
+            (norm1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+            (attn): Attention(
+              (qkv): Linear(in_features=768, out_features=2304, bias=False)
+              (attn_drop): Dropout(p=0.0, inplace=False)
+              (proj): Linear(in_features=768, out_features=768, bias=True)
+              (proj_drop): Dropout(p=0.0, inplace=False)
+            )
+            (drop_path): DropPath(drop_prob=0.055)
+            (norm2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=768, out_features=3072, bias=True)
+              (act): GELU(approximate='none')
+              (fc2): Linear(in_features=3072, out_features=768, bias=True)
+              (drop): Dropout(p=0.0, inplace=False)
+            )
+          )
+          (7): Block(
+            (norm1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+            (attn): Attention(
+              (qkv): Linear(in_features=768, out_features=2304, bias=False)
+              (attn_drop): Dropout(p=0.0, inplace=False)
+              (proj): Linear(in_features=768, out_features=768, bias=True)
+              (proj_drop): Dropout(p=0.0, inplace=False)
+            )
+            (drop_path): DropPath(drop_prob=0.064)
+            (norm2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=768, out_features=3072, bias=True)
+              (act): GELU(approximate='none')
+              (fc2): Linear(in_features=3072, out_features=768, bias=True)
+              (drop): Dropout(p=0.0, inplace=False)
+            )
+          )
+          (8): Block(
+            (norm1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+            (attn): Attention(
+              (qkv): Linear(in_features=768, out_features=2304, bias=False)
+              (attn_drop): Dropout(p=0.0, inplace=False)
+              (proj): Linear(in_features=768, out_features=768, bias=True)
+              (proj_drop): Dropout(p=0.0, inplace=False)
+            )
+            (drop_path): DropPath(drop_prob=0.073)
+            (norm2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=768, out_features=3072, bias=True)
+              (act): GELU(approximate='none')
+              (fc2): Linear(in_features=3072, out_features=768, bias=True)
+              (drop): Dropout(p=0.0, inplace=False)
+            )
+          )
+          (9): Block(
+            (norm1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+            (attn): Attention(
+              (qkv): Linear(in_features=768, out_features=2304, bias=False)
+              (attn_drop): Dropout(p=0.0, inplace=False)
+              (proj): Linear(in_features=768, out_features=768, bias=True)
+              (proj_drop): Dropout(p=0.0, inplace=False)
+            )
+            (drop_path): DropPath(drop_prob=0.082)
+            (norm2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=768, out_features=3072, bias=True)
+              (act): GELU(approximate='none')
+              (fc2): Linear(in_features=3072, out_features=768, bias=True)
+              (drop): Dropout(p=0.0, inplace=False)
+            )
+          )
+          (10): Block(
+            (norm1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+            (attn): Attention(
+              (qkv): Linear(in_features=768, out_features=2304, bias=False)
+              (attn_drop): Dropout(p=0.0, inplace=False)
+              (proj): Linear(in_features=768, out_features=768, bias=True)
+              (proj_drop): Dropout(p=0.0, inplace=False)
+            )
+            (drop_path): DropPath(drop_prob=0.091)
+            (norm2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=768, out_features=3072, bias=True)
+              (act): GELU(approximate='none')
+              (fc2): Linear(in_features=3072, out_features=768, bias=True)
+              (drop): Dropout(p=0.0, inplace=False)
+            )
+          )
+          (11): Block(
+            (norm1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+            (attn): Attention(
+              (qkv): Linear(in_features=768, out_features=2304, bias=False)
+              (attn_drop): Dropout(p=0.0, inplace=False)
+              (proj): Linear(in_features=768, out_features=768, bias=True)
+              (proj_drop): Dropout(p=0.0, inplace=False)
+            )
+            (drop_path): DropPath(drop_prob=0.100)
+            (norm2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=768, out_features=3072, bias=True)
+              (act): GELU(approximate='none')
+              (fc2): Linear(in_features=3072, out_features=768, bias=True)
+              (drop): Dropout(p=0.0, inplace=False)
+            )
+          )
+        )
+        (norm): Identity()
+        (fc_norm): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+        (cls_blocks): ModuleList(
+          (0): Block(
+            (norm1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+            (attn): Attention(
+              (qkv): Linear(in_features=768, out_features=2304, bias=False)
+              (attn_drop): Dropout(p=0.0, inplace=False)
+              (proj): Linear(in_features=768, out_features=768, bias=True)
+              (proj_drop): Dropout(p=0.0, inplace=False)
+            )
+            (drop_path): Identity()
+            (norm2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=768, out_features=3072, bias=True)
+              (act): GELU(approximate='none')
+              (fc2): Linear(in_features=3072, out_features=768, bias=True)
+              (drop): Dropout(p=0.0, inplace=False)
+            )
+          )
+        )
+        (cls_norm): Identity()
+        (intermediate_fc_norm): ModuleList(
+          (0-11): 12 x LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+        )
+        (head): Linear(in_features=9216, out_features=2, bias=True)
+      )
+      (features_processor): FrequencyRestorationEstimator(
+        (patch_projector): FeatureSpecificProjector(
+          (projectors): ModuleList(
+            (0-11): 12 x Projector(
+              (norm1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+              (projector): Sequential(
+                (0): Dropout(p=0.5, inplace=False)
+                (1): Linear(in_features=768, out_features=1024, bias=True)
+                (2): GELU(approximate='none')
+                (3): Dropout(p=0.5, inplace=False)
+                (4): Linear(in_features=1024, out_features=1024, bias=True)
+                (5): Identity()
+                (6): Dropout(p=0.5, inplace=False)
+              )
+              (norm2): LayerNorm((1024,), eps=1e-05, elementwise_affine=True)
+            )
+          )
+        )
+        (original_features_processor): FeatureImportanceProjector(
+          (proj1): Projector(
+            (norm1): Identity()
+            (projector): Sequential(
+              (0): Dropout(p=0.5, inplace=False)
+              (1): Linear(in_features=2048, out_features=1024, bias=True)
+              (2): GELU(approximate='none')
+              (3): Dropout(p=0.5, inplace=False)
+              (4): Linear(in_features=1024, out_features=1024, bias=True)
+              (5): GELU(approximate='none')
+              (6): Dropout(p=0.5, inplace=False)
+            )
+            (norm2): LayerNorm((1024,), eps=1e-05, elementwise_affine=True)
+          )
+          (proj2): Projector(
+            (norm1): Identity()
+            (projector): Sequential(
+              (0): Dropout(p=0.5, inplace=False)
+              (1): Linear(in_features=1024, out_features=1024, bias=True)
+              (2): GELU(approximate='none')
+              (3): Dropout(p=0.5, inplace=False)
+              (4): Linear(in_features=1024, out_features=1024, bias=True)
+              (5): GELU(approximate='none')
+              (6): Dropout(p=0.5, inplace=False)
+            )
+            (norm2): LayerNorm((1024,), eps=1e-05, elementwise_affine=True)
+          )
+        )
+      )
+      (backbone_norm): Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
+    )
+    (attend): Softmax(dim=-1)
+    (dropout): Dropout(p=0.5, inplace=False)
+    (to_kv): Linear(in_features=1096, out_features=3072, bias=False)
+    (to_out): Sequential(
+      (0): Linear(in_features=1536, out_features=1096, bias=False)
+      (1): Dropout(p=0.5, inplace=False)
+    )
+    (norm): LayerNorm((1096,), eps=1e-05, elementwise_affine=True)
+    (cls_head): ClassificationHead(
+      (head): Sequential(
+        (0): Linear(in_features=1096, out_features=3288, bias=True)
+        (1): ReLU()
+        (2): Dropout(p=0.5, inplace=False)
+        (3): Linear(in_features=3288, out_features=3288, bias=True)
+        (4): ReLU()
+        (5): Dropout(p=0.5, inplace=False)
+        (6): Linear(in_features=3288, out_features=1, bias=True)
+      )
+    )
+  )
+  (semantic_backbone): ConvNeXt(
+    (stem): Sequential(
+      (0): Conv2d(3, 384, kernel_size=(4, 4), stride=(4, 4))
+      (1): LayerNorm2d((384,), eps=1e-05, elementwise_affine=True)
+    )
+    (stages): Sequential(
+      (0): ConvNeXtStage(
+        (downsample): Identity()
+        (blocks): Sequential(
+          (0): ConvNeXtBlock(
+            (conv_dw): Conv2d(384, 384, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=384)
+            (norm): LayerNorm((384,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=384, out_features=1536, bias=True)
+              (act): GELU()
+              (drop1): Dropout(p=0.0, inplace=False)
+              (norm): Identity()
+              (fc2): Linear(in_features=1536, out_features=384, bias=True)
+              (drop2): Dropout(p=0.0, inplace=False)
+            )
+            (shortcut): Identity()
+            (drop_path): Identity()
+          )
+          (1): ConvNeXtBlock(
+            (conv_dw): Conv2d(384, 384, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=384)
+            (norm): LayerNorm((384,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=384, out_features=1536, bias=True)
+              (act): GELU()
+              (drop1): Dropout(p=0.0, inplace=False)
+              (norm): Identity()
+              (fc2): Linear(in_features=1536, out_features=384, bias=True)
+              (drop2): Dropout(p=0.0, inplace=False)
+            )
+            (shortcut): Identity()
+            (drop_path): DropPath(drop_prob=0.003)
+          )
+          (2): ConvNeXtBlock(
+            (conv_dw): Conv2d(384, 384, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=384)
+            (norm): LayerNorm((384,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=384, out_features=1536, bias=True)
+              (act): GELU()
+              (drop1): Dropout(p=0.0, inplace=False)
+              (norm): Identity()
+              (fc2): Linear(in_features=1536, out_features=384, bias=True)
+              (drop2): Dropout(p=0.0, inplace=False)
+            )
+            (shortcut): Identity()
+            (drop_path): DropPath(drop_prob=0.005)
+          )
+        )
+      )
+      (1): ConvNeXtStage(
+        (downsample): Sequential(
+          (0): LayerNorm2d((384,), eps=1e-05, elementwise_affine=True)
+          (1): Conv2d(384, 768, kernel_size=(2, 2), stride=(2, 2))
+        )
+        (blocks): Sequential(
+          (0): ConvNeXtBlock(
+            (conv_dw): Conv2d(768, 768, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=768)
+            (norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=768, out_features=3072, bias=True)
+              (act): GELU()
+              (drop1): Dropout(p=0.0, inplace=False)
+              (norm): Identity()
+              (fc2): Linear(in_features=3072, out_features=768, bias=True)
+              (drop2): Dropout(p=0.0, inplace=False)
+            )
+            (shortcut): Identity()
+            (drop_path): DropPath(drop_prob=0.008)
+          )
+          (1): ConvNeXtBlock(
+            (conv_dw): Conv2d(768, 768, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=768)
+            (norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=768, out_features=3072, bias=True)
+              (act): GELU()
+              (drop1): Dropout(p=0.0, inplace=False)
+              (norm): Identity()
+              (fc2): Linear(in_features=3072, out_features=768, bias=True)
+              (drop2): Dropout(p=0.0, inplace=False)
+            )
+            (shortcut): Identity()
+            (drop_path): DropPath(drop_prob=0.010)
+          )
+          (2): ConvNeXtBlock(
+            (conv_dw): Conv2d(768, 768, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=768)
+            (norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=768, out_features=3072, bias=True)
+              (act): GELU()
+              (drop1): Dropout(p=0.0, inplace=False)
+              (norm): Identity()
+              (fc2): Linear(in_features=3072, out_features=768, bias=True)
+              (drop2): Dropout(p=0.0, inplace=False)
+            )
+            (shortcut): Identity()
+            (drop_path): DropPath(drop_prob=0.013)
+          )
+          (3): ConvNeXtBlock(
+            (conv_dw): Conv2d(768, 768, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=768)
+            (norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=768, out_features=3072, bias=True)
+              (act): GELU()
+              (drop1): Dropout(p=0.0, inplace=False)
+              (norm): Identity()
+              (fc2): Linear(in_features=3072, out_features=768, bias=True)
+              (drop2): Dropout(p=0.0, inplace=False)
+            )
+            (shortcut): Identity()
+            (drop_path): DropPath(drop_prob=0.015)
+          )
+        )
+      )
+      (2): ConvNeXtStage(
+        (downsample): Sequential(
+          (0): LayerNorm2d((768,), eps=1e-05, elementwise_affine=True)
+          (1): Conv2d(768, 1536, kernel_size=(2, 2), stride=(2, 2))
+        )
+        (blocks): Sequential(
+          (0): ConvNeXtBlock(
+            (conv_dw): Conv2d(1536, 1536, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=1536)
+            (norm): LayerNorm((1536,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=1536, out_features=6144, bias=True)
+              (act): GELU()
+              (drop1): Dropout(p=0.0, inplace=False)
+              (norm): Identity()
+              (fc2): Linear(in_features=6144, out_features=1536, bias=True)
+              (drop2): Dropout(p=0.0, inplace=False)
+            )
+            (shortcut): Identity()
+            (drop_path): DropPath(drop_prob=0.018)
+          )
+          (1): ConvNeXtBlock(
+            (conv_dw): Conv2d(1536, 1536, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=1536)
+            (norm): LayerNorm((1536,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=1536, out_features=6144, bias=True)
+              (act): GELU()
+              (drop1): Dropout(p=0.0, inplace=False)
+              (norm): Identity()
+              (fc2): Linear(in_features=6144, out_features=1536, bias=True)
+              (drop2): Dropout(p=0.0, inplace=False)
+            )
+            (shortcut): Identity()
+            (drop_path): DropPath(drop_prob=0.021)
+          )
+          (2): ConvNeXtBlock(
+            (conv_dw): Conv2d(1536, 1536, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=1536)
+            (norm): LayerNorm((1536,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=1536, out_features=6144, bias=True)
+              (act): GELU()
+              (drop1): Dropout(p=0.0, inplace=False)
+              (norm): Identity()
+              (fc2): Linear(in_features=6144, out_features=1536, bias=True)
+              (drop2): Dropout(p=0.0, inplace=False)
+            )
+            (shortcut): Identity()
+            (drop_path): DropPath(drop_prob=0.023)
+          )
+          (3): ConvNeXtBlock(
+            (conv_dw): Conv2d(1536, 1536, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=1536)
+            (norm): LayerNorm((1536,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=1536, out_features=6144, bias=True)
+              (act): GELU()
+              (drop1): Dropout(p=0.0, inplace=False)
+              (norm): Identity()
+              (fc2): Linear(in_features=6144, out_features=1536, bias=True)
+              (drop2): Dropout(p=0.0, inplace=False)
+            )
+            (shortcut): Identity()
+            (drop_path): DropPath(drop_prob=0.026)
+          )
+          (4): ConvNeXtBlock(
+            (conv_dw): Conv2d(1536, 1536, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=1536)
+            (norm): LayerNorm((1536,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=1536, out_features=6144, bias=True)
+              (act): GELU()
+              (drop1): Dropout(p=0.0, inplace=False)
+              (norm): Identity()
+              (fc2): Linear(in_features=6144, out_features=1536, bias=True)
+              (drop2): Dropout(p=0.0, inplace=False)
+            )
+            (shortcut): Identity()
+            (drop_path): DropPath(drop_prob=0.028)
+          )
+          (5): ConvNeXtBlock(
+            (conv_dw): Conv2d(1536, 1536, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=1536)
+            (norm): LayerNorm((1536,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=1536, out_features=6144, bias=True)
+              (act): GELU()
+              (drop1): Dropout(p=0.0, inplace=False)
+              (norm): Identity()
+              (fc2): Linear(in_features=6144, out_features=1536, bias=True)
+              (drop2): Dropout(p=0.0, inplace=False)
+            )
+            (shortcut): Identity()
+            (drop_path): DropPath(drop_prob=0.031)
+          )
+          (6): ConvNeXtBlock(
+            (conv_dw): Conv2d(1536, 1536, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=1536)
+            (norm): LayerNorm((1536,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=1536, out_features=6144, bias=True)
+              (act): GELU()
+              (drop1): Dropout(p=0.0, inplace=False)
+              (norm): Identity()
+              (fc2): Linear(in_features=6144, out_features=1536, bias=True)
+              (drop2): Dropout(p=0.0, inplace=False)
+            )
+            (shortcut): Identity()
+            (drop_path): DropPath(drop_prob=0.033)
+          )
+          (7): ConvNeXtBlock(
+            (conv_dw): Conv2d(1536, 1536, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=1536)
+            (norm): LayerNorm((1536,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=1536, out_features=6144, bias=True)
+              (act): GELU()
+              (drop1): Dropout(p=0.0, inplace=False)
+              (norm): Identity()
+              (fc2): Linear(in_features=6144, out_features=1536, bias=True)
+              (drop2): Dropout(p=0.0, inplace=False)
+            )
+            (shortcut): Identity()
+            (drop_path): DropPath(drop_prob=0.036)
+          )
+          (8): ConvNeXtBlock(
+            (conv_dw): Conv2d(1536, 1536, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=1536)
+            (norm): LayerNorm((1536,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=1536, out_features=6144, bias=True)
+              (act): GELU()
+              (drop1): Dropout(p=0.0, inplace=False)
+              (norm): Identity()
+              (fc2): Linear(in_features=6144, out_features=1536, bias=True)
+              (drop2): Dropout(p=0.0, inplace=False)
+            )
+            (shortcut): Identity()
+            (drop_path): DropPath(drop_prob=0.038)
+          )
+          (9): ConvNeXtBlock(
+            (conv_dw): Conv2d(1536, 1536, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=1536)
+            (norm): LayerNorm((1536,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=1536, out_features=6144, bias=True)
+              (act): GELU()
+              (drop1): Dropout(p=0.0, inplace=False)
+              (norm): Identity()
+              (fc2): Linear(in_features=6144, out_features=1536, bias=True)
+              (drop2): Dropout(p=0.0, inplace=False)
+            )
+            (shortcut): Identity()
+            (drop_path): DropPath(drop_prob=0.041)
+          )
+          (10): ConvNeXtBlock(
+            (conv_dw): Conv2d(1536, 1536, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=1536)
+            (norm): LayerNorm((1536,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=1536, out_features=6144, bias=True)
+              (act): GELU()
+              (drop1): Dropout(p=0.0, inplace=False)
+              (norm): Identity()
+              (fc2): Linear(in_features=6144, out_features=1536, bias=True)
+              (drop2): Dropout(p=0.0, inplace=False)
+            )
+            (shortcut): Identity()
+            (drop_path): DropPath(drop_prob=0.044)
+          )
+          (11): ConvNeXtBlock(
+            (conv_dw): Conv2d(1536, 1536, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=1536)
+            (norm): LayerNorm((1536,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=1536, out_features=6144, bias=True)
+              (act): GELU()
+              (drop1): Dropout(p=0.0, inplace=False)
+              (norm): Identity()
+              (fc2): Linear(in_features=6144, out_features=1536, bias=True)
+              (drop2): Dropout(p=0.0, inplace=False)
+            )
+            (shortcut): Identity()
+            (drop_path): DropPath(drop_prob=0.046)
+          )
+          (12): ConvNeXtBlock(
+            (conv_dw): Conv2d(1536, 1536, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=1536)
+            (norm): LayerNorm((1536,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=1536, out_features=6144, bias=True)
+              (act): GELU()
+              (drop1): Dropout(p=0.0, inplace=False)
+              (norm): Identity()
+              (fc2): Linear(in_features=6144, out_features=1536, bias=True)
+              (drop2): Dropout(p=0.0, inplace=False)
+            )
+            (shortcut): Identity()
+            (drop_path): DropPath(drop_prob=0.049)
+          )
+          (13): ConvNeXtBlock(
+            (conv_dw): Conv2d(1536, 1536, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=1536)
+            (norm): LayerNorm((1536,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=1536, out_features=6144, bias=True)
+              (act): GELU()
+              (drop1): Dropout(p=0.0, inplace=False)
+              (norm): Identity()
+              (fc2): Linear(in_features=6144, out_features=1536, bias=True)
+              (drop2): Dropout(p=0.0, inplace=False)
+            )
+            (shortcut): Identity()
+            (drop_path): DropPath(drop_prob=0.051)
+          )
+          (14): ConvNeXtBlock(
+            (conv_dw): Conv2d(1536, 1536, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=1536)
+            (norm): LayerNorm((1536,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=1536, out_features=6144, bias=True)
+              (act): GELU()
+              (drop1): Dropout(p=0.0, inplace=False)
+              (norm): Identity()
+              (fc2): Linear(in_features=6144, out_features=1536, bias=True)
+              (drop2): Dropout(p=0.0, inplace=False)
+            )
+            (shortcut): Identity()
+            (drop_path): DropPath(drop_prob=0.054)
+          )
+          (15): ConvNeXtBlock(
+            (conv_dw): Conv2d(1536, 1536, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=1536)
+            (norm): LayerNorm((1536,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=1536, out_features=6144, bias=True)
+              (act): GELU()
+              (drop1): Dropout(p=0.0, inplace=False)
+              (norm): Identity()
+              (fc2): Linear(in_features=6144, out_features=1536, bias=True)
+              (drop2): Dropout(p=0.0, inplace=False)
+            )
+            (shortcut): Identity()
+            (drop_path): DropPath(drop_prob=0.056)
+          )
+          (16): ConvNeXtBlock(
+            (conv_dw): Conv2d(1536, 1536, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=1536)
+            (norm): LayerNorm((1536,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=1536, out_features=6144, bias=True)
+              (act): GELU()
+              (drop1): Dropout(p=0.0, inplace=False)
+              (norm): Identity()
+              (fc2): Linear(in_features=6144, out_features=1536, bias=True)
+              (drop2): Dropout(p=0.0, inplace=False)
+            )
+            (shortcut): Identity()
+            (drop_path): DropPath(drop_prob=0.059)
+          )
+          (17): ConvNeXtBlock(
+            (conv_dw): Conv2d(1536, 1536, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=1536)
+            (norm): LayerNorm((1536,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=1536, out_features=6144, bias=True)
+              (act): GELU()
+              (drop1): Dropout(p=0.0, inplace=False)
+              (norm): Identity()
+              (fc2): Linear(in_features=6144, out_features=1536, bias=True)
+              (drop2): Dropout(p=0.0, inplace=False)
+            )
+            (shortcut): Identity()
+            (drop_path): DropPath(drop_prob=0.062)
+          )
+          (18): ConvNeXtBlock(
+            (conv_dw): Conv2d(1536, 1536, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=1536)
+            (norm): LayerNorm((1536,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=1536, out_features=6144, bias=True)
+              (act): GELU()
+              (drop1): Dropout(p=0.0, inplace=False)
+              (norm): Identity()
+              (fc2): Linear(in_features=6144, out_features=1536, bias=True)
+              (drop2): Dropout(p=0.0, inplace=False)
+            )
+            (shortcut): Identity()
+            (drop_path): DropPath(drop_prob=0.064)
+          )
+          (19): ConvNeXtBlock(
+            (conv_dw): Conv2d(1536, 1536, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=1536)
+            (norm): LayerNorm((1536,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=1536, out_features=6144, bias=True)
+              (act): GELU()
+              (drop1): Dropout(p=0.0, inplace=False)
+              (norm): Identity()
+              (fc2): Linear(in_features=6144, out_features=1536, bias=True)
+              (drop2): Dropout(p=0.0, inplace=False)
+            )
+            (shortcut): Identity()
+            (drop_path): DropPath(drop_prob=0.067)
+          )
+          (20): ConvNeXtBlock(
+            (conv_dw): Conv2d(1536, 1536, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=1536)
+            (norm): LayerNorm((1536,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=1536, out_features=6144, bias=True)
+              (act): GELU()
+              (drop1): Dropout(p=0.0, inplace=False)
+              (norm): Identity()
+              (fc2): Linear(in_features=6144, out_features=1536, bias=True)
+              (drop2): Dropout(p=0.0, inplace=False)
+            )
+            (shortcut): Identity()
+            (drop_path): DropPath(drop_prob=0.069)
+          )
+          (21): ConvNeXtBlock(
+            (conv_dw): Conv2d(1536, 1536, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=1536)
+            (norm): LayerNorm((1536,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=1536, out_features=6144, bias=True)
+              (act): GELU()
+              (drop1): Dropout(p=0.0, inplace=False)
+              (norm): Identity()
+              (fc2): Linear(in_features=6144, out_features=1536, bias=True)
+              (drop2): Dropout(p=0.0, inplace=False)
+            )
+            (shortcut): Identity()
+            (drop_path): DropPath(drop_prob=0.072)
+          )
+          (22): ConvNeXtBlock(
+            (conv_dw): Conv2d(1536, 1536, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=1536)
+            (norm): LayerNorm((1536,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=1536, out_features=6144, bias=True)
+              (act): GELU()
+              (drop1): Dropout(p=0.0, inplace=False)
+              (norm): Identity()
+              (fc2): Linear(in_features=6144, out_features=1536, bias=True)
+              (drop2): Dropout(p=0.0, inplace=False)
+            )
+            (shortcut): Identity()
+            (drop_path): DropPath(drop_prob=0.074)
+          )
+          (23): ConvNeXtBlock(
+            (conv_dw): Conv2d(1536, 1536, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=1536)
+            (norm): LayerNorm((1536,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=1536, out_features=6144, bias=True)
+              (act): GELU()
+              (drop1): Dropout(p=0.0, inplace=False)
+              (norm): Identity()
+              (fc2): Linear(in_features=6144, out_features=1536, bias=True)
+              (drop2): Dropout(p=0.0, inplace=False)
+            )
+            (shortcut): Identity()
+            (drop_path): DropPath(drop_prob=0.077)
+          )
+          (24): ConvNeXtBlock(
+            (conv_dw): Conv2d(1536, 1536, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=1536)
+            (norm): LayerNorm((1536,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=1536, out_features=6144, bias=True)
+              (act): GELU()
+              (drop1): Dropout(p=0.0, inplace=False)
+              (norm): Identity()
+              (fc2): Linear(in_features=6144, out_features=1536, bias=True)
+              (drop2): Dropout(p=0.0, inplace=False)
+            )
+            (shortcut): Identity()
+            (drop_path): DropPath(drop_prob=0.079)
+          )
+          (25): ConvNeXtBlock(
+            (conv_dw): Conv2d(1536, 1536, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=1536)
+            (norm): LayerNorm((1536,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=1536, out_features=6144, bias=True)
+              (act): GELU()
+              (drop1): Dropout(p=0.0, inplace=False)
+              (norm): Identity()
+              (fc2): Linear(in_features=6144, out_features=1536, bias=True)
+              (drop2): Dropout(p=0.0, inplace=False)
+            )
+            (shortcut): Identity()
+            (drop_path): DropPath(drop_prob=0.082)
+          )
+          (26): ConvNeXtBlock(
+            (conv_dw): Conv2d(1536, 1536, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=1536)
+            (norm): LayerNorm((1536,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=1536, out_features=6144, bias=True)
+              (act): GELU()
+              (drop1): Dropout(p=0.0, inplace=False)
+              (norm): Identity()
+              (fc2): Linear(in_features=6144, out_features=1536, bias=True)
+              (drop2): Dropout(p=0.0, inplace=False)
+            )
+            (shortcut): Identity()
+            (drop_path): DropPath(drop_prob=0.085)
+          )
+          (27): ConvNeXtBlock(
+            (conv_dw): Conv2d(1536, 1536, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=1536)
+            (norm): LayerNorm((1536,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=1536, out_features=6144, bias=True)
+              (act): GELU()
+              (drop1): Dropout(p=0.0, inplace=False)
+              (norm): Identity()
+              (fc2): Linear(in_features=6144, out_features=1536, bias=True)
+              (drop2): Dropout(p=0.0, inplace=False)
+            )
+            (shortcut): Identity()
+            (drop_path): DropPath(drop_prob=0.087)
+          )
+          (28): ConvNeXtBlock(
+            (conv_dw): Conv2d(1536, 1536, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=1536)
+            (norm): LayerNorm((1536,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=1536, out_features=6144, bias=True)
+              (act): GELU()
+              (drop1): Dropout(p=0.0, inplace=False)
+              (norm): Identity()
+              (fc2): Linear(in_features=6144, out_features=1536, bias=True)
+              (drop2): Dropout(p=0.0, inplace=False)
+            )
+            (shortcut): Identity()
+            (drop_path): DropPath(drop_prob=0.090)
+          )
+          (29): ConvNeXtBlock(
+            (conv_dw): Conv2d(1536, 1536, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=1536)
+            (norm): LayerNorm((1536,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=1536, out_features=6144, bias=True)
+              (act): GELU()
+              (drop1): Dropout(p=0.0, inplace=False)
+              (norm): Identity()
+              (fc2): Linear(in_features=6144, out_features=1536, bias=True)
+              (drop2): Dropout(p=0.0, inplace=False)
+            )
+            (shortcut): Identity()
+            (drop_path): DropPath(drop_prob=0.092)
+          )
+        )
+      )
+      (3): ConvNeXtStage(
+        (downsample): Sequential(
+          (0): LayerNorm2d((1536,), eps=1e-05, elementwise_affine=True)
+          (1): Conv2d(1536, 3072, kernel_size=(2, 2), stride=(2, 2))
+        )
+        (blocks): Sequential(
+          (0): ConvNeXtBlock(
+            (conv_dw): Conv2d(3072, 3072, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=3072)
+            (norm): LayerNorm((3072,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=3072, out_features=12288, bias=True)
+              (act): GELU()
+              (drop1): Dropout(p=0.0, inplace=False)
+              (norm): Identity()
+              (fc2): Linear(in_features=12288, out_features=3072, bias=True)
+              (drop2): Dropout(p=0.0, inplace=False)
+            )
+            (shortcut): Identity()
+            (drop_path): DropPath(drop_prob=0.095)
+          )
+          (1): ConvNeXtBlock(
+            (conv_dw): Conv2d(3072, 3072, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=3072)
+            (norm): LayerNorm((3072,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=3072, out_features=12288, bias=True)
+              (act): GELU()
+              (drop1): Dropout(p=0.0, inplace=False)
+              (norm): Identity()
+              (fc2): Linear(in_features=12288, out_features=3072, bias=True)
+              (drop2): Dropout(p=0.0, inplace=False)
+            )
+            (shortcut): Identity()
+            (drop_path): DropPath(drop_prob=0.097)
+          )
+          (2): ConvNeXtBlock(
+            (conv_dw): Conv2d(3072, 3072, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=3072)
+            (norm): LayerNorm((3072,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=3072, out_features=12288, bias=True)
+              (act): GELU()
+              (drop1): Dropout(p=0.0, inplace=False)
+              (norm): Identity()
+              (fc2): Linear(in_features=12288, out_features=3072, bias=True)
+              (drop2): Dropout(p=0.0, inplace=False)
+            )
+            (shortcut): Identity()
+            (drop_path): DropPath(drop_prob=0.100)
+          )
+        )
+      )
+    )
+    (norm_pre): Identity()
+    (head): NormMlpClassifierHead(
+      (global_pool): Identity()
+      (norm): LayerNorm2d((3072,), eps=1e-05, elementwise_affine=True)
+      (flatten): Identity()
+      (pre_logits): Identity()
+      (drop): Dropout(p=0.0, inplace=False)
+      (fc): Identity()
+    )
+  )
+  (global_pool): AdaptiveAvgPool2d(output_size=(1, 1))
+  (semantic_projection): Sequential(
+    (0): LayerNorm((3072,), eps=1e-05, elementwise_affine=True)
+    (1): Linear(in_features=3072, out_features=256, bias=True)
+    (2): GELU(approximate='none')
+    (3): Dropout(p=0.5, inplace=False)
+  )
+  (fusion_layer): Sequential(
+    (0): Linear(in_features=1352, out_features=512, bias=True)
+    (1): GELU(approximate='none')
+    (2): Dropout(p=0.5, inplace=False)
+  )
+  (classifier): Sequential(
+    (0): Linear(in_features=1608, out_features=512, bias=True)
+    (1): GELU(approximate='none')
+    (2): Dropout(p=0.5, inplace=False)
+    (3): Linear(in_features=512, out_features=1, bias=True)
+  )
+)
+[2025-07-20 22:30:28 finetune](__main__.py 400): INFO Number of Params: 2309889
+[2025-07-20 22:30:28 finetune](utils.py 146): INFO >>>>>>>>>> Fine-tuned from /home/igodzwon/spai/multispai_weights/ckpt_epoch_9.pth ..........
+[2025-07-20 22:30:29 finetune](utils.py 160): INFO Detect non-pre-trained model, pass without doing anything.
+[2025-07-20 22:30:29 finetune](utils.py 166): INFO >>>>>>>>>> Remapping pre-trained keys for VIT ..........
+[2025-07-20 22:30:29 finetune](utils.py 173): INFO <All keys matched successfully>
+[2025-07-20 22:30:29 finetune](utils.py 178): INFO >>>>>>>>>> loaded successfully '/home/igodzwon/spai/multispai_weights/ckpt_epoch_9.pth'
+/home/igodzwon/.conda/envs/spai/lib/python3.11/site-packages/torchmetrics/utilities/prints.py:43: UserWarning: No positive samples in targets, true positive value should be meaningless. Returning zero tensor in true positive score
+  warnings.warn(*args, **kwargs)  # noqa: B028
+/home/igodzwon/.conda/envs/spai/lib/python3.11/site-packages/torchmetrics/utilities/prints.py:43: UserWarning: No positive samples found in target, recall is undefined. Setting recall to one for all thresholds.
+  warnings.warn(*args, **kwargs)  # noqa: B028
+[2025-07-20 22:30:33 finetune](__main__.py 1201): INFO Test: [0/750] | Time 3.611 (3.611) | Loss 0.1888 (0.1888) | Mem 4866MB
+[2025-07-20 22:30:35 finetune](__main__.py 1201): INFO Test: [2/750] | Time 0.827 (1.718) | Loss 0.0878 (0.5710) | Mem 5033MB
+[2025-07-20 22:30:36 finetune](__main__.py 1201): INFO Test: [4/750] | Time 0.717 (1.318) | Loss 0.3625 (0.5811) | Mem 5033MB
+[2025-07-20 22:30:38 finetune](__main__.py 1201): INFO Test: [6/750] | Time 0.744 (1.164) | Loss 0.4056 (0.5637) | Mem 5088MB
+[2025-07-20 22:30:39 finetune](__main__.py 1201): INFO Test: [8/750] | Time 0.719 (1.066) | Loss 0.4108 (0.5002) | Mem 5088MB
+[2025-07-20 22:30:40 finetune](__main__.py 1201): INFO Test: [10/750] | Time 0.719 (1.003) | Loss 1.1993 (0.6239) | Mem 5088MB
+[2025-07-20 22:30:42 finetune](__main__.py 1201): INFO Test: [12/750] | Time 0.723 (0.960) | Loss 0.8535 (0.6026) | Mem 5223MB
+[2025-07-20 22:30:43 finetune](__main__.py 1201): INFO Test: [14/750] | Time 0.724 (0.929) | Loss 1.1773 (0.6547) | Mem 5223MB
+[2025-07-20 22:30:45 finetune](__main__.py 1201): INFO Test: [16/750] | Time 0.720 (0.904) | Loss 0.1134 (0.5855) | Mem 5223MB
+[2025-07-20 22:30:46 finetune](__main__.py 1201): INFO Test: [18/750] | Time 0.715 (0.884) | Loss 0.2849 (0.5580) | Mem 5223MB
+[2025-07-20 22:30:48 finetune](__main__.py 1201): INFO Test: [20/750] | Time 0.730 (0.869) | Loss 1.4124 (0.5986) | Mem 5223MB
+[2025-07-20 22:30:49 finetune](__main__.py 1201): INFO Test: [22/750] | Time 0.722 (0.856) | Loss 0.6834 (0.5926) | Mem 5223MB
+[2025-07-20 22:30:51 finetune](__main__.py 1201): INFO Test: [24/750] | Time 0.716 (0.845) | Loss 0.3566 (0.5724) | Mem 5223MB
+[2025-07-20 22:30:52 finetune](__main__.py 1201): INFO Test: [26/750] | Time 0.719 (0.836) | Loss 0.0200 (0.5374) | Mem 5223MB
+[2025-07-20 22:30:53 finetune](__main__.py 1201): INFO Test: [28/750] | Time 0.719 (0.828) | Loss 0.1036 (0.5050) | Mem 5223MB
+[2025-07-20 22:30:55 finetune](__main__.py 1201): INFO Test: [30/750] | Time 0.723 (0.824) | Loss 0.0512 (0.4778) | Mem 5223MB
+[2025-07-20 22:30:56 finetune](__main__.py 1201): INFO Test: [32/750] | Time 0.814 (0.821) | Loss 0.0344 (0.4613) | Mem 5223MB
+[2025-07-20 22:30:58 finetune](__main__.py 1201): INFO Test: [34/750] | Time 0.723 (0.815) | Loss 0.6857 (0.4775) | Mem 5223MB
+[2025-07-20 22:30:59 finetune](__main__.py 1201): INFO Test: [36/750] | Time 0.724 (0.810) | Loss 0.7951 (0.4734) | Mem 5223MB
+[2025-07-20 22:31:01 finetune](__main__.py 1201): INFO Test: [38/750] | Time 0.723 (0.806) | Loss 0.1431 (0.4683) | Mem 5223MB
+[2025-07-20 22:31:02 finetune](__main__.py 1201): INFO Test: [40/750] | Time 0.718 (0.802) | Loss 0.6062 (0.4712) | Mem 5223MB
+[2025-07-20 22:31:04 finetune](__main__.py 1201): INFO Test: [42/750] | Time 0.717 (0.798) | Loss 0.0754 (0.4650) | Mem 5223MB
+[2025-07-20 22:31:05 finetune](__main__.py 1201): INFO Test: [44/750] | Time 0.720 (0.794) | Loss 0.0088 (0.4558) | Mem 5223MB
+[2025-07-20 22:31:07 finetune](__main__.py 1201): INFO Test: [46/750] | Time 0.724 (0.792) | Loss 1.0597 (0.4590) | Mem 5223MB
+[2025-07-20 22:31:08 finetune](__main__.py 1201): INFO Test: [48/750] | Time 0.721 (0.789) | Loss 0.3645 (0.4534) | Mem 5223MB
+[2025-07-20 22:31:10 finetune](__main__.py 1201): INFO Test: [50/750] | Time 0.716 (0.787) | Loss 0.4500 (0.4455) | Mem 5223MB
+[2025-07-20 22:31:11 finetune](__main__.py 1201): INFO Test: [52/750] | Time 0.721 (0.784) | Loss 0.2103 (0.4333) | Mem 5223MB
+[2025-07-20 22:31:12 finetune](__main__.py 1201): INFO Test: [54/750] | Time 0.720 (0.782) | Loss 1.5613 (0.4470) | Mem 5223MB
+[2025-07-20 22:31:14 finetune](__main__.py 1201): INFO Test: [56/750] | Time 0.720 (0.780) | Loss 0.2358 (0.4421) | Mem 5223MB
+[2025-07-20 22:31:15 finetune](__main__.py 1201): INFO Test: [58/750] | Time 0.722 (0.778) | Loss 0.2513 (0.4316) | Mem 5223MB
+[2025-07-20 22:31:17 finetune](__main__.py 1201): INFO Test: [60/750] | Time 0.718 (0.776) | Loss 0.9160 (0.4350) | Mem 5223MB
+[2025-07-20 22:31:18 finetune](__main__.py 1201): INFO Test: [62/750] | Time 0.720 (0.774) | Loss 0.9590 (0.4470) | Mem 5223MB
+[2025-07-20 22:31:20 finetune](__main__.py 1201): INFO Test: [64/750] | Time 0.722 (0.772) | Loss 0.4166 (0.4441) | Mem 5223MB
+[2025-07-20 22:31:21 finetune](__main__.py 1201): INFO Test: [66/750] | Time 0.720 (0.771) | Loss 0.4471 (0.4508) | Mem 5223MB
+[2025-07-20 22:31:23 finetune](__main__.py 1201): INFO Test: [68/750] | Time 0.719 (0.769) | Loss 0.7278 (0.4687) | Mem 5223MB
+[2025-07-20 22:31:24 finetune](__main__.py 1201): INFO Test: [70/750] | Time 0.720 (0.768) | Loss 0.3752 (0.4735) | Mem 5223MB
+[2025-07-20 22:31:25 finetune](__main__.py 1201): INFO Test: [72/750] | Time 0.722 (0.767) | Loss 0.3485 (0.4817) | Mem 5223MB
+[2025-07-20 22:31:27 finetune](__main__.py 1201): INFO Test: [74/750] | Time 0.728 (0.766) | Loss 0.1555 (0.4746) | Mem 5227MB
+[2025-07-20 22:31:28 finetune](__main__.py 1201): INFO Test: [76/750] | Time 0.725 (0.764) | Loss 0.0856 (0.4713) | Mem 5227MB
+[2025-07-20 22:31:30 finetune](__main__.py 1201): INFO Test: [78/750] | Time 0.729 (0.764) | Loss 1.0914 (0.4753) | Mem 5233MB
+[2025-07-20 22:31:31 finetune](__main__.py 1201): INFO Test: [80/750] | Time 0.722 (0.762) | Loss 0.2860 (0.4672) | Mem 5233MB
+[2025-07-20 22:31:33 finetune](__main__.py 1201): INFO Test: [82/750] | Time 0.720 (0.761) | Loss 0.5476 (0.4688) | Mem 5233MB
+[2025-07-20 22:31:34 finetune](__main__.py 1201): INFO Test: [84/750] | Time 0.719 (0.760) | Loss 0.2550 (0.4686) | Mem 5233MB
+[2025-07-20 22:31:35 finetune](__main__.py 1201): INFO Test: [86/750] | Time 0.721 (0.760) | Loss 1.0370 (0.4783) | Mem 5233MB
+[2025-07-20 22:31:37 finetune](__main__.py 1201): INFO Test: [88/750] | Time 0.721 (0.759) | Loss 0.0063 (0.4777) | Mem 5233MB
+[2025-07-20 22:31:38 finetune](__main__.py 1201): INFO Test: [90/750] | Time 0.720 (0.758) | Loss 1.2292 (0.4813) | Mem 5233MB
+[2025-07-20 22:31:40 finetune](__main__.py 1201): INFO Test: [92/750] | Time 0.719 (0.757) | Loss 0.0768 (0.4859) | Mem 5233MB
+[2025-07-20 22:31:41 finetune](__main__.py 1201): INFO Test: [94/750] | Time 0.718 (0.756) | Loss 0.6961 (0.4874) | Mem 5233MB
+[2025-07-20 22:31:43 finetune](__main__.py 1201): INFO Test: [96/750] | Time 0.727 (0.756) | Loss 0.2061 (0.4886) | Mem 5233MB
+[2025-07-20 22:31:44 finetune](__main__.py 1201): INFO Test: [98/750] | Time 0.721 (0.755) | Loss 0.1070 (0.4832) | Mem 5233MB
+[2025-07-20 22:31:46 finetune](__main__.py 1201): INFO Test: [100/750] | Time 0.720 (0.754) | Loss 0.5479 (0.4837) | Mem 5233MB
+[2025-07-20 22:31:47 finetune](__main__.py 1201): INFO Test: [102/750] | Time 0.721 (0.753) | Loss 1.4565 (0.4975) | Mem 5233MB
+[2025-07-20 22:31:48 finetune](__main__.py 1201): INFO Test: [104/750] | Time 0.718 (0.753) | Loss 0.3261 (0.4961) | Mem 5233MB
+[2025-07-20 22:31:50 finetune](__main__.py 1201): INFO Test: [106/750] | Time 0.718 (0.752) | Loss 0.1000 (0.4906) | Mem 5233MB
+[2025-07-20 22:31:51 finetune](__main__.py 1201): INFO Test: [108/750] | Time 0.719 (0.752) | Loss 0.2408 (0.4886) | Mem 5233MB
+[2025-07-20 22:31:53 finetune](__main__.py 1201): INFO Test: [110/750] | Time 0.722 (0.751) | Loss 0.2768 (0.4861) | Mem 5400MB
+[2025-07-20 22:31:54 finetune](__main__.py 1201): INFO Test: [112/750] | Time 0.725 (0.751) | Loss 0.0382 (0.4793) | Mem 5400MB
+[2025-07-20 22:31:56 finetune](__main__.py 1201): INFO Test: [114/750] | Time 0.718 (0.750) | Loss 1.0074 (0.4834) | Mem 5400MB
+[2025-07-20 22:31:57 finetune](__main__.py 1201): INFO Test: [116/750] | Time 0.730 (0.750) | Loss 0.7897 (0.4824) | Mem 5400MB
+[2025-07-20 22:31:59 finetune](__main__.py 1201): INFO Test: [118/750] | Time 0.719 (0.749) | Loss 0.3546 (0.4790) | Mem 5400MB
+[2025-07-20 22:32:00 finetune](__main__.py 1201): INFO Test: [120/750] | Time 0.720 (0.749) | Loss 0.0306 (0.4774) | Mem 5400MB
+[2025-07-20 22:32:01 finetune](__main__.py 1201): INFO Test: [122/750] | Time 0.720 (0.748) | Loss 0.1286 (0.4741) | Mem 5400MB
+[2025-07-20 22:32:03 finetune](__main__.py 1201): INFO Test: [124/750] | Time 0.723 (0.748) | Loss 0.6256 (0.4735) | Mem 5400MB
+[2025-07-20 22:32:04 finetune](__main__.py 1201): INFO Test: [126/750] | Time 0.716 (0.747) | Loss 4.3005 (0.5069) | Mem 5400MB
+[2025-07-20 22:32:06 finetune](__main__.py 1201): INFO Test: [128/750] | Time 0.719 (0.747) | Loss 1.1730 (0.5142) | Mem 5400MB
+[2025-07-20 22:32:07 finetune](__main__.py 1201): INFO Test: [130/750] | Time 0.717 (0.747) | Loss 1.2027 (0.5305) | Mem 5400MB
+[2025-07-20 22:32:09 finetune](__main__.py 1201): INFO Test: [132/750] | Time 0.717 (0.746) | Loss 2.4068 (0.5442) | Mem 5400MB
+[2025-07-20 22:32:10 finetune](__main__.py 1201): INFO Test: [134/750] | Time 0.717 (0.746) | Loss 0.9464 (0.5600) | Mem 5400MB
+[2025-07-20 22:32:12 finetune](__main__.py 1201): INFO Test: [136/750] | Time 0.718 (0.745) | Loss 2.1412 (0.5764) | Mem 5400MB
+[2025-07-20 22:32:13 finetune](__main__.py 1201): INFO Test: [138/750] | Time 0.717 (0.745) | Loss 2.0882 (0.5926) | Mem 5400MB
+[2025-07-20 22:32:14 finetune](__main__.py 1201): INFO Test: [140/750] | Time 0.716 (0.744) | Loss 2.0585 (0.6081) | Mem 5400MB
+[2025-07-20 22:32:16 finetune](__main__.py 1201): INFO Test: [142/750] | Time 0.717 (0.744) | Loss 2.7206 (0.6245) | Mem 5400MB
+[2025-07-20 22:32:17 finetune](__main__.py 1201): INFO Test: [144/750] | Time 0.718 (0.744) | Loss 1.8945 (0.6452) | Mem 5400MB
+[2025-07-20 22:32:19 finetune](__main__.py 1201): INFO Test: [146/750] | Time 0.717 (0.743) | Loss 1.0688 (0.6565) | Mem 5400MB
+[2025-07-20 22:32:20 finetune](__main__.py 1201): INFO Test: [148/750] | Time 0.718 (0.743) | Loss 5.6465 (0.6973) | Mem 5400MB
+[2025-07-20 22:32:22 finetune](__main__.py 1201): INFO Test: [150/750] | Time 0.716 (0.743) | Loss 2.8560 (0.7210) | Mem 5400MB
+[2025-07-20 22:32:23 finetune](__main__.py 1201): INFO Test: [152/750] | Time 0.717 (0.742) | Loss 3.0485 (0.7484) | Mem 5400MB
+[2025-07-20 22:32:24 finetune](__main__.py 1201): INFO Test: [154/750] | Time 0.718 (0.742) | Loss 1.3627 (0.7636) | Mem 5400MB
+[2025-07-20 22:32:26 finetune](__main__.py 1201): INFO Test: [156/750] | Time 0.718 (0.742) | Loss 0.0261 (0.7582) | Mem 5400MB
+[2025-07-20 22:32:27 finetune](__main__.py 1201): INFO Test: [158/750] | Time 0.718 (0.741) | Loss 0.1163 (0.7685) | Mem 5400MB
+[2025-07-20 22:32:29 finetune](__main__.py 1201): INFO Test: [160/750] | Time 0.718 (0.741) | Loss 2.0607 (0.7961) | Mem 5400MB
+[2025-07-20 22:32:30 finetune](__main__.py 1201): INFO Test: [162/750] | Time 0.717 (0.741) | Loss 1.3367 (0.8115) | Mem 5400MB
+[2025-07-20 22:32:32 finetune](__main__.py 1201): INFO Test: [164/750] | Time 0.719 (0.741) | Loss 2.4368 (0.8221) | Mem 5400MB
+[2025-07-20 22:32:33 finetune](__main__.py 1201): INFO Test: [166/750] | Time 0.718 (0.740) | Loss 1.5028 (0.8257) | Mem 5400MB
+[2025-07-20 22:32:34 finetune](__main__.py 1201): INFO Test: [168/750] | Time 0.717 (0.740) | Loss 0.7455 (0.8349) | Mem 5400MB
+[2025-07-20 22:32:36 finetune](__main__.py 1201): INFO Test: [170/750] | Time 0.717 (0.740) | Loss 0.0064 (0.8306) | Mem 5400MB
+[2025-07-20 22:32:37 finetune](__main__.py 1201): INFO Test: [172/750] | Time 0.719 (0.740) | Loss 1.2970 (0.8292) | Mem 5400MB
+[2025-07-20 22:32:39 finetune](__main__.py 1201): INFO Test: [174/750] | Time 0.718 (0.739) | Loss 3.4099 (0.8441) | Mem 5400MB
+[2025-07-20 22:32:40 finetune](__main__.py 1201): INFO Test: [176/750] | Time 0.718 (0.739) | Loss 0.5510 (0.8449) | Mem 5400MB
+[2025-07-20 22:32:42 finetune](__main__.py 1201): INFO Test: [178/750] | Time 0.719 (0.739) | Loss 0.7155 (0.8472) | Mem 5400MB
+[2025-07-20 22:32:43 finetune](__main__.py 1201): INFO Test: [180/750] | Time 0.718 (0.739) | Loss 0.1608 (0.8396) | Mem 5400MB
+[2025-07-20 22:32:45 finetune](__main__.py 1201): INFO Test: [182/750] | Time 0.719 (0.738) | Loss 0.4268 (0.8338) | Mem 5400MB
+[2025-07-20 22:32:46 finetune](__main__.py 1201): INFO Test: [184/750] | Time 0.719 (0.738) | Loss 0.2103 (0.8281) | Mem 5400MB
+[2025-07-20 22:32:47 finetune](__main__.py 1201): INFO Test: [186/750] | Time 0.717 (0.738) | Loss 2.0530 (0.8360) | Mem 5400MB
+[2025-07-20 22:32:49 finetune](__main__.py 1201): INFO Test: [188/750] | Time 0.718 (0.738) | Loss 2.4125 (0.8523) | Mem 5400MB
+[2025-07-20 22:32:50 finetune](__main__.py 1201): INFO Test: [190/750] | Time 0.719 (0.738) | Loss 0.4313 (0.8518) | Mem 5400MB
+[2025-07-20 22:32:52 finetune](__main__.py 1201): INFO Test: [192/750] | Time 0.719 (0.737) | Loss 1.1446 (0.8498) | Mem 5400MB
+[2025-07-20 22:32:53 finetune](__main__.py 1201): INFO Test: [194/750] | Time 0.718 (0.737) | Loss 0.2042 (0.8442) | Mem 5400MB
+[2025-07-20 22:32:55 finetune](__main__.py 1201): INFO Test: [196/750] | Time 0.718 (0.737) | Loss 1.3634 (0.8450) | Mem 5400MB
+[2025-07-20 22:32:56 finetune](__main__.py 1201): INFO Test: [198/750] | Time 0.717 (0.737) | Loss 0.6895 (0.8443) | Mem 5400MB
+[2025-07-20 22:32:57 finetune](__main__.py 1201): INFO Test: [200/750] | Time 0.719 (0.737) | Loss 2.3124 (0.8625) | Mem 5400MB
+[2025-07-20 22:32:59 finetune](__main__.py 1201): INFO Test: [202/750] | Time 0.717 (0.736) | Loss 0.2586 (0.8624) | Mem 5400MB
+[2025-07-20 22:33:00 finetune](__main__.py 1201): INFO Test: [204/750] | Time 0.719 (0.736) | Loss 0.9225 (0.8611) | Mem 5400MB
+[2025-07-20 22:33:02 finetune](__main__.py 1201): INFO Test: [206/750] | Time 0.719 (0.736) | Loss 0.5113 (0.8608) | Mem 5400MB
+[2025-07-20 22:33:03 finetune](__main__.py 1201): INFO Test: [208/750] | Time 0.719 (0.736) | Loss 0.6550 (0.8580) | Mem 5400MB
+[2025-07-20 22:33:05 finetune](__main__.py 1201): INFO Test: [210/750] | Time 0.719 (0.736) | Loss 1.3695 (0.8591) | Mem 5400MB
+[2025-07-20 22:33:06 finetune](__main__.py 1201): INFO Test: [212/750] | Time 0.720 (0.736) | Loss 1.6817 (0.8763) | Mem 5400MB
+[2025-07-20 22:33:08 finetune](__main__.py 1201): INFO Test: [214/750] | Time 0.718 (0.735) | Loss 2.2369 (0.8899) | Mem 5400MB
+[2025-07-20 22:33:09 finetune](__main__.py 1201): INFO Test: [216/750] | Time 0.718 (0.735) | Loss 0.1971 (0.8834) | Mem 5400MB
+[2025-07-20 22:33:10 finetune](__main__.py 1201): INFO Test: [218/750] | Time 0.720 (0.735) | Loss 2.0250 (0.8902) | Mem 5400MB
+[2025-07-20 22:33:12 finetune](__main__.py 1201): INFO Test: [220/750] | Time 0.719 (0.735) | Loss 1.5149 (0.8915) | Mem 5400MB
+[2025-07-20 22:33:13 finetune](__main__.py 1201): INFO Test: [222/750] | Time 0.718 (0.735) | Loss 0.9096 (0.8933) | Mem 5400MB
+[2025-07-20 22:33:15 finetune](__main__.py 1201): INFO Test: [224/750] | Time 0.718 (0.735) | Loss 1.4275 (0.8950) | Mem 5400MB
+[2025-07-20 22:33:16 finetune](__main__.py 1201): INFO Test: [226/750] | Time 0.719 (0.735) | Loss 1.9599 (0.8963) | Mem 5400MB
+[2025-07-20 22:33:18 finetune](__main__.py 1201): INFO Test: [228/750] | Time 0.719 (0.734) | Loss 3.6131 (0.9115) | Mem 5400MB
+[2025-07-20 22:33:19 finetune](__main__.py 1201): INFO Test: [230/750] | Time 0.719 (0.734) | Loss 1.3553 (0.9100) | Mem 5400MB
+[2025-07-20 22:33:20 finetune](__main__.py 1201): INFO Test: [232/750] | Time 0.718 (0.734) | Loss 0.8560 (0.9106) | Mem 5400MB
+[2025-07-20 22:33:22 finetune](__main__.py 1201): INFO Test: [234/750] | Time 0.720 (0.734) | Loss 1.1792 (0.9142) | Mem 5400MB
+[2025-07-20 22:33:23 finetune](__main__.py 1201): INFO Test: [236/750] | Time 0.719 (0.734) | Loss 1.0210 (0.9184) | Mem 5400MB
+[2025-07-20 22:33:25 finetune](__main__.py 1201): INFO Test: [238/750] | Time 0.718 (0.734) | Loss 0.0153 (0.9140) | Mem 5400MB
+[2025-07-20 22:33:26 finetune](__main__.py 1201): INFO Test: [240/750] | Time 0.719 (0.734) | Loss 0.4867 (0.9098) | Mem 5400MB
+[2025-07-20 22:33:28 finetune](__main__.py 1201): INFO Test: [242/750] | Time 0.718 (0.734) | Loss 0.5665 (0.9219) | Mem 5400MB
+[2025-07-20 22:33:29 finetune](__main__.py 1201): INFO Test: [244/750] | Time 0.721 (0.733) | Loss 2.6237 (0.9279) | Mem 5400MB
+[2025-07-20 22:33:31 finetune](__main__.py 1201): INFO Test: [246/750] | Time 0.725 (0.733) | Loss 0.4960 (0.9239) | Mem 5400MB
+[2025-07-20 22:33:33 finetune](__main__.py 1201): INFO Test: [248/750] | Time 1.018 (0.737) | Loss 0.3996 (0.9196) | Mem 5400MB
+[2025-07-20 22:33:35 finetune](__main__.py 1201): INFO Test: [250/750] | Time 0.977 (0.741) | Loss 0.5573 (0.9217) | Mem 6112MB
+[2025-07-20 22:33:37 finetune](__main__.py 1201): INFO Test: [252/750] | Time 0.745 (0.741) | Loss 0.2215 (0.9156) | Mem 6112MB
+[2025-07-20 22:33:38 finetune](__main__.py 1201): INFO Test: [254/750] | Time 0.752 (0.741) | Loss 0.1744 (0.9109) | Mem 6112MB
+[2025-07-20 22:33:40 finetune](__main__.py 1201): INFO Test: [256/750] | Time 0.754 (0.741) | Loss 0.0186 (0.9044) | Mem 6112MB
+[2025-07-20 22:33:41 finetune](__main__.py 1201): INFO Test: [258/750] | Time 0.743 (0.741) | Loss 0.3499 (0.8988) | Mem 6112MB
+[2025-07-20 22:33:43 finetune](__main__.py 1201): INFO Test: [260/750] | Time 0.753 (0.742) | Loss 0.2240 (0.8928) | Mem 6112MB
+[2025-07-20 22:33:44 finetune](__main__.py 1201): INFO Test: [262/750] | Time 0.753 (0.742) | Loss 0.0273 (0.8871) | Mem 6112MB
+[2025-07-20 22:33:46 finetune](__main__.py 1201): INFO Test: [264/750] | Time 0.754 (0.742) | Loss 0.2679 (0.8818) | Mem 6112MB
+[2025-07-20 22:33:47 finetune](__main__.py 1201): INFO Test: [266/750] | Time 0.750 (0.742) | Loss 0.0867 (0.8757) | Mem 6112MB
+[2025-07-20 22:33:49 finetune](__main__.py 1201): INFO Test: [268/750] | Time 0.753 (0.742) | Loss 0.0775 (0.8725) | Mem 6112MB
+[2025-07-20 22:33:50 finetune](__main__.py 1201): INFO Test: [270/750] | Time 0.747 (0.742) | Loss 0.0041 (0.8674) | Mem 6112MB
+[2025-07-20 22:33:52 finetune](__main__.py 1201): INFO Test: [272/750] | Time 0.752 (0.742) | Loss 0.0009 (0.8650) | Mem 6112MB
+[2025-07-20 22:33:53 finetune](__main__.py 1201): INFO Test: [274/750] | Time 0.751 (0.742) | Loss 0.2218 (0.8596) | Mem 6112MB
+[2025-07-20 22:33:55 finetune](__main__.py 1201): INFO Test: [276/750] | Time 0.783 (0.742) | Loss 0.0027 (0.8535) | Mem 6112MB
+[2025-07-20 22:33:57 finetune](__main__.py 1201): INFO Test: [278/750] | Time 0.753 (0.742) | Loss 0.7155 (0.8515) | Mem 6112MB
+[2025-07-20 22:33:58 finetune](__main__.py 1201): INFO Test: [280/750] | Time 0.753 (0.742) | Loss 0.2792 (0.8465) | Mem 6112MB
+[2025-07-20 22:34:00 finetune](__main__.py 1201): INFO Test: [282/750] | Time 0.752 (0.742) | Loss 0.2746 (0.8429) | Mem 6112MB
+[2025-07-20 22:34:01 finetune](__main__.py 1201): INFO Test: [284/750] | Time 0.751 (0.743) | Loss 0.0128 (0.8371) | Mem 6112MB
+[2025-07-20 22:34:03 finetune](__main__.py 1201): INFO Test: [286/750] | Time 0.749 (0.743) | Loss 0.6739 (0.8337) | Mem 6156MB
+[2025-07-20 22:34:04 finetune](__main__.py 1201): INFO Test: [288/750] | Time 0.752 (0.743) | Loss 0.3312 (0.8294) | Mem 6156MB
+[2025-07-20 22:34:06 finetune](__main__.py 1201): INFO Test: [290/750] | Time 0.748 (0.743) | Loss 0.3083 (0.8269) | Mem 6156MB
+[2025-07-20 22:34:07 finetune](__main__.py 1201): INFO Test: [292/750] | Time 0.746 (0.743) | Loss 0.0614 (0.8224) | Mem 6156MB
+[2025-07-20 22:34:09 finetune](__main__.py 1201): INFO Test: [294/750] | Time 0.746 (0.743) | Loss 0.0724 (0.8184) | Mem 6156MB
+[2025-07-20 22:34:10 finetune](__main__.py 1201): INFO Test: [296/750] | Time 0.758 (0.743) | Loss 0.7928 (0.8161) | Mem 6156MB
+[2025-07-20 22:34:12 finetune](__main__.py 1201): INFO Test: [298/750] | Time 0.752 (0.743) | Loss 0.0018 (0.8108) | Mem 6156MB
+[2025-07-20 22:34:13 finetune](__main__.py 1201): INFO Test: [300/750] | Time 0.750 (0.743) | Loss 0.0027 (0.8063) | Mem 6156MB
+[2025-07-20 22:34:15 finetune](__main__.py 1201): INFO Test: [302/750] | Time 0.746 (0.743) | Loss 0.2172 (0.8019) | Mem 6156MB
+[2025-07-20 22:34:16 finetune](__main__.py 1201): INFO Test: [304/750] | Time 0.752 (0.743) | Loss 0.1911 (0.7987) | Mem 6156MB
+[2025-07-20 22:34:18 finetune](__main__.py 1201): INFO Test: [306/750] | Time 0.748 (0.743) | Loss 2.0117 (0.8008) | Mem 6156MB
+[2025-07-20 22:34:19 finetune](__main__.py 1201): INFO Test: [308/750] | Time 0.753 (0.743) | Loss 0.1447 (0.7974) | Mem 6156MB
+[2025-07-20 22:34:21 finetune](__main__.py 1201): INFO Test: [310/750] | Time 0.756 (0.743) | Loss 0.0098 (0.7926) | Mem 6156MB
+[2025-07-20 22:34:22 finetune](__main__.py 1201): INFO Test: [312/750] | Time 0.752 (0.743) | Loss 0.0831 (0.7880) | Mem 6156MB
+[2025-07-20 22:34:24 finetune](__main__.py 1201): INFO Test: [314/750] | Time 0.746 (0.743) | Loss 0.0015 (0.7857) | Mem 6156MB
+[2025-07-20 22:34:25 finetune](__main__.py 1201): INFO Test: [316/750] | Time 0.754 (0.743) | Loss 0.0056 (0.7808) | Mem 6156MB
+[2025-07-20 22:34:27 finetune](__main__.py 1201): INFO Test: [318/750] | Time 0.757 (0.743) | Loss 0.0399 (0.7767) | Mem 6156MB
+[2025-07-20 22:34:28 finetune](__main__.py 1201): INFO Test: [320/750] | Time 0.749 (0.743) | Loss 0.1026 (0.7729) | Mem 6156MB
+[2025-07-20 22:34:30 finetune](__main__.py 1201): INFO Test: [322/750] | Time 0.750 (0.743) | Loss 0.1308 (0.7687) | Mem 6156MB
+[2025-07-20 22:34:31 finetune](__main__.py 1201): INFO Test: [324/750] | Time 0.756 (0.743) | Loss 0.4880 (0.7657) | Mem 6156MB
+[2025-07-20 22:34:33 finetune](__main__.py 1201): INFO Test: [326/750] | Time 0.756 (0.744) | Loss 0.3648 (0.7630) | Mem 6156MB
+[2025-07-20 22:34:34 finetune](__main__.py 1201): INFO Test: [328/750] | Time 0.755 (0.744) | Loss 0.3766 (0.7614) | Mem 6156MB
+[2025-07-20 22:34:36 finetune](__main__.py 1201): INFO Test: [330/750] | Time 0.754 (0.744) | Loss 0.2787 (0.7610) | Mem 6156MB
+[2025-07-20 22:34:37 finetune](__main__.py 1201): INFO Test: [332/750] | Time 0.749 (0.744) | Loss 0.0772 (0.7583) | Mem 6156MB
+[2025-07-20 22:34:39 finetune](__main__.py 1201): INFO Test: [334/750] | Time 0.753 (0.744) | Loss 0.0140 (0.7549) | Mem 6156MB
+[2025-07-20 22:34:40 finetune](__main__.py 1201): INFO Test: [336/750] | Time 0.747 (0.744) | Loss 0.1276 (0.7508) | Mem 6156MB
+[2025-07-20 22:34:42 finetune](__main__.py 1201): INFO Test: [338/750] | Time 0.756 (0.744) | Loss 0.0406 (0.7465) | Mem 6156MB
+[2025-07-20 22:34:43 finetune](__main__.py 1201): INFO Test: [340/750] | Time 0.747 (0.744) | Loss 0.0107 (0.7454) | Mem 6156MB
+[2025-07-20 22:34:45 finetune](__main__.py 1201): INFO Test: [342/750] | Time 0.744 (0.744) | Loss 0.5576 (0.7439) | Mem 6156MB
+[2025-07-20 22:34:46 finetune](__main__.py 1201): INFO Test: [344/750] | Time 0.754 (0.744) | Loss 0.0902 (0.7427) | Mem 6156MB
+[2025-07-20 22:34:48 finetune](__main__.py 1201): INFO Test: [346/750] | Time 0.756 (0.744) | Loss 0.6249 (0.7409) | Mem 6156MB
+[2025-07-20 22:34:49 finetune](__main__.py 1201): INFO Test: [348/750] | Time 0.751 (0.744) | Loss 0.2063 (0.7404) | Mem 6156MB
+[2025-07-20 22:34:51 finetune](__main__.py 1201): INFO Test: [350/750] | Time 0.750 (0.744) | Loss 0.0099 (0.7362) | Mem 6156MB
+[2025-07-20 22:34:52 finetune](__main__.py 1201): INFO Test: [352/750] | Time 0.748 (0.744) | Loss 0.1829 (0.7334) | Mem 6156MB
+[2025-07-20 22:34:54 finetune](__main__.py 1201): INFO Test: [354/750] | Time 0.753 (0.744) | Loss 0.6695 (0.7317) | Mem 6156MB
+[2025-07-20 22:34:55 finetune](__main__.py 1201): INFO Test: [356/750] | Time 0.754 (0.744) | Loss 0.5855 (0.7300) | Mem 6156MB
+[2025-07-20 22:34:57 finetune](__main__.py 1201): INFO Test: [358/750] | Time 0.748 (0.744) | Loss 0.0648 (0.7289) | Mem 6156MB
+[2025-07-20 22:34:58 finetune](__main__.py 1201): INFO Test: [360/750] | Time 0.753 (0.744) | Loss 0.1269 (0.7257) | Mem 6156MB
+[2025-07-20 22:35:00 finetune](__main__.py 1201): INFO Test: [362/750] | Time 0.755 (0.744) | Loss 0.0411 (0.7227) | Mem 6156MB
+[2025-07-20 22:35:01 finetune](__main__.py 1201): INFO Test: [364/750] | Time 0.755 (0.744) | Loss 0.0109 (0.7188) | Mem 6156MB
+[2025-07-20 22:35:03 finetune](__main__.py 1201): INFO Test: [366/750] | Time 0.750 (0.745) | Loss 0.0118 (0.7154) | Mem 6156MB
+[2025-07-20 22:35:04 finetune](__main__.py 1201): INFO Test: [368/750] | Time 0.749 (0.745) | Loss 0.9865 (0.7155) | Mem 6156MB
+[2025-07-20 22:35:06 finetune](__main__.py 1201): INFO Test: [370/750] | Time 0.748 (0.745) | Loss 0.0251 (0.7121) | Mem 6156MB
+[2025-07-20 22:35:07 finetune](__main__.py 1201): INFO Test: [372/750] | Time 0.748 (0.745) | Loss 0.1285 (0.7105) | Mem 6156MB
+[2025-07-20 22:35:09 finetune](__main__.py 1201): INFO Test: [374/750] | Time 0.744 (0.745) | Loss 1.7871 (0.7129) | Mem 6156MB
+[2025-07-20 22:35:10 finetune](__main__.py 1201): INFO Test: [376/750] | Time 0.720 (0.744) | Loss 2.6132 (0.7201) | Mem 6156MB
+[2025-07-20 22:35:12 finetune](__main__.py 1201): INFO Test: [378/750] | Time 0.719 (0.744) | Loss 1.9204 (0.7280) | Mem 6156MB
+[2025-07-20 22:35:13 finetune](__main__.py 1201): INFO Test: [380/750] | Time 0.719 (0.744) | Loss 1.7194 (0.7317) | Mem 6156MB
+[2025-07-20 22:35:14 finetune](__main__.py 1201): INFO Test: [382/750] | Time 0.720 (0.744) | Loss 4.1666 (0.7496) | Mem 6156MB
+[2025-07-20 22:35:16 finetune](__main__.py 1201): INFO Test: [384/750] | Time 0.720 (0.744) | Loss 0.7841 (0.7575) | Mem 6156MB
+[2025-07-20 22:35:17 finetune](__main__.py 1201): INFO Test: [386/750] | Time 0.719 (0.744) | Loss 2.4369 (0.7685) | Mem 6156MB
+[2025-07-20 22:35:19 finetune](__main__.py 1201): INFO Test: [388/750] | Time 0.719 (0.744) | Loss 2.2158 (0.7742) | Mem 6156MB
+[2025-07-20 22:35:20 finetune](__main__.py 1201): INFO Test: [390/750] | Time 0.719 (0.744) | Loss 1.6143 (0.7816) | Mem 6156MB
+[2025-07-20 22:35:22 finetune](__main__.py 1201): INFO Test: [392/750] | Time 0.719 (0.743) | Loss 3.1104 (0.7911) | Mem 6156MB
+[2025-07-20 22:35:23 finetune](__main__.py 1201): INFO Test: [394/750] | Time 0.719 (0.743) | Loss 2.5159 (0.7965) | Mem 6156MB
+[2025-07-20 22:35:24 finetune](__main__.py 1201): INFO Test: [396/750] | Time 0.719 (0.743) | Loss 0.3471 (0.8000) | Mem 6156MB
+[2025-07-20 22:35:26 finetune](__main__.py 1201): INFO Test: [398/750] | Time 0.719 (0.743) | Loss 2.4343 (0.8069) | Mem 6156MB
+[2025-07-20 22:35:27 finetune](__main__.py 1201): INFO Test: [400/750] | Time 0.719 (0.743) | Loss 0.8005 (0.8187) | Mem 6156MB
+[2025-07-20 22:35:29 finetune](__main__.py 1201): INFO Test: [402/750] | Time 0.719 (0.743) | Loss 0.0160 (0.8198) | Mem 6156MB
+[2025-07-20 22:35:30 finetune](__main__.py 1201): INFO Test: [404/750] | Time 0.719 (0.743) | Loss 3.4626 (0.8304) | Mem 6156MB
+[2025-07-20 22:35:32 finetune](__main__.py 1201): INFO Test: [406/750] | Time 0.720 (0.743) | Loss 1.3345 (0.8374) | Mem 6156MB
+[2025-07-20 22:35:33 finetune](__main__.py 1201): INFO Test: [408/750] | Time 0.721 (0.742) | Loss 3.4915 (0.8450) | Mem 6156MB
+[2025-07-20 22:35:35 finetune](__main__.py 1201): INFO Test: [410/750] | Time 0.719 (0.742) | Loss 2.0549 (0.8505) | Mem 6156MB
+[2025-07-20 22:35:36 finetune](__main__.py 1201): INFO Test: [412/750] | Time 0.720 (0.742) | Loss 2.3027 (0.8581) | Mem 6156MB
+[2025-07-20 22:35:37 finetune](__main__.py 1201): INFO Test: [414/750] | Time 0.720 (0.742) | Loss 1.7065 (0.8617) | Mem 6156MB
+[2025-07-20 22:35:39 finetune](__main__.py 1201): INFO Test: [416/750] | Time 0.719 (0.742) | Loss 1.9649 (0.8700) | Mem 6156MB
+[2025-07-20 22:35:40 finetune](__main__.py 1201): INFO Test: [418/750] | Time 0.719 (0.742) | Loss 2.0845 (0.8799) | Mem 6156MB
+[2025-07-20 22:35:42 finetune](__main__.py 1201): INFO Test: [420/750] | Time 0.720 (0.742) | Loss 1.5492 (0.8856) | Mem 6156MB
+[2025-07-20 22:35:43 finetune](__main__.py 1201): INFO Test: [422/750] | Time 0.720 (0.742) | Loss 1.5691 (0.8896) | Mem 6156MB
+[2025-07-20 22:35:45 finetune](__main__.py 1201): INFO Test: [424/750] | Time 0.720 (0.742) | Loss 0.8328 (0.8886) | Mem 6156MB
+[2025-07-20 22:35:46 finetune](__main__.py 1201): INFO Test: [426/750] | Time 0.720 (0.742) | Loss 0.5869 (0.8869) | Mem 6156MB
+[2025-07-20 22:35:47 finetune](__main__.py 1201): INFO Test: [428/750] | Time 0.720 (0.741) | Loss 0.0303 (0.8848) | Mem 6156MB
+[2025-07-20 22:35:49 finetune](__main__.py 1201): INFO Test: [430/750] | Time 0.720 (0.741) | Loss 1.3812 (0.8869) | Mem 6156MB
+[2025-07-20 22:35:50 finetune](__main__.py 1201): INFO Test: [432/750] | Time 0.720 (0.741) | Loss 0.5777 (0.8877) | Mem 6156MB
+[2025-07-20 22:35:52 finetune](__main__.py 1201): INFO Test: [434/750] | Time 0.720 (0.741) | Loss 2.9598 (0.8931) | Mem 6156MB
+[2025-07-20 22:35:53 finetune](__main__.py 1201): INFO Test: [436/750] | Time 0.721 (0.741) | Loss 2.6517 (0.8967) | Mem 6156MB
+[2025-07-20 22:35:55 finetune](__main__.py 1201): INFO Test: [438/750] | Time 0.720 (0.741) | Loss 0.0978 (0.8952) | Mem 6156MB
+[2025-07-20 22:35:56 finetune](__main__.py 1201): INFO Test: [440/750] | Time 0.720 (0.741) | Loss 1.2810 (0.9010) | Mem 6156MB
+[2025-07-20 22:35:58 finetune](__main__.py 1201): INFO Test: [442/750] | Time 0.720 (0.741) | Loss 2.0724 (0.9079) | Mem 6156MB
+[2025-07-20 22:35:59 finetune](__main__.py 1201): INFO Test: [444/750] | Time 0.720 (0.741) | Loss 2.3899 (0.9127) | Mem 6156MB
+[2025-07-20 22:36:00 finetune](__main__.py 1201): INFO Test: [446/750] | Time 0.720 (0.741) | Loss 3.5449 (0.9187) | Mem 6156MB
+[2025-07-20 22:36:02 finetune](__main__.py 1201): INFO Test: [448/750] | Time 0.720 (0.741) | Loss 0.7227 (0.9241) | Mem 6156MB
+[2025-07-20 22:36:03 finetune](__main__.py 1201): INFO Test: [450/750] | Time 0.721 (0.740) | Loss 2.2908 (0.9300) | Mem 6156MB
+[2025-07-20 22:36:05 finetune](__main__.py 1201): INFO Test: [452/750] | Time 0.720 (0.740) | Loss 0.9607 (0.9288) | Mem 6156MB
+[2025-07-20 22:36:06 finetune](__main__.py 1201): INFO Test: [454/750] | Time 0.720 (0.740) | Loss 1.4015 (0.9285) | Mem 6156MB
+[2025-07-20 22:36:08 finetune](__main__.py 1201): INFO Test: [456/750] | Time 0.721 (0.740) | Loss 2.7658 (0.9307) | Mem 6156MB
+[2025-07-20 22:36:09 finetune](__main__.py 1201): INFO Test: [458/750] | Time 0.720 (0.740) | Loss 2.0297 (0.9328) | Mem 6156MB
+[2025-07-20 22:36:11 finetune](__main__.py 1201): INFO Test: [460/750] | Time 0.720 (0.740) | Loss 1.5151 (0.9343) | Mem 6156MB
+[2025-07-20 22:36:12 finetune](__main__.py 1201): INFO Test: [462/750] | Time 0.721 (0.740) | Loss 0.9191 (0.9396) | Mem 6156MB
+[2025-07-20 22:36:13 finetune](__main__.py 1201): INFO Test: [464/750] | Time 0.720 (0.740) | Loss 2.1715 (0.9411) | Mem 6156MB
+[2025-07-20 22:36:15 finetune](__main__.py 1201): INFO Test: [466/750] | Time 0.720 (0.740) | Loss 0.0072 (0.9419) | Mem 6156MB
+[2025-07-20 22:36:16 finetune](__main__.py 1201): INFO Test: [468/750] | Time 0.720 (0.740) | Loss 3.4623 (0.9522) | Mem 6156MB
+[2025-07-20 22:36:18 finetune](__main__.py 1201): INFO Test: [470/750] | Time 0.721 (0.740) | Loss 0.3733 (0.9521) | Mem 6156MB
+[2025-07-20 22:36:19 finetune](__main__.py 1201): INFO Test: [472/750] | Time 0.721 (0.740) | Loss 1.0139 (0.9597) | Mem 6156MB
+[2025-07-20 22:36:21 finetune](__main__.py 1201): INFO Test: [474/750] | Time 0.721 (0.739) | Loss 5.2269 (0.9716) | Mem 6156MB
+[2025-07-20 22:36:22 finetune](__main__.py 1201): INFO Test: [476/750] | Time 0.721 (0.739) | Loss 1.6078 (0.9744) | Mem 6156MB
+[2025-07-20 22:36:24 finetune](__main__.py 1201): INFO Test: [478/750] | Time 0.721 (0.739) | Loss 3.2714 (0.9789) | Mem 6156MB
+[2025-07-20 22:36:25 finetune](__main__.py 1201): INFO Test: [480/750] | Time 0.723 (0.739) | Loss 2.6424 (0.9851) | Mem 6156MB
+[2025-07-20 22:36:26 finetune](__main__.py 1201): INFO Test: [482/750] | Time 0.721 (0.739) | Loss 4.4794 (0.9923) | Mem 6156MB
+[2025-07-20 22:36:28 finetune](__main__.py 1201): INFO Test: [484/750] | Time 0.721 (0.739) | Loss 0.8234 (0.9942) | Mem 6156MB
+[2025-07-20 22:36:29 finetune](__main__.py 1201): INFO Test: [486/750] | Time 0.721 (0.739) | Loss 3.5706 (1.0027) | Mem 6156MB
+[2025-07-20 22:36:31 finetune](__main__.py 1201): INFO Test: [488/750] | Time 0.721 (0.739) | Loss 4.5302 (1.0096) | Mem 6156MB
+[2025-07-20 22:36:32 finetune](__main__.py 1201): INFO Test: [490/750] | Time 0.721 (0.739) | Loss 0.4804 (1.0068) | Mem 6156MB
+[2025-07-20 22:36:34 finetune](__main__.py 1201): INFO Test: [492/750] | Time 0.721 (0.739) | Loss 2.8216 (1.0169) | Mem 6156MB
+[2025-07-20 22:36:35 finetune](__main__.py 1201): INFO Test: [494/750] | Time 0.721 (0.739) | Loss 2.5352 (1.0191) | Mem 6156MB
+[2025-07-20 22:36:37 finetune](__main__.py 1201): INFO Test: [496/750] | Time 0.721 (0.739) | Loss 1.8055 (1.0250) | Mem 6156MB
+[2025-07-20 22:36:38 finetune](__main__.py 1201): INFO Test: [498/750] | Time 0.721 (0.739) | Loss 1.2172 (1.0240) | Mem 6156MB
+[2025-07-20 22:36:39 finetune](__main__.py 1201): INFO Test: [500/750] | Time 0.721 (0.738) | Loss 1.6763 (1.0276) | Mem 6156MB
+[2025-07-20 22:36:41 finetune](__main__.py 1201): INFO Test: [502/750] | Time 0.722 (0.738) | Loss 0.8229 (1.0252) | Mem 6156MB
+[2025-07-20 22:36:42 finetune](__main__.py 1201): INFO Test: [504/750] | Time 0.721 (0.738) | Loss 0.2036 (1.0215) | Mem 6156MB
+[2025-07-20 22:36:44 finetune](__main__.py 1201): INFO Test: [506/750] | Time 0.721 (0.738) | Loss 1.6891 (1.0210) | Mem 6156MB
+[2025-07-20 22:36:45 finetune](__main__.py 1201): INFO Test: [508/750] | Time 0.722 (0.738) | Loss 1.2318 (1.0207) | Mem 6156MB
+[2025-07-20 22:36:47 finetune](__main__.py 1201): INFO Test: [510/750] | Time 0.721 (0.738) | Loss 0.1723 (1.0176) | Mem 6156MB
+[2025-07-20 22:36:48 finetune](__main__.py 1201): INFO Test: [512/750] | Time 0.721 (0.738) | Loss 0.0424 (1.0137) | Mem 6156MB
+[2025-07-20 22:36:50 finetune](__main__.py 1201): INFO Test: [514/750] | Time 0.721 (0.738) | Loss 0.0451 (1.0116) | Mem 6156MB
+[2025-07-20 22:36:51 finetune](__main__.py 1201): INFO Test: [516/750] | Time 0.721 (0.738) | Loss 1.1475 (1.0104) | Mem 6156MB
+[2025-07-20 22:36:52 finetune](__main__.py 1201): INFO Test: [518/750] | Time 0.721 (0.738) | Loss 0.0086 (1.0070) | Mem 6156MB
+[2025-07-20 22:36:54 finetune](__main__.py 1201): INFO Test: [520/750] | Time 0.722 (0.738) | Loss 1.1264 (1.0068) | Mem 6156MB
+[2025-07-20 22:36:55 finetune](__main__.py 1201): INFO Test: [522/750] | Time 0.721 (0.738) | Loss 0.0582 (1.0039) | Mem 6156MB
+[2025-07-20 22:36:57 finetune](__main__.py 1201): INFO Test: [524/750] | Time 0.722 (0.738) | Loss 1.6877 (1.0047) | Mem 6156MB
+[2025-07-20 22:36:58 finetune](__main__.py 1201): INFO Test: [526/750] | Time 0.721 (0.738) | Loss 0.5597 (1.0028) | Mem 6156MB
+[2025-07-20 22:37:00 finetune](__main__.py 1201): INFO Test: [528/750] | Time 0.722 (0.738) | Loss 0.0285 (0.9997) | Mem 6156MB
+[2025-07-20 22:37:01 finetune](__main__.py 1201): INFO Test: [530/750] | Time 0.721 (0.738) | Loss 0.9899 (0.9978) | Mem 6156MB
+[2025-07-20 22:37:02 finetune](__main__.py 1201): INFO Test: [532/750] | Time 0.722 (0.737) | Loss 0.9099 (0.9976) | Mem 6156MB
+[2025-07-20 22:37:04 finetune](__main__.py 1201): INFO Test: [534/750] | Time 0.723 (0.737) | Loss 1.5079 (0.9970) | Mem 6156MB
+[2025-07-20 22:37:05 finetune](__main__.py 1201): INFO Test: [536/750] | Time 0.722 (0.737) | Loss 2.4620 (0.9979) | Mem 6156MB
+[2025-07-20 22:37:07 finetune](__main__.py 1201): INFO Test: [538/750] | Time 0.721 (0.737) | Loss 1.3200 (1.0004) | Mem 6156MB
+[2025-07-20 22:37:08 finetune](__main__.py 1201): INFO Test: [540/750] | Time 0.721 (0.737) | Loss 0.3268 (1.0007) | Mem 6156MB
+[2025-07-20 22:37:10 finetune](__main__.py 1201): INFO Test: [542/750] | Time 0.722 (0.737) | Loss 2.1788 (1.0023) | Mem 6156MB
+[2025-07-20 22:37:11 finetune](__main__.py 1201): INFO Test: [544/750] | Time 0.721 (0.737) | Loss 1.0778 (1.0045) | Mem 6156MB
+[2025-07-20 22:37:13 finetune](__main__.py 1201): INFO Test: [546/750] | Time 0.722 (0.737) | Loss 0.9171 (1.0042) | Mem 6156MB
+[2025-07-20 22:37:14 finetune](__main__.py 1201): INFO Test: [548/750] | Time 0.722 (0.737) | Loss 1.0524 (1.0034) | Mem 6156MB
+[2025-07-20 22:37:15 finetune](__main__.py 1201): INFO Test: [550/750] | Time 0.722 (0.737) | Loss 0.9246 (1.0022) | Mem 6156MB
+[2025-07-20 22:37:17 finetune](__main__.py 1201): INFO Test: [552/750] | Time 0.722 (0.737) | Loss 0.8366 (1.0008) | Mem 6156MB
+[2025-07-20 22:37:18 finetune](__main__.py 1201): INFO Test: [554/750] | Time 0.721 (0.737) | Loss 0.1396 (1.0019) | Mem 6156MB
+[2025-07-20 22:37:20 finetune](__main__.py 1201): INFO Test: [556/750] | Time 0.721 (0.737) | Loss 0.3687 (1.0011) | Mem 6156MB
+[2025-07-20 22:37:21 finetune](__main__.py 1201): INFO Test: [558/750] | Time 0.722 (0.737) | Loss 0.0348 (0.9980) | Mem 6156MB
+[2025-07-20 22:37:23 finetune](__main__.py 1201): INFO Test: [560/750] | Time 0.722 (0.737) | Loss 0.0050 (0.9953) | Mem 6156MB
+[2025-07-20 22:37:24 finetune](__main__.py 1201): INFO Test: [562/750] | Time 0.722 (0.737) | Loss 0.1805 (0.9926) | Mem 6156MB
+[2025-07-20 22:37:26 finetune](__main__.py 1201): INFO Test: [564/750] | Time 0.722 (0.737) | Loss 0.0565 (0.9927) | Mem 6156MB
+[2025-07-20 22:37:27 finetune](__main__.py 1201): INFO Test: [566/750] | Time 0.721 (0.737) | Loss 0.1510 (0.9925) | Mem 6156MB
+[2025-07-20 22:37:29 finetune](__main__.py 1201): INFO Test: [568/750] | Time 0.722 (0.737) | Loss 2.4694 (0.9940) | Mem 6156MB
+[2025-07-20 22:37:30 finetune](__main__.py 1201): INFO Test: [570/750] | Time 0.722 (0.737) | Loss 1.1465 (0.9939) | Mem 6156MB
+[2025-07-20 22:37:31 finetune](__main__.py 1201): INFO Test: [572/750] | Time 0.722 (0.736) | Loss 0.0005 (0.9904) | Mem 6156MB
+[2025-07-20 22:37:33 finetune](__main__.py 1201): INFO Test: [574/750] | Time 0.722 (0.736) | Loss 1.4510 (0.9906) | Mem 6156MB
+[2025-07-20 22:37:34 finetune](__main__.py 1201): INFO Test: [576/750] | Time 0.722 (0.736) | Loss 0.3737 (0.9879) | Mem 6156MB
+[2025-07-20 22:37:36 finetune](__main__.py 1201): INFO Test: [578/750] | Time 0.723 (0.737) | Loss 2.9308 (0.9918) | Mem 6156MB
+[2025-07-20 22:37:37 finetune](__main__.py 1201): INFO Test: [580/750] | Time 0.722 (0.737) | Loss 0.8429 (0.9925) | Mem 6156MB
+[2025-07-20 22:37:39 finetune](__main__.py 1201): INFO Test: [582/750] | Time 0.722 (0.737) | Loss 1.2678 (0.9914) | Mem 6156MB
+[2025-07-20 22:37:40 finetune](__main__.py 1201): INFO Test: [584/750] | Time 0.722 (0.737) | Loss 0.6647 (0.9905) | Mem 6156MB
+[2025-07-20 22:37:42 finetune](__main__.py 1201): INFO Test: [586/750] | Time 0.723 (0.737) | Loss 0.6440 (0.9889) | Mem 6156MB
+[2025-07-20 22:37:43 finetune](__main__.py 1201): INFO Test: [588/750] | Time 0.722 (0.737) | Loss 0.2056 (0.9885) | Mem 6156MB
+[2025-07-20 22:37:45 finetune](__main__.py 1201): INFO Test: [590/750] | Time 0.726 (0.736) | Loss 0.1191 (0.9890) | Mem 6156MB
+[2025-07-20 22:37:46 finetune](__main__.py 1201): INFO Test: [592/750] | Time 0.723 (0.736) | Loss 0.9728 (0.9873) | Mem 6156MB
+[2025-07-20 22:37:48 finetune](__main__.py 1201): INFO Test: [594/750] | Time 0.723 (0.736) | Loss 0.6595 (0.9865) | Mem 6156MB
+[2025-07-20 22:37:49 finetune](__main__.py 1201): INFO Test: [596/750] | Time 0.722 (0.736) | Loss 0.2789 (0.9862) | Mem 6156MB
+[2025-07-20 22:37:50 finetune](__main__.py 1201): INFO Test: [598/750] | Time 0.723 (0.736) | Loss 0.5422 (0.9853) | Mem 6156MB
+[2025-07-20 22:37:52 finetune](__main__.py 1201): INFO Test: [600/750] | Time 0.723 (0.736) | Loss 1.3225 (0.9863) | Mem 6156MB
+[2025-07-20 22:37:53 finetune](__main__.py 1201): INFO Test: [602/750] | Time 0.723 (0.736) | Loss 0.0005 (0.9845) | Mem 6156MB
+[2025-07-20 22:37:55 finetune](__main__.py 1201): INFO Test: [604/750] | Time 0.725 (0.736) | Loss 0.0307 (0.9835) | Mem 6156MB
+[2025-07-20 22:37:56 finetune](__main__.py 1201): INFO Test: [606/750] | Time 0.723 (0.736) | Loss 0.3183 (0.9846) | Mem 6156MB
+[2025-07-20 22:37:58 finetune](__main__.py 1201): INFO Test: [608/750] | Time 0.723 (0.736) | Loss 0.7787 (0.9845) | Mem 6156MB
+[2025-07-20 22:37:59 finetune](__main__.py 1201): INFO Test: [610/750] | Time 0.723 (0.736) | Loss 0.0098 (0.9815) | Mem 6156MB
+[2025-07-20 22:38:01 finetune](__main__.py 1201): INFO Test: [612/750] | Time 0.723 (0.736) | Loss 0.6249 (0.9801) | Mem 6156MB
+[2025-07-20 22:38:02 finetune](__main__.py 1201): INFO Test: [614/750] | Time 0.723 (0.736) | Loss 0.0505 (0.9780) | Mem 6156MB
+[2025-07-20 22:38:04 finetune](__main__.py 1201): INFO Test: [616/750] | Time 0.723 (0.736) | Loss 0.1243 (0.9751) | Mem 6156MB
+[2025-07-20 22:38:05 finetune](__main__.py 1201): INFO Test: [618/750] | Time 0.726 (0.736) | Loss 0.3244 (0.9743) | Mem 6156MB
+[2025-07-20 22:38:06 finetune](__main__.py 1201): INFO Test: [620/750] | Time 0.724 (0.736) | Loss 0.0061 (0.9719) | Mem 6156MB
+[2025-07-20 22:38:08 finetune](__main__.py 1201): INFO Test: [622/750] | Time 0.724 (0.736) | Loss 0.1050 (0.9702) | Mem 6156MB
+[2025-07-20 22:38:09 finetune](__main__.py 1201): INFO Test: [624/750] | Time 0.727 (0.736) | Loss 0.1255 (0.9674) | Mem 6156MB
+/home/igodzwon/.conda/envs/spai/lib/python3.11/site-packages/torchmetrics/utilities/prints.py:43: UserWarning: No negative samples in targets, false positive value should be meaningless. Returning zero tensor in false positive score
+  warnings.warn(*args, **kwargs)  # noqa: B028
+[2025-07-20 22:38:11 finetune](__main__.py 1201): INFO Test: [626/750] | Time 0.724 (0.736) | Loss 0.0004 (0.9644) | Mem 6156MB
+[2025-07-20 22:38:12 finetune](__main__.py 1201): INFO Test: [628/750] | Time 0.725 (0.736) | Loss 0.0001 (0.9613) | Mem 6156MB
+[2025-07-20 22:38:14 finetune](__main__.py 1201): INFO Test: [630/750] | Time 0.725 (0.736) | Loss 0.0161 (0.9585) | Mem 6156MB
+[2025-07-20 22:38:15 finetune](__main__.py 1201): INFO Test: [632/750] | Time 0.726 (0.736) | Loss 0.2461 (0.9558) | Mem 6156MB
+[2025-07-20 22:38:17 finetune](__main__.py 1201): INFO Test: [634/750] | Time 0.725 (0.736) | Loss 0.2364 (0.9537) | Mem 6156MB
+[2025-07-20 22:38:18 finetune](__main__.py 1201): INFO Test: [636/750] | Time 0.724 (0.736) | Loss 0.0000 (0.9507) | Mem 6156MB
+[2025-07-20 22:38:19 finetune](__main__.py 1201): INFO Test: [638/750] | Time 0.725 (0.736) | Loss 0.0331 (0.9478) | Mem 6156MB
+[2025-07-20 22:38:21 finetune](__main__.py 1201): INFO Test: [640/750] | Time 0.724 (0.736) | Loss 0.0000 (0.9448) | Mem 6156MB
+[2025-07-20 22:38:22 finetune](__main__.py 1201): INFO Test: [642/750] | Time 0.724 (0.736) | Loss 0.2120 (0.9422) | Mem 6156MB
+[2025-07-20 22:38:24 finetune](__main__.py 1201): INFO Test: [644/750] | Time 0.725 (0.736) | Loss 0.0000 (0.9393) | Mem 6156MB
+[2025-07-20 22:38:25 finetune](__main__.py 1201): INFO Test: [646/750] | Time 0.727 (0.735) | Loss 0.0000 (0.9364) | Mem 6156MB
+[2025-07-20 22:38:27 finetune](__main__.py 1201): INFO Test: [648/750] | Time 0.724 (0.735) | Loss 0.0000 (0.9337) | Mem 6156MB
+[2025-07-20 22:38:28 finetune](__main__.py 1201): INFO Test: [650/750] | Time 0.725 (0.735) | Loss 0.0063 (0.9309) | Mem 6156MB
+[2025-07-20 22:38:30 finetune](__main__.py 1201): INFO Test: [652/750] | Time 0.725 (0.735) | Loss 0.0842 (0.9282) | Mem 6156MB
+[2025-07-20 22:38:31 finetune](__main__.py 1201): INFO Test: [654/750] | Time 0.725 (0.735) | Loss 0.6808 (0.9264) | Mem 6156MB
+[2025-07-20 22:38:33 finetune](__main__.py 1201): INFO Test: [656/750] | Time 0.725 (0.735) | Loss 0.0062 (0.9236) | Mem 6156MB
+[2025-07-20 22:38:34 finetune](__main__.py 1201): INFO Test: [658/750] | Time 0.724 (0.735) | Loss 0.0001 (0.9208) | Mem 6156MB
+[2025-07-20 22:38:35 finetune](__main__.py 1201): INFO Test: [660/750] | Time 0.727 (0.735) | Loss 0.0709 (0.9181) | Mem 6156MB
+[2025-07-20 22:38:37 finetune](__main__.py 1201): INFO Test: [662/750] | Time 0.725 (0.735) | Loss 0.0032 (0.9153) | Mem 6156MB
+[2025-07-20 22:38:38 finetune](__main__.py 1201): INFO Test: [664/750] | Time 0.725 (0.735) | Loss 0.2211 (0.9130) | Mem 6156MB
+[2025-07-20 22:38:40 finetune](__main__.py 1201): INFO Test: [666/750] | Time 0.724 (0.735) | Loss 0.0020 (0.9103) | Mem 6156MB
+[2025-07-20 22:38:41 finetune](__main__.py 1201): INFO Test: [668/750] | Time 0.725 (0.735) | Loss 0.0008 (0.9076) | Mem 6156MB
+[2025-07-20 22:38:43 finetune](__main__.py 1201): INFO Test: [670/750] | Time 0.727 (0.735) | Loss 0.0001 (0.9049) | Mem 6156MB
+[2025-07-20 22:38:44 finetune](__main__.py 1201): INFO Test: [672/750] | Time 0.725 (0.735) | Loss 0.0114 (0.9022) | Mem 6156MB
+[2025-07-20 22:38:46 finetune](__main__.py 1201): INFO Test: [674/750] | Time 0.728 (0.735) | Loss 0.0000 (0.8995) | Mem 6156MB
+[2025-07-20 22:38:47 finetune](__main__.py 1201): INFO Test: [676/750] | Time 0.725 (0.735) | Loss 0.0001 (0.8969) | Mem 6156MB
+[2025-07-20 22:38:48 finetune](__main__.py 1201): INFO Test: [678/750] | Time 0.725 (0.735) | Loss 0.0005 (0.8943) | Mem 6156MB
+[2025-07-20 22:38:50 finetune](__main__.py 1201): INFO Test: [680/750] | Time 0.725 (0.735) | Loss 0.0001 (0.8917) | Mem 6156MB
+[2025-07-20 22:38:51 finetune](__main__.py 1201): INFO Test: [682/750] | Time 0.725 (0.735) | Loss 0.0000 (0.8894) | Mem 6156MB
+[2025-07-20 22:38:53 finetune](__main__.py 1201): INFO Test: [684/750] | Time 0.725 (0.735) | Loss 0.0083 (0.8868) | Mem 6156MB
+[2025-07-20 22:38:54 finetune](__main__.py 1201): INFO Test: [686/750] | Time 0.726 (0.735) | Loss 0.1917 (0.8845) | Mem 6156MB
+[2025-07-20 22:38:56 finetune](__main__.py 1201): INFO Test: [688/750] | Time 0.728 (0.735) | Loss 0.0013 (0.8819) | Mem 6156MB
+[2025-07-20 22:38:57 finetune](__main__.py 1201): INFO Test: [690/750] | Time 0.725 (0.735) | Loss 0.0062 (0.8794) | Mem 6156MB
+[2025-07-20 22:38:59 finetune](__main__.py 1201): INFO Test: [692/750] | Time 0.725 (0.735) | Loss 0.0006 (0.8768) | Mem 6156MB
+[2025-07-20 22:39:00 finetune](__main__.py 1201): INFO Test: [694/750] | Time 0.725 (0.735) | Loss 0.0000 (0.8743) | Mem 6156MB
+[2025-07-20 22:39:02 finetune](__main__.py 1201): INFO Test: [696/750] | Time 0.726 (0.735) | Loss 0.0000 (0.8718) | Mem 6156MB
+[2025-07-20 22:39:03 finetune](__main__.py 1201): INFO Test: [698/750] | Time 0.725 (0.735) | Loss 0.0008 (0.8693) | Mem 6156MB
+[2025-07-20 22:39:04 finetune](__main__.py 1201): INFO Test: [700/750] | Time 0.725 (0.735) | Loss 0.0049 (0.8669) | Mem 6156MB
+[2025-07-20 22:39:06 finetune](__main__.py 1201): INFO Test: [702/750] | Time 0.726 (0.735) | Loss 0.0190 (0.8645) | Mem 6156MB
+[2025-07-20 22:39:07 finetune](__main__.py 1201): INFO Test: [704/750] | Time 0.725 (0.735) | Loss 0.0002 (0.8620) | Mem 6156MB
+[2025-07-20 22:39:09 finetune](__main__.py 1201): INFO Test: [706/750] | Time 0.725 (0.735) | Loss 0.0413 (0.8596) | Mem 6156MB
+[2025-07-20 22:39:10 finetune](__main__.py 1201): INFO Test: [708/750] | Time 0.726 (0.735) | Loss 0.0002 (0.8572) | Mem 6156MB
+[2025-07-20 22:39:12 finetune](__main__.py 1201): INFO Test: [710/750] | Time 0.725 (0.735) | Loss 0.0506 (0.8549) | Mem 6156MB
+[2025-07-20 22:39:13 finetune](__main__.py 1201): INFO Test: [712/750] | Time 0.725 (0.735) | Loss 0.0011 (0.8525) | Mem 6156MB
+[2025-07-20 22:39:15 finetune](__main__.py 1201): INFO Test: [714/750] | Time 0.726 (0.735) | Loss 0.0018 (0.8501) | Mem 6156MB
+[2025-07-20 22:39:16 finetune](__main__.py 1201): INFO Test: [716/750] | Time 0.726 (0.735) | Loss 0.0000 (0.8477) | Mem 6156MB
+[2025-07-20 22:39:18 finetune](__main__.py 1201): INFO Test: [718/750] | Time 0.726 (0.735) | Loss 0.0000 (0.8454) | Mem 6156MB
+[2025-07-20 22:39:19 finetune](__main__.py 1201): INFO Test: [720/750] | Time 0.727 (0.734) | Loss 0.0054 (0.8437) | Mem 6156MB
+[2025-07-20 22:39:20 finetune](__main__.py 1201): INFO Test: [722/750] | Time 0.725 (0.734) | Loss 0.2994 (0.8418) | Mem 6156MB
+[2025-07-20 22:39:22 finetune](__main__.py 1201): INFO Test: [724/750] | Time 0.727 (0.734) | Loss 0.0000 (0.8395) | Mem 6156MB
+[2025-07-20 22:39:23 finetune](__main__.py 1201): INFO Test: [726/750] | Time 0.727 (0.734) | Loss 0.0004 (0.8372) | Mem 6156MB
+[2025-07-20 22:39:25 finetune](__main__.py 1201): INFO Test: [728/750] | Time 0.726 (0.734) | Loss 0.0007 (0.8349) | Mem 6156MB
+[2025-07-20 22:39:26 finetune](__main__.py 1201): INFO Test: [730/750] | Time 0.726 (0.734) | Loss 0.0006 (0.8326) | Mem 6156MB
+[2025-07-20 22:39:28 finetune](__main__.py 1201): INFO Test: [732/750] | Time 0.726 (0.734) | Loss 0.0011 (0.8304) | Mem 6156MB
+[2025-07-20 22:39:29 finetune](__main__.py 1201): INFO Test: [734/750] | Time 0.726 (0.734) | Loss 0.0005 (0.8281) | Mem 6156MB
+[2025-07-20 22:39:31 finetune](__main__.py 1201): INFO Test: [736/750] | Time 0.726 (0.734) | Loss 0.0301 (0.8260) | Mem 6156MB
+[2025-07-20 22:39:32 finetune](__main__.py 1201): INFO Test: [738/750] | Time 0.727 (0.734) | Loss 0.0004 (0.8238) | Mem 6156MB
+[2025-07-20 22:39:34 finetune](__main__.py 1201): INFO Test: [740/750] | Time 0.726 (0.734) | Loss 0.0005 (0.8215) | Mem 6156MB
+[2025-07-20 22:39:35 finetune](__main__.py 1201): INFO Test: [742/750] | Time 0.725 (0.734) | Loss 0.1491 (0.8195) | Mem 6156MB
+[2025-07-20 22:39:36 finetune](__main__.py 1201): INFO Test: [744/750] | Time 0.726 (0.734) | Loss 0.0042 (0.8173) | Mem 6156MB
+[2025-07-20 22:39:38 finetune](__main__.py 1201): INFO Test: [746/750] | Time 0.725 (0.734) | Loss 0.0002 (0.8153) | Mem 6156MB
+[2025-07-20 22:39:39 finetune](__main__.py 1201): INFO Test: [748/750] | Time 0.725 (0.734) | Loss 0.0002 (0.8131) | Mem 6156MB
+[2025-07-20 22:39:40 finetune](__main__.py 421): INFO Test | test_set_spai_test_images_flux | Epoch 9 | Images: 5999 | loss: 0.8124
+[2025-07-20 22:39:40 finetune](__main__.py 423): INFO Test | test_set_spai_test_images_flux | Epoch 9  | Images: 5999 | ACC: 0.819
+[2025-07-20 22:39:40 finetune](__main__.py 425): INFO Test | test_set_spai_test_images_flux | Epoch 9  | Images: 5999 | AP: 0.895
+[2025-07-20 22:39:40 finetune](__main__.py 427): INFO Test | test_set_spai_test_images_flux | Epoch 9  | Images: 5999 | AUC: 0.977
+[neptune] [info   ] Shutting down background jobs, please wait a moment...
+[neptune] [info   ] Done!
+[neptune] [info   ] Waiting for the remaining 1 operations to synchronize with Neptune. Do not kill this process.
+[neptune] [info   ] All 1 operations synced, thanks for waiting!
+[neptune] [info   ] Explore the metadata in the Neptune app: https://app.neptune.ai/iwkooo/spai/e/SPAI-302/metadata
+
+JOB STATISTICS
+==============
+Job ID: 13228843
+Cluster: snellius
+User/Group: igodzwon/igodzwon
+State: COMPLETED (exit code 0)
+Nodes: 1
+Cores per node: 16
+CPU Utilized: 00:16:57
+CPU Efficiency: 10.65% of 02:39:12 core-walltime
+Job Wall-clock time: 00:09:57
+Memory Utilized: 39.45 GB
+Memory Efficiency: 21.92% of 180.00 GB (180.00 GB/node)

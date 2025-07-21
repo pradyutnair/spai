@@ -14,7 +14,7 @@ module load 2023
 module load Anaconda3/2023.07-2
 
 
-source activate spai_2
+source activate spai
 export NEPTUNE_MODE=offline
 
 
@@ -23,11 +23,11 @@ export NEPTUNE_MODE=offline
 srun python -m spai test \
   --cfg "./configs/spai.yaml" \
   --batch-size 8 \
-  --model 'weights/spai.pth' \
+  --model 'multispai_weights/ckpt_epoch_9.pth' \
   --output '/home/scur2605/spai/output_runs' \
   --tag "spai" \
   --opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
   --opt "DATA.NUM_WORKERS" "8" \
   --opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
   --opt "DATA.TEST_PREFETCH_FACTOR" "1" \
-  --test-csv '/home/scur2605/spai/data/combined_real_fake_gigagan.csv'
+  --test-csv '/scratch-shared/dl2_all_data/testsets.test_set_TestSet_dalle_2.csv'
