@@ -17,6 +17,8 @@
 import dataclasses
 import pathlib
 from typing import Literal, Optional, Union
+import torch
+import numpy as np
 
 import numpy as np
 import torch
@@ -1471,8 +1473,9 @@ class SemanticContextModel(nn.Module):
         # === Load and freeze SPAI model ===
         from spai.models.build import build_mf_vit
         from spai.config import get_config
-
-        cfg = get_config({"cfg": "configs/spai.yaml"})
+        
+        cfg_path = 'configs/spai.yaml'
+        cfg = get_config({"cfg": cfg_path})
         self.spai_model = build_mf_vit(cfg)
 
         checkpoint = torch.load(spai_model_path, map_location="cpu", weights_only=False)
@@ -1558,11 +1561,11 @@ class SemanticContextModel(nn.Module):
                 img_spai = spai_resize(img)
                 img_convnext = convnext_resize(img)
                 spai_input.append(img_spai)
-                #spai_input.append(img)
                 convnext_input.append(normalize(img_convnext))
             x_spai = torch.stack(spai_input).to(device).float()
             x_convnext = torch.stack(convnext_input).to(device).float()
-
+            # Clear intermediate lists
+            del spai_input, convnext_input
 
         # === Training mode: batched tensor ===
         else:
@@ -1570,6 +1573,8 @@ class SemanticContextModel(nn.Module):
                 raise ValueError(f"Expected batched input (B×C×H×W), got {x.shape}")
             if x.max() > 1.0:
                 x = x / 255.0
+            
+            # Process in-place to save memory
             x_spai = x.to(device).float()
             x_convnext = normalize(x).to(device).float()
 
@@ -1584,22 +1589,33 @@ class SemanticContextModel(nn.Module):
             # ConvNeXt
             semantic_features = self.semantic_backbone(x_convnext)
             semantic_features = self.global_pool(semantic_features).flatten(1)
+        # Clear input tensors to free memory
+        del x_spai, x_convnext
 
         # === Semantic projection ===
         semantic_proj = self.semantic_projection(semantic_features)  # e.g. 3072 → 256
+        
+        # Clear original semantic features
+        del semantic_features
 
         # === Combined features with weighting ===
         combined = torch.cat([spectral_features, semantic_proj], dim=1)
+        del semantic_proj  # Free memory
+        
         # === Process combined features ===
         fused_features = self.fusion_layer(combined)
+        del combined  # Free memory
         
         # === RESIDUAL CONNECTION: concatenate raw spectral features with fusion output ===
         final_features = torch.cat([spectral_features, fused_features], dim=1)
+        del fused_features  # Free memory
         
         # === Final classification ===
         output = self.classifier(final_features)
+        del final_features  # Free memory
 
-        if not self.training:
+        # Force garbage collection in training mode too
+        if torch.cuda.is_available():
             torch.cuda.empty_cache()
 
         return output

@@ -8,13 +8,15 @@ MODEL:
   RESOLUTION_MODE: "arbitrary"
   FEATURE_EXTRACTION_BATCH: 400
   SEMANTIC_CONTEXT:
-    SPAI_MODEL_PATH: "/home/igodzwon/spai/weights/spai.pth"
+    SPAI_MODEL_PATH: "/scratch-shared/dl2_spai_models/late_fusion_spai_ldm_NOPRETRAINED/train_og_spai_LDM/finetune/train_og_spai_LDM/ckpt_epoch_2.pth"
+    #SPAI_MODEL_PATH: "/scratch-shared/dl2_spai_models/late_fusion_spai_ldm/train_og_spai_LDM/finetune/train_og_spai_LDM/ckpt_epoch_13.pth"
+    #SPAI_MODEL_PATH: "/home/igodzwon/spai/weights/spai.pth"
     #SPAI_MODEL_PATH: "/scratch-shared/dl2_spai_models/late_fusion_spai/train_og_spai_Chameleon/finetune/train_og_spai_Chameleon/ckpt_epoch_10.pth"
     OUTPUT_DIM: 1096
     HIDDEN_DIMS: [1024, 512]
     DROPOUT: 0.5
     #SPAI_INPUT_SIZE: [224, 224] # 1024x1024 for testing and 224 x 224 for training
-    SPAI_INPUT_SIZE: [224, 224] # 1024x1024 for testing and 224 x 224 for training
+    SPAI_INPUT_SIZE: [1024, 1024] # 1024x1024 for testing and 224 x 224 for training
   VIT:
     EMBED_DIM: 768
     DEPTH: 12

@@ -8,7 +8,7 @@ MODEL:
   RESOLUTION_MODE: "arbitrary"
   FEATURE_EXTRACTION_BATCH: 400
   SEMANTIC_CONTEXT:
-    SPAI_MODEL_PATH: "/home/igodzwon/spai/weights/spai.pth"
+    #SPAI_MODEL_PATH: "/home/igodzwon/spai/weights/spai.pth"
     #SPAI_MODEL_PATH: "/scratch-shared/dl2_spai_models/late_fusion_spai/train_og_spai_Chameleon/finetune/train_og_spai_Chameleon/ckpt_epoch_10.pth"
     OUTPUT_DIM: 1096
     HIDDEN_DIMS: [1024, 512]

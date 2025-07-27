@@ -1,5 +1,5 @@
 MODEL:
-  SID_APPROACH: "semantic_context" # change to "freq_restoration" and fill SEMANTIC_CROSS_ATTN to use semantic cross attention
+  SID_APPROACH: "freq_restoration"
   TYPE: vit
   NAME: finetune
   DROP_PATH_RATE: 0.1
@@ -7,14 +7,6 @@ MODEL:
   REQUIRED_NORMALIZATION: "positive_0_1"
   RESOLUTION_MODE: "arbitrary"
   FEATURE_EXTRACTION_BATCH: 400
-  SEMANTIC_CONTEXT:
-    SPAI_MODEL_PATH: "/home/igodzwon/spai/weights/spai.pth"
-    #SPAI_MODEL_PATH: "/scratch-shared/dl2_spai_models/late_fusion_spai/train_og_spai_Chameleon/finetune/train_og_spai_Chameleon/ckpt_epoch_10.pth"
-    OUTPUT_DIM: 1096
-    HIDDEN_DIMS: [1024, 512]
-    DROPOUT: 0.5
-    #SPAI_INPUT_SIZE: [224, 224] # 1024x1024 for testing and 224 x 224 for training
-    SPAI_INPUT_SIZE: [224, 224] # 1024x1024 for testing and 224 x 224 for training
   VIT:
     EMBED_DIM: 768
     DEPTH: 12
@@ -34,15 +26,6 @@ MODEL:
     MASKING_RADIUS: 16
     PROJECTOR_LAST_LAYER_ACTIVATION_TYPE: None
     ORIGINAL_IMAGE_FEATURES_BRANCH: True
-  ######### USE ONLY FOR SEMANTIC CROSS ATTENTION #########
-  SEMANTIC_CROSS_ATTN:
-    CROSS_ATTN_SCA: None # None/before/after
-    DUAL_CROSS_ATTN_SCA: False # True/False
-    EMBED_DIM: 512
-    NUM_HEADS: 8
-    FREEZE_BACKBONE: False
-    SEMANTIC_ENCODER: "clip"
-  ############ END OF SEMANTIC CROSS ATTENTION ############
   CLS_HEAD:
     MLP_RATIO: 3
   PATCH_VIT:
@@ -56,8 +39,8 @@ DATA:
 AUG:
   COLOR_JITTER: 0.
 TRAIN:
-  EPOCHS: 20
-  WARMUP_EPOCHS: 0
+  EPOCHS: 35
+  WARMUP_EPOCHS: 5
   BASE_LR: 5e-4
   WARMUP_LR: 2.5e-7
   MIN_LR: 2.5e-7

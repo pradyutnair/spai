@@ -31,21 +31,25 @@ DATASET_DIR="/scratch-shared/dl2_all_data/testsets"
 
 # --- Experiment Definitions ---
 declare -A TEST_SETS=(
-  ["dalle2"]="$DATASET_DIR/test_set_TestSet_dalle_2.csv"
-
-  # ["dalle3"]="test_set_dalle3.csv"
-  # ["sd1_4"]="test_set_sd1_4.csv"
-  # ["sdxl"]="test_set_sdxl.csv"
+  ["MJ6.1"]="$DATASET_DIR/test_set_spai_test_images_midjourney-v6.1.csv"
+  ["dalle2"]="$DATASET_DIR/test_set_synthbuster_dalle2.csv"
+  ["dalle2_2"]="$DATASET_DIR/test_set_TestSet_dalle_2.csv"
+  ["dalle3"]="$DATASET_DIR/test_set_synthbuster_dalle3.csv"
+  ["glide"]="$DATASET_DIR/test_set_TestSet_glide_text2img_valid.csv"
+  ["flux"]="$DATASET_DIR/test_set_spai_test_images_flux.csv"
+  ["gigagan"]="$DATASET_DIR/test_set_spai_test_images_gigagan.csv"
+  ["firefly"]="$DATASET_DIR/test_set_synthbuster_firefly.csv"
 )
 
 declare -A MODELS=(
-  ["test"]="$ROOT_DIR/multispai_weights/ckpt_epoch_9.pth" 
+  ["scratch_late_fusion"]="/scratch-shared/dl2_spai_models/late_fusion_spai_ldm/train_og_spai_LDM/finetune/train_og_spai_LDM/ckpt_epoch_13.pth" 
   # ["clip_cross_attn_after_sca_chameleon"]="$MODEL_DIR/train_clip_cross_attn_after_sca_chameleon/ckpt_best.pth"
   # ["convnext_cross_attn_after_sca_chameleon"]="$MODEL_DIR/train_convnext_cross_attn_after_sca_chameleon/ckpt_best.pth"
 )
 
 declare -A CONFIGS=(
-  ["test"]="$ROOT_DIR/configs/spai.yaml"
+  ["scratch_late_fusion"]="/home/igodzwon/spai/configs/spai_latefusion_eval.yaml"
+  #["test"]="$ROOT_DIR/configs/spai_latefusion_eval.yaml"
   # ["clip_cross_attn_after_sca_chameleon"]="$ROOT_DIR/configs/clip_spai_after_sca.yaml"
   # ["convnext_cross_attn_after_sca_chameleon"]="$ROOT_DIR/configs/convnext_spai_after_sca.yaml"
 )

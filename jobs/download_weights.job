@@ -1,0 +1,56 @@
+#!/bin/bash
+#SBATCH --job-name=download_weights
+#SBATCH --partition=gpu_h100
+#SBATCH --gpus-per-node=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --time=01:00:00
+#SBATCH --mem=8G
+#SBATCH --output=outputs/download_weights_%A.out
+
+echo "📥 Starting weight download on $(hostname) at $(date)"
+
+# Load required modules
+module purge
+module load 2023
+module load Anaconda3/2023.07-2
+
+# Define paths
+HOME_DIR="/home/igodzwon/spai"
+WEIGHTS_DIR="$HOME_DIR/weights"
+GOOGLE_DRIVE_URL="https://drive.google.com/file/d/1qgMuODAxAapwXZXbH2Bgo5s5O_zc1bdl/view"
+FILE_ID="1qgMuODAxAapwXZXbH2Bgo5s5O_zc1bdl"
+OUTPUT_FILE="$WEIGHTS_DIR/spai_semantic_context.pth"
+
+cd "$HOME_DIR" || exit
+echo "Working directory: $(pwd)"
+
+# Activate environment
+source activate spai
+
+# Create weights directory if it doesn't exist
+mkdir -p "$WEIGHTS_DIR"
+echo "📁 Weights directory: $WEIGHTS_DIR"
+
+# Install gdown if not already available
+echo "🔧 Installing gdown for Google Drive downloads..."
+pip install gdown
+
+# Download the file from Google Drive
+echo "📥 Downloading file from Google Drive..."
+echo "   File ID: $FILE_ID"
+echo "   Output: $OUTPUT_FILE"
+
+gdown "$FILE_ID" -O "$OUTPUT_FILE"
+
+# Check if download was successful
+if [ -f "$OUTPUT_FILE" ]; then
+    echo "✅ Download successful!"
+    echo "   File size: $(du -h "$OUTPUT_FILE" | cut -f1)"
+    echo "   Location: $OUTPUT_FILE"
+else
+    echo "❌ Download failed!"
+    exit 1
+fi
+
+echo "🎉 Weight download complete at $(date)"

@@ -18,36 +18,36 @@ SLEEP_TIME=60
 
 # --- SLURM Parameters ---
 PARTITION="gpu_h100"
-TIME_LIMIT="10:00:00"
+TIME_LIMIT="12:00:00"
 GPUS_PER_NODE=1
 CPUS_PER_TASK=16
 MEMORY="180G"
 
 # --- Python Script Parameters ---
-BATCH_SIZE=192
+BATCH_SIZE=74  # Reduced from 104 to prevent OOM
 NUM_WORKERS=16
-VAL_BATCH_SIZE=256
+VAL_BATCH_SIZE=64  # Also reduced validation batch size
 AMP_OPT_LEVEL="O0"
 FEATURE_BATCH=400
 PREFETCH_FACTOR=4
 
 # --- Path Configuration ---
-USER="azywot" # NOTE: hange this to your username!
-ROOT_DIR="$HOME/$USER/spai"
+USER="igodzwon" # NOTE: hange this to your username!
+ROOT_DIR="$HOME/spai"
 PRETRAINED_PATH="${ROOT_DIR}/weights/spai.pth"
-OUTPUT_DIR_BASE="/scratch-shared/dl2_spai_models/original_spai" # Base path for outputs
+OUTPUT_DIR_BASE="/scratch-shared/dl2_spai_models/late_fusion_spai_ldm" # Base path for outputs
 
 # --- Experiment Definitions ---
 # Short Name -> Config File Path
 declare -A CONFIGS=(
-  ["og_spai"]="${ROOT_DIR}/configs/spai.yaml"
+  ["baseline"]="${ROOT_DIR}/configs/og_spai.yaml"
   # ["clip_cross_attn_after_sca"]="${ROOT_DIR}/configs/clip_spai_after_sca.yaml"
   # ["semantic_context"]="${ROOT_DIR}/configs/spai.yaml"
 )
 
 # Short Name -> Dataset CSV Path
 declare -A DATASETS=(
-  ["ldm_coco_lsun"]="/scratch-shared/dl2_all_data/ldm_train_val_trainset.csv"
+  ["baseline"]="/scratch-shared/dl2_all_data/ldm_train_val_trainset_20pct.csv"
   # NOTE: add more datasets as needed
 )
 
