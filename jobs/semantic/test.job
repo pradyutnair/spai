@@ -7,7 +7,7 @@
 #SBATCH --time=5:00:00
 #SBATCH --mem=180G
 #SBATCH --hint=nomultithread
-#SBATCH --output=EXTENSION_DALLE%A.out
+#SBATCH --output=EXTENSION_all%A.out
 
 cd /home/scur2605/spai
 export PYTHONPATH=/home/scur2605:$PYTHONPATH
@@ -34,6 +34,77 @@ python -m spai test \
 --opt "MODEL.SEMANTIC_CONTEXT.SPAI_INPUT_SIZE" "[1024, 1024]" 
 
 
+
+python -m spai test \
+--cfg "./configs/spai.yaml" \
+--batch-size 8 \
+--model "/home/igodzwon/spai/multispai_weights/ckpt_epoch_9.pth" \
+--output "./output/semantic_test" \
+--tag "spai" \
+--opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
+--opt "DATA.NUM_WORKERS" "8" \
+--opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
+--opt "DATA.TEST_PREFETCH_FACTOR" "1" \
+--test-csv "/scratch-shared/dl2_all_data/testsets/test_set_synthbuster_dalle2.csv" \
+--opt "PRINT_FREQ" "2" \
+--opt "MODEL.SEMANTIC_CONTEXT.SPAI_INPUT_SIZE" "[1024, 1024]" 
+
+python -m spai test \
+--cfg "./configs/spai.yaml" \
+--batch-size 8 \
+--model "/home/igodzwon/spai/multispai_weights/ckpt_epoch_9.pth" \
+--output "./output/semantic_test" \
+--tag "spai" \
+--opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
+--opt "DATA.NUM_WORKERS" "8" \
+--opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
+--opt "DATA.TEST_PREFETCH_FACTOR" "1" \
+--test-csv "/scratch-shared/dl2_all_data/testsets/test_set_synthbuster_dalle3.csv" \
+--opt "PRINT_FREQ" "2" \
+--opt "MODEL.SEMANTIC_CONTEXT.SPAI_INPUT_SIZE" "[1024, 1024]" 
+
+python -m spai test \
+--cfg "./configs/spai.yaml" \
+--batch-size 8 \
+--model "/home/igodzwon/spai/multispai_weights/ckpt_epoch_9.pth" \
+--output "./output/semantic_test" \
+--tag "spai" \
+--opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
+--opt "DATA.NUM_WORKERS" "8" \
+--opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
+--opt "DATA.TEST_PREFETCH_FACTOR" "1" \
+--test-csv "/scratch-shared/dl2_all_data/testsets/test_set_spai_test_images_gigagan.csv" \
+--opt "PRINT_FREQ" "2" \
+--opt "MODEL.SEMANTIC_CONTEXT.SPAI_INPUT_SIZE" "[1024, 1024]" 
+
+python -m spai test \
+--cfg "./configs/spai.yaml" \
+--batch-size 8 \
+--model "/home/igodzwon/spai/multispai_weights/ckpt_epoch_9.pth" \
+--output "./output/semantic_test" \
+--tag "spai" \
+--opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
+--opt "DATA.NUM_WORKERS" "8" \
+--opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
+--opt "DATA.TEST_PREFETCH_FACTOR" "1" \
+--test-csv "/scratch-shared/dl2_all_data/testsets/test_set_synthbuster_glide.csv" \
+--opt "PRINT_FREQ" "2" \
+--opt "MODEL.SEMANTIC_CONTEXT.SPAI_INPUT_SIZE" "[1024, 1024]"
+
+
+python -m spai test \
+--cfg "./configs/spai.yaml" \
+--batch-size 8 \
+--model "/home/igodzwon/spai/multispai_weights/ckpt_epoch_9.pth" \
+--output "./output/semantic_test" \
+--tag "spai" \
+--opt "MODEL.PATCH_VIT.MINIMUM_PATCHES" "4" \
+--opt "DATA.NUM_WORKERS" "8" \
+--opt "MODEL.FEATURE_EXTRACTION_BATCH" "400" \
+--opt "DATA.TEST_PREFETCH_FACTOR" "1" \
+--test-csv "/scratch-shared/dl2_all_data/testsets/test_set_synthbuster_stable-diffusion-1-3.csv" \
+--opt "PRINT_FREQ" "2" \
+--opt "MODEL.SEMANTIC_CONTEXT.SPAI_INPUT_SIZE" "[1024, 1024]" 
 
 # # python -m spai test \
 # # --cfg "./configs/spai.yaml" \
