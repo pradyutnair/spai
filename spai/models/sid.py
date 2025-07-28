@@ -16,7 +16,7 @@
 
 import dataclasses
 import pathlib
-from typing import Optional, Union, List
+from typing import Optional, Union
 
 import numpy as np
 import torch
@@ -34,6 +34,8 @@ from . import utils
 from . import backbones
 from spai.utils import save_image_with_attention_overlay
 
+from typing import Union, List
+
 
 class PatchBasedMFViT(nn.Module):
     def __init__(
@@ -43,22 +45,18 @@ class PatchBasedMFViT(nn.Module):
                    backbones.DINOv2Backbone],
         features_processor: 'FrequencyRestorationEstimator',
         cls_head: Optional[nn.Module],
-        semantics_head: Optional[nn.Module],
         masking_radius: int,
         img_patch_size: int,
         img_patch_stride: int,
         cls_vector_dim: int,
         num_heads: int,
         attn_embed_dim: int,
-        context_backbone: Optional[nn.Module] = None,
         dropout: float = .0,
         frozen_backbone: bool = True,
         minimum_patches: int = 0,
         initialization_scope: str = "all"
     ) -> None:
         super().__init__()
-
-        self.context_backbone = context_backbone
 
         self.mfvit = MFViT(
             vit,
@@ -91,7 +89,6 @@ class PatchBasedMFViT(nn.Module):
 
         self.norm = nn.LayerNorm(cls_vector_dim)
         self.cls_head = cls_head
-        self.semantics_head = semantics_head
 
         if initialization_scope == "all":
             self.apply(_init_weights)
@@ -120,13 +117,8 @@ class PatchBasedMFViT(nn.Module):
         :param feature_extraction_batch_size:
         :param export_dirs:
         """
-
-        x_context = self.context_backbone(x) if self.context_backbone is not None else None
-
         if isinstance(x, torch.Tensor):
-            
-            x =  self.forward_batch(x, x_context)
-            
+            x =  self.forward_batch(x)
         elif isinstance(x, list):
             if feature_extraction_batch_size is None:
                 feature_extraction_batch_size = len(x)
@@ -135,12 +127,11 @@ class PatchBasedMFViT(nn.Module):
                     x, feature_extraction_batch_size, export_dirs
                 )
             else:
-                x = self.forward_arbitrary_resolution_batch(x, feature_extraction_batch_size, x_context)
+                x = self.forward_arbitrary_resolution_batch(x, feature_extraction_batch_size)
         else:
             raise TypeError('x must be a tensor or a list of tensors')
 
         return x
-        # return torch.cat([x, x_context], dim=1) if x_context is not None else x
 
     def patches_attention(
         self,
@@ -165,7 +156,7 @@ class PatchBasedMFViT(nn.Module):
         else:
             return x
 
-    def forward_batch(self, x: torch.Tensor, x_context: torch.Tensor = None) -> torch.Tensor:
+    def forward_batch(self, x: torch.Tensor) -> torch.Tensor:
         x = utils.patchify_image(
             x,
             (self.img_patch_size, self.img_patch_size),
@@ -180,26 +171,14 @@ class PatchBasedMFViT(nn.Module):
 
         x = self.patches_attention(x)  # B x D
         x = self.norm(x)  # B x D
-
-        
         x = self.cls_head(x)  # B x 1
-
-        x = torch.cat([x, x_context], dim=1) if x_context is not None else x
-        # x = torch.cat([torch.zeros_like(x), x_context], dim=1) if x_context is not None else x # <-- I was meeeega lazy when it came to cutting off
-                                                                                                 # SPAI component in 2stage training :)
-
-        
-
-
-        x = self.semantics_head(x) if self.semantics_head is not None else x
 
         return x
 
     def forward_arbitrary_resolution_batch(
         self,
         x: list[torch.Tensor],
-        feature_extraction_batch_size: int,
-        x_context: Optional[torch.Tensor] = None
+        feature_extraction_batch_size: int
     ) -> torch.Tensor:
         """Forward pass of a batch of images of different resolutions.
 
@@ -255,15 +234,7 @@ class PatchBasedMFViT(nn.Module):
         del attended
 
         x = self.norm(x)  # B x D
-
-        x = self.cls_head(x)  # B x 1F
-
-        x = torch.cat([x, x_context], dim=1) if x_context is not None else x
-        # x = torch.cat([torch.zeros_like(x), x_context], dim=1) if x_context is not None else x # <-- I was meeeega lazy when it came to cutting off
-                                                                                                 # SPAI component in 2stage training :)
-
-
-        x = self.semantics_head(x) if self.semantics_head is not None else x
+        x = self.cls_head(x)  # B x 1
 
         return x
 
@@ -699,23 +670,16 @@ class ClassificationVisionTransformer(nn.Module):
         vit: vision_transformer.VisionTransformer,
         features_processor: 'DenseIntermediateFeaturesProcessor',
         cls_head: Optional[nn.Module],
-        context_backbone: Optional[nn.Module],
         frozen_backbone: bool = True
     ):
         super().__init__()
         self.vit = vit
         self.features_processor = features_processor
         self.cls_head = cls_head
-        self.context_backbone = context_backbone
         self.apply(_init_weights)
         self.frozen_backbone: bool = frozen_backbone
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        
-        print("Uses classification vit")
-        if self.context_backbone is not None:
-            x_context = self.context_backbone(x)
-
         if self.frozen_backbone:
             with torch.no_grad():
                 x = self.vit(x)
@@ -723,13 +687,7 @@ class ClassificationVisionTransformer(nn.Module):
             x = self.vit(x)
         x = self.features_processor(x)
         if self.cls_head is not None:
-
-            if self.context_backbone is not None:
-                x = self.cls_head(x)
-            else:
-                print("Uses classification vit with context")
-                assert False
-                # x = self.cls_head(torch.cat([x, x_context], dim=1))
+            x = self.cls_head(x)
         return x
 
     def get_vision_transformer(self) -> vision_transformer.VisionTransformer:
@@ -935,234 +893,29 @@ class Projector(nn.Module):
         return x
 
 
-import clip
-import open_clip
-from torchvision.transforms import Resize, Compose, Normalize, ToTensor
+class ClassificationHead(nn.Module):
 
-class DINOv2FeatureEmbedding(nn.Module): # CURRENTLY USED SEMANTIC BACKBONE, can use SemanticFeatureEmbedding as alternative
-    """Projector that embeds DINOv2 features into a lower-dimensional space."""
-    def __init__(self, model_name="dinov2_vitg14", 
-                 device='cuda' if torch.cuda.is_available() else 'cpu', 
-                 proj_dim=512):
-        super().__init__()
-        self.device = device
-        
-        # Load DINOv2 model
-        if model_name == "dinov2_vitl14":
-            self.dino_model = torch.hub.load('facebookresearch/dinov2', 'dinov2_vitl14')
-            self.output_dim = 1024
-        elif model_name == "dinov2_vitg14":
-            self.dino_model = torch.hub.load('facebookresearch/dinov2', 'dinov2_vitg14')
-            self.output_dim = 1536
-        elif model_name == "dinov2_vitb14":
-            self.dino_model = torch.hub.load('facebookresearch/dinov2', 'dinov2_vitb14')
-            self.output_dim = 768
-        elif model_name == "dinov2_vits14":
-            self.dino_model = torch.hub.load('facebookresearch/dinov2', 'dinov2_vits14')
-            self.output_dim = 384
-        else:
-            raise ValueError(f"Unknown DINOv2 model: {model_name}")
-            
-        self.dino_model.to(device)
-        self.dino_model.eval()  # Freeze model
-        
-        for param in self.dino_model.parameters():
-            param.requires_grad = False
-            
-        # # Project to desired dimension
-        # self.projection = nn.Linear(self.output_dim, proj_dim)
-        
-        # Print model info for debugging
-        print(f"Loaded DINOv2 model {model_name} with output dim {self.output_dim}")
-
-    def forward(self, images):
-        # Handle input types: list of tensors vs 4D tensor
-        if isinstance(images, list):
-            processed_images = torch.stack([
-                self.preprocess_image(img).to(self.device).squeeze(0) for img in images
-            ])
-        else:
-            processed_images = torch.stack([
-                self.preprocess_image(img).to(self.device).squeeze(0) for img in images
-            ])
-
-        # Extract features using DINOv2
-        with torch.no_grad():
-            # DINOv2 returns the [CLS] token features by default
-            features = self.dino_model(processed_images)
-
-        # Project to desired dimension
-        features = features.float()
-        # features = self.projection(features)
-        
-        return features # output dimention should match semantic_dim in build_mf_vit
-
-    def preprocess_image(self, image_tensor):
-        # DINOv2 expects images normalized with ImageNet stats
-        preprocess = Compose([
-            Resize((224, 224)),
-            Normalize(mean=(0.485, 0.456, 0.406),
-                     std=(0.229, 0.224, 0.225))
-        ])
-        return preprocess(image_tensor)
-
-
-class SemanticFeatureEmbedding(nn.Module):  # NOT USED CURRENTLY, to use --> substitute this class for DiNOv2FeatureEmbedding in PatchBasedMFViT of build_mf_vit
-    """Projector that embeds the CLIP features into a lower-dimensional space."""
-    def __init__(self, model_name="convnext_xxlarge", pretrained="laion2b_s34b_b82k_augreg", 
-                 device='cuda' if torch.cuda.is_available() else 'cpu', proj_dim=512):
-        super().__init__()
-        self.device = device
-        
-        # Load ConvNext-XXLarge using open_clip instead of standard clip
-        self.clip_model, _, self.preprocess = open_clip.create_model_and_transforms(
-            model_name=model_name,
-            pretrained=pretrained,
-            device=device
-        )
-        
-        self.clip_model.eval()  # Freeze model
-        for param in self.clip_model.parameters():
-            param.requires_grad = False
-            
-
-    def forward(self, images):
-        # Handle input types: list of tensors vs 4D tensor
-        if isinstance(images, list):
-            processed_images = torch.stack([
-                self.preprocess_image(img).to(self.device).squeeze(0) for img in images
-            ])
-        else:
-            processed_images = torch.stack([
-                self.preprocess_image(img).to(self.device).squeeze(0) for img in images
-            ])
-
-        # Extract features using open_clip's encoding method
-        with torch.no_grad():
-            features = self.clip_model.encode_image(processed_images)
-
-        # Project to lower dimension
-        features = features.float()
-
-        return features # output dimention should match semantic_dim in build_mf_vit
-
-    def preprocess_image(self, image_tensor):
-        # For OpenCLIP, we'll use its normalization values 
-        # But keep the same resizing approach for consistency
-        preprocess = Compose([
-            Resize((224, 224)),
-            Normalize(mean=(0.48145466, 0.4578275, 0.40821073),
-                     std=(0.26862954, 0.26130258, 0.27577711))
-        ])
-        return preprocess(image_tensor)
-
-class ClassificationHead(nn.Module): # This head is only used to process SPAI features, final head is ClassificationHeadSemantics
-                                     # Output of this head is concatenated with the semantic embedding and given to ClassificationHeadSemantics
     def __init__(
         self,
         input_dim: int,
         num_classes: int,
         mlp_ratio: int = 1,
-        dropout: float = 1,
+        dropout: float = 0.5
     ):
         super().__init__()
-
         self.head = nn.Sequential(
             nn.Linear(input_dim, input_dim*mlp_ratio),
             nn.ReLU(),
             nn.Dropout(dropout),
             nn.Linear(input_dim*mlp_ratio, input_dim*mlp_ratio),
-            # nn.ReLU(),
-            # nn.Dropout(dropout),
-            # nn.Linear(input_dim*mlp_ratio, num_classes)
+            nn.ReLU(),
+            nn.Dropout(dropout),
+            nn.Linear(input_dim*mlp_ratio, num_classes)
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.head(x)
+         return self.head(x)
 
-    def preprocess_image(self, image_tensor):
-        # Manually define CLIP's preprocessing pipeline (default 224x224)
-        preprocess = Compose([
-            Resize((224, 224)),
-            Normalize(mean=(0.4815, 0.4578, 0.4082),
-                      std=(0.2686, 0.2613, 0.2758))
-        ])
-        return preprocess(image_tensor)
-
-class ClassificationHeadSemantics(nn.Module): # The actual head of the model lol
-    def __init__(
-        self,
-        input_dim: int,
-        semantic_dim: int,
-        num_classes: int,
-        projection_dim: int = 512,
-        num_heads: int = 4,
-        dropout: float = 1,
-        mlp_ratio: int = 1,
-    ):
-        super().__init__()
-        
-        self.spectral_dim = input_dim*mlp_ratio 
-        # Projections
-        self.spectral_proj = nn.Linear(self.spectral_dim, projection_dim)
-        self.semantic_proj = nn.Linear(semantic_dim, projection_dim)
-        
-        # Cross-attention modules (bidirectional)
-        self.spectral_to_semantic_attn = nn.MultiheadAttention(
-            embed_dim=projection_dim,
-            num_heads=num_heads,
-            dropout=dropout,
-            batch_first=True,
-        )
-        
-        self.semantic_to_spectral_attn = nn.MultiheadAttention(
-            embed_dim=projection_dim,
-            num_heads=num_heads,
-            dropout=dropout,
-            batch_first=True,
-        )
-        
-        # Stabilization
-        self.norm1 = nn.LayerNorm(projection_dim)
-        self.norm2 = nn.LayerNorm(projection_dim)
-        self.dropout = nn.Dropout(dropout)
-
-        # Fusion and classification
-        self.fusion = nn.Linear(2 * projection_dim, projection_dim)  # Combine both attended features
-        self.classifier = nn.Linear(projection_dim, num_classes)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        
-        spectral_features = x[:, :self.spectral_dim]
-        semantic_features = x[:, self.spectral_dim:]
-
-        # Project both modalities
-        spectral_proj = self.spectral_proj(spectral_features).unsqueeze(1)  # [B, 1, D]
-        semantic_proj = self.semantic_proj(semantic_features).unsqueeze(1)  # [B, 1, D]
-
-        # Bidirectional cross-attention:
-        # 1. Spectral features attend to semantic features
-        spectral_attended, _ = self.spectral_to_semantic_attn(
-            query=spectral_proj,
-            key=semantic_proj,
-            value=semantic_proj,
-        )
-        spectral_attended = self.norm1(spectral_proj + self.dropout(spectral_attended))
-
-        # 2. Semantic features attend to spectral features
-        semantic_attended, _ = self.semantic_to_spectral_attn(
-            query=semantic_proj,
-            key=spectral_proj,
-            value=spectral_proj,
-        )
-        semantic_attended = self.norm2(semantic_proj + self.dropout(semantic_attended))
-
-        # Fuse both attended features
-        fused = torch.cat([spectral_attended, semantic_attended], dim=-1)  # [B, 1, 2*D]
-        fused = self.fusion(fused).squeeze(1)  # [B, D]
-
-        # Classify
-        return self.classifier(fused)
 
 class FeatureImportanceProjector(nn.Module):
 
@@ -1407,22 +1160,19 @@ def build_cls_vit(config) -> ClassificationVisionTransformer:
     else:
         raise RuntimeError(f"Unsupported features processor: {config.MODEL.VIT.FEATURES_PROCESSOR}")
 
-
     cls_head: Optional[ClassificationHead]
     if config.TRAIN.MODE == "contrastive":
         cls_head = None
     elif config.TRAIN.MODE == "supervised":
         # Build classification head.
-
-        raise RuntimeError("not implemented yet")
         cls_head = ClassificationHead(
-            input_dim=cls_vector_dim + 256,
+            input_dim=cls_vector_dim,
             num_classes=config.MODEL.NUM_CLASSES if config.MODEL.NUM_CLASSES > 2 else 1
         )
     else:
         raise RuntimeError(f"Unsupported train mode: {config.TRAIN.MODE}")
 
-    return ClassificationVisionTransformer(vit, features_processor, cls_head,)
+    return ClassificationVisionTransformer(vit, features_processor, cls_head)
 
 
 def build_mf_vit(config) -> MFViT:
@@ -1444,7 +1194,7 @@ def build_mf_vit(config) -> MFViT:
         initialization_scope: str = "local"
     else:
         raise RuntimeError(f"Unsupported ViT weights type: {config.MODEL_WEIGHTS}")
-    correct_setup = False
+
     # Build features processor.
     fre: FrequencyRestorationEstimator = FrequencyRestorationEstimator(
         features_num=len(config.MODEL.VIT.INTERMEDIATE_LAYERS),
@@ -1476,20 +1226,10 @@ def build_mf_vit(config) -> MFViT:
             mlp_ratio=config.MODEL.CLS_HEAD.MLP_RATIO,
             dropout=config.MODEL.SID_DROPOUT
         )
-
-        semantics_head = ClassificationHeadSemantics(
-            input_dim=cls_vector_dim,
-            num_classes=config.MODEL.NUM_CLASSES if config.MODEL.NUM_CLASSES > 2 else 1,
-            mlp_ratio=config.MODEL.CLS_HEAD.MLP_RATIO,
-            dropout=config.MODEL.SID_DROPOUT,
-            semantic_dim=1536
-        )
     else:
         raise RuntimeError(f"Unsupported train mode: {config.TRAIN.MODE}")
 
     if config.MODEL.RESOLUTION_MODE == "fixed":
-        assert False
-
         model = MFViT(
             vit,
             fre,
@@ -1497,32 +1237,24 @@ def build_mf_vit(config) -> MFViT:
             masking_radius=config.MODEL.FRE.MASKING_RADIUS,
             img_size=config.DATA.IMG_SIZE
         )
-
     elif config.MODEL.RESOLUTION_MODE == "arbitrary":
-
         model = PatchBasedMFViT(
             vit,
             fre,
             cls_head,
-            semantics_head,
             masking_radius=config.MODEL.FRE.MASKING_RADIUS,
             img_patch_size=config.DATA.IMG_SIZE,
             img_patch_stride=config.MODEL.PATCH_VIT.PATCH_STRIDE,
             cls_vector_dim=cls_vector_dim,
             attn_embed_dim=config.MODEL.PATCH_VIT.ATTN_EMBED_DIM,
-            context_backbone=DINOv2FeatureEmbedding(),
             num_heads=config.MODEL.PATCH_VIT.NUM_HEADS,
             dropout=config.MODEL.SID_DROPOUT,
             minimum_patches=config.MODEL.PATCH_VIT.MINIMUM_PATCHES,
-            initialization_scope=initialization_scope,
-
+            initialization_scope=initialization_scope
         )
-        print("Using Semantic Context Embedding")
-        correct_setup = True
     else:
         raise RuntimeError(f"Unsupported resolution mode: {config.MODEL.RESOLUTION_MODE}")
-    if not correct_setup:
-        raise RuntimeError("Incorrect setup for MFViT model.")
+
     return model
 
 
@@ -1538,3 +1270,200 @@ def _init_weights(m: nn.Module) -> None:
     elif isinstance(m, (nn.BatchNorm2d, nn.GroupNorm, nn.LayerNorm)):
         nn.init.ones_(m.weight)
         nn.init.zeros_(m.bias)
+
+
+##### The following code is the addition of MoE model with semantic context
+
+class SemanticContextModel(nn.Module):
+    """
+    Combines SPAI's spectral features with ConvNeXt semantic features using residual connections
+    to structurally bias the model toward spectral features.
+    """
+    def __init__(
+        self,
+        spai_model_path: str,
+        semantic_output_dim: int = 1096,
+        projection_dim: int = 256,
+        hidden_dims: List[int] = [512, 256],
+        dropout: float = 0.5,
+        spai_input_size:tuple = (224,224)
+    ):
+        super().__init__()
+        self.spai_input_size = spai_input_size
+        print(f'Input size for resizing SPAI model: {self.spai_input_size}')
+
+        # === Load and freeze SPAI model ===
+        from spai.models.build import build_mf_vit
+        from spai.config import get_config
+
+        cfg = get_config({"cfg": "configs/spai.yaml"})
+        self.spai_model = build_mf_vit(cfg)
+
+        checkpoint = torch.load(spai_model_path, map_location="cpu", weights_only=False)
+        self.spai_model.load_state_dict(checkpoint.get("model", checkpoint))
+        print(f"Loaded SPAI model from {spai_model_path}") 
+        load_result = self.spai_model.load_state_dict(checkpoint.get("model", checkpoint), strict=False)
+        print(f"Loaded SPAI model from {spai_model_path}")
+        print("Missing keys (randomly initialized):", load_result.missing_keys)
+        print("Unexpected keys (in checkpoint, not in model):", load_result.unexpected_keys)
+        for param in self.spai_model.parameters():
+            param.requires_grad = False
+        self.spai_model.eval()
+
+
+
+        spectral_features_dim = 1096  # known output dim from SPAI feature extractor
+
+        # === Load and freeze ConvNeXt-XXL from OpenCLIP ===
+        import open_clip
+        convnext_model, _, _ = open_clip.create_model_and_transforms(
+            "convnext_xxlarge", pretrained="/scratch-shared/dl2_all_data/open_clip_pytorch_model.bin"
+        )
+        self.semantic_backbone = convnext_model.visual.trunk
+        self.semantic_backbone.head.global_pool = nn.Identity()
+        self.semantic_backbone.head.flatten = nn.Identity()
+        self.global_pool = nn.AdaptiveAvgPool2d((1, 1))
+
+        for param in self.semantic_backbone.parameters():
+            param.requires_grad = False
+        self.semantic_backbone.eval()
+
+        # === Projections (raw -> aligned dimensions) ===
+        self.semantic_projection = nn.Sequential(
+            nn.LayerNorm(3072),
+            nn.Linear(3072, projection_dim),
+            nn.GELU(),
+            nn.Dropout(dropout)
+        )
+
+        # === Added: fusion layer to process combined features ===
+        self.fusion_layer = nn.Sequential(
+            nn.Linear(1096 + projection_dim, 512),
+            nn.GELU(),
+            nn.Dropout(dropout)
+        )
+        
+        # === Modified: classifier with residual connection ===
+        # Takes both spectral features directly and fusion output
+        self.classifier = nn.Sequential(
+            nn.Linear(1096 + 512, 512),  # spectral features + fusion features
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.Linear(512, 1)
+        )
+
+        # === Initialization ===
+        self.semantic_projection.apply(_init_weights)
+        self.fusion_layer.apply(_init_weights)
+        self.classifier.apply(_init_weights)
+
+    def forward(self, x: Union[torch.Tensor, List[torch.Tensor]], feature_extraction_batch_size: Optional[int] = None
+    ) -> torch.Tensor:
+        """
+        Forward pass with residual connection for spectral features.
+        """
+        device = next(self.parameters()).device
+        normalize = transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD)
+        convnext_resize = transforms.Resize((224, 224), antialias=True)
+
+        if self.spai_input_size:
+            spai_resize = transforms.Resize(self.spai_input_size, antialias=True)
+        else:
+            spai_resize = lambda x: x  # identity function, does nothing
+
+        # === Validation/inference mode: list of images ===
+        if isinstance(x, list):
+            spai_input, convnext_input = [], []
+            for img in x:
+                if img.dim() == 4 and img.size(0) == 1:
+                    img = img.squeeze(0)
+                elif img.dim() != 3:
+                    raise ValueError(f"Expected C×H×W or 1×C×H×W, got {img.shape}")
+                if img.max() > 1.0:
+                    img = img / 255.0
+                img_spai = spai_resize(img)
+                img_convnext = convnext_resize(img)
+                spai_input.append(img_spai)
+                #spai_input.append(img)
+                convnext_input.append(normalize(img_convnext))
+            x_spai = torch.stack(spai_input).to(device).float()
+            x_convnext = torch.stack(convnext_input).to(device).float()
+
+
+        # === Training mode: batched tensor ===
+        else:
+            if x.dim() != 4:
+                raise ValueError(f"Expected batched input (B×C×H×W), got {x.shape}")
+            if x.max() > 1.0:
+                x = x / 255.0
+            x_spai = x.to(device).float()
+            x_convnext = normalize(x).to(device).float()
+
+        # === Feature extraction ===
+        with torch.no_grad():
+            # SPAI – remove classification head temporarily
+            original_cls_head = self.spai_model.cls_head
+            self.spai_model.cls_head = nn.Identity()
+            spectral_features = self.spai_model(x_spai)
+            self.spai_model.cls_head = original_cls_head
+
+            # ConvNeXt
+            semantic_features = self.semantic_backbone(x_convnext)
+            semantic_features = self.global_pool(semantic_features).flatten(1)
+
+        # === Semantic projection ===
+        semantic_proj = self.semantic_projection(semantic_features)  # e.g. 3072 → 256
+
+        # === Combined features with weighting ===
+        combined = torch.cat([spectral_features, semantic_proj], dim=1)
+        # === Process combined features ===
+        fused_features = self.fusion_layer(combined)
+        
+        # === RESIDUAL CONNECTION: concatenate raw spectral features with fusion output ===
+        final_features = torch.cat([spectral_features, fused_features], dim=1)
+        
+        # === Final classification ===
+        output = self.classifier(final_features)
+
+        if not self.training:
+            torch.cuda.empty_cache()
+
+        return output
+
+    def unfreeze_backbone(self) -> None:
+        """
+        Implements unfreeze_backbone for compatibility with SPAI training code.
+        Since we want to keep backbones frozen in semantic model, this is a no-op.
+        """
+        print("Note: unfreeze_backbone() called but semantic model backbones remain frozen by design")
+        pass
+
+    
+def build_semantic_context_model(config) -> SemanticContextModel:
+    """
+    Factory function to build a semantic context model.
+    
+    Args:
+        config: Configuration object with model parameters
+        
+    Returns:
+        Initialized SemanticContextModel
+    """
+    # Extract configuration parameters
+    spai_model_path = config.MODEL.SEMANTIC_CONTEXT.SPAI_MODEL_PATH
+    semantic_output_dim = config.MODEL.SEMANTIC_CONTEXT.OUTPUT_DIM
+    hidden_dims = config.MODEL.SEMANTIC_CONTEXT.HIDDEN_DIMS
+    dropout = config.MODEL.SEMANTIC_CONTEXT.DROPOUT
+    spai_input_size = config.MODEL.SEMANTIC_CONTEXT.SPAI_INPUT_SIZE
+    spai_input_size = tuple(spai_input_size) if spai_input_size is not None else None
+    # Build and return the model
+    model = SemanticContextModel(
+        spai_model_path=spai_model_path,
+        semantic_output_dim=semantic_output_dim,
+        hidden_dims=hidden_dims,
+        dropout=dropout,
+        spai_input_size = spai_input_size
+
+    )
+    
+    return model

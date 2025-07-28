@@ -300,7 +300,7 @@ def train(
     #         param.requires_grad = False
 
     for name, param in model.named_parameters():
-        if ("mfvit" in name) or ("context_backbone" in name):
+        if ("mfvit" in name) or ("context_backbone" in name) or ("semantic_backbone" in name):
             param.requires_grad = False
         else:
             param.requires_grad = True
