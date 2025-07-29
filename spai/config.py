@@ -107,7 +107,7 @@ _C.DATA.AUGMENTED_VIEWS = 1
 # -----------------------------------------------------------------------------
 _C.MODEL = CN()
 # Model type
-_C.MODEL.TYPE = 'vit'
+_C.MODEL.TYPE = "vit"
 # Type of weights that will be used to initialize the backbone. Supported "mfm", "clip", "dinov2".
 _C.MODEL_WEIGHTS = "mfm"
 # Model name
@@ -230,6 +230,16 @@ _C.MODEL.SEMANTIC_CONTEXT.DROPOUT = 0.5
 
 _C.MODEL.SEMANTIC_CONTEXT.SPAI_INPUT_SIZE = [224, 224]  # <-- Add this line!
 
+
+# Semantic cross-attention parameters
+_C.MODEL.SEMANTIC_CROSS_ATTN = CN()
+_C.MODEL.SEMANTIC_CROSS_ATTN.CROSS_ATTN_SCA = None
+_C.MODEL.SEMANTIC_CROSS_ATTN.DUAL_CROSS_ATTN_SCA = False
+_C.MODEL.SEMANTIC_CROSS_ATTN.EMBED_DIM = 768
+_C.MODEL.SEMANTIC_CROSS_ATTN.NUM_HEADS = None
+_C.MODEL.SEMANTIC_CROSS_ATTN.FREEZE_BACKBONE = True
+_C.MODEL.SEMANTIC_CROSS_ATTN.SEMANTIC_ENCODER = "clip"
+
 # -----------------------------------------------------------------------------
 # Training settings
 # -----------------------------------------------------------------------------
@@ -238,11 +248,9 @@ _C.TRAIN.START_EPOCH = 0
 _C.TRAIN.EPOCHS = 300
 _C.TRAIN.WARMUP_EPOCHS = 20
 _C.TRAIN.WEIGHT_DECAY = 0.05
-# _C.TRAIN.BASE_LR = 3e-4
-_C.TRAIN.BASE_LR = 1e-3
-# _C.TRAIN.WARMUP_LR = 2.5e-7
-_C.TRAIN.WARMUP_LR = 1.5e-3
-_C.TRAIN.MIN_LR = 2.5e-3
+_C.TRAIN.BASE_LR = 3e-4
+_C.TRAIN.WARMUP_LR = 2.5e-7
+_C.TRAIN.MIN_LR = 2.5e-6
 # Clip gradient norm
 _C.TRAIN.CLIP_GRAD = 3.0
 # Auto resume from latest checkpoint
@@ -427,7 +435,7 @@ def update_config(config, args):
     _update_config_from_file(config, args["cfg"])
 
     config.defrost()
-    if "opts" in args:
+    if "opts" in args and args["opts"]:
         options: list[Any] = []
         for (k, v) in args["opts"]:
             options.append(k)
