@@ -14,7 +14,7 @@ from timm.utils import AverageMeter
 
 from config import get_config
 from models.spatial_masking import build_image_masked_mfm
-from data import build_loader
+from data.data_spatial_ssl import build_loader_spatial_ssl
 from lr_scheduler import build_scheduler
 from optimizer import build_optimizer
 from logger import create_logger
@@ -73,8 +73,8 @@ def parse_option():
 
 
 def main(config, log_writer):
-    # Build data loader - modified to not need img_lq or spectral mask
-    data_loader_train = build_loader(config, logger, is_pretrain=True)
+    # Build data loader for spatial SSL
+    data_loader_train = build_loader_spatial_ssl(config, logger)
 
     logger.info(f"Creating model:{config.MODEL.TYPE}/{config.MODEL.NAME}")
     model = build_image_masked_mfm(config)  # Using our image-masked version
@@ -85,7 +85,8 @@ def main(config, log_writer):
     if config.AMP_OPT_LEVEL != "O0":
         model, optimizer = amp.initialize(model, optimizer, opt_level=config.AMP_OPT_LEVEL)
     model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[torch.cuda.current_device()], 
-                                                     broadcast_buffers=False)
+                                                     broadcast_buffers=False, 
+                                                     find_unused_parameters=True)
     model_without_ddp = model.module
 
     n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -140,11 +141,14 @@ def train_one_epoch(config, model, data_loader, optimizer, epoch, lr_scheduler, 
     start = time.time()
     end = time.time()
     
-    for idx, (img, _, _, _) in enumerate(data_loader):  # Only need the image, ignore other outputs
+    for idx, (img, img_lq, mask, _) in enumerate(data_loader):
         img = img.cuda(non_blocking=True)
-        
-        # Forward pass - img_lq and mask will be generated internally
-        loss = model(img, img_lq=None, mask=None)
+        if img_lq is not None:
+            img_lq = img_lq.cuda(non_blocking=True)
+        if mask is not None:
+            mask = mask.cuda(non_blocking=True)
+
+        loss = model(img, img_lq, mask)
 
         if config.TRAIN.ACCUMULATION_STEPS > 1:
             loss = loss / config.TRAIN.ACCUMULATION_STEPS
@@ -263,7 +267,7 @@ if __name__ == '__main__':
     cudnn.benchmark = True
 
     # Scale learning rate
-    linear_scaled_lr = config.TRAIN.BASE_LR * config.DATA.BATCH_SIZE * dist.get_world_size() / 512.0
+    linear_scaled_lr = config.TRAIN.SPATIAL_BASE_LR * config.DATA.BATCH_SIZE * dist.get_world_size() / 512.0
     linear_scaled_warmup_lr = config.TRAIN.WARMUP_LR * config.DATA.BATCH_SIZE * dist.get_world_size() / 512.0
     linear_scaled_min_lr = config.TRAIN.MIN_LR * config.DATA.BATCH_SIZE * dist.get_world_size() / 512.0
     

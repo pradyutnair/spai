@@ -1,0 +1,68 @@
+MODEL:
+  TYPE: vit
+  NAME: spatial_ssl_pretrain
+  DROP_PATH_RATE: 0.1
+  RECOVER_TARGET_TYPE: normal  # or 'masked' to only compute loss on masked regions
+  VIT:
+    EMBED_DIM: 768
+    DEPTH: 12
+    NUM_HEADS: 12
+    PATCH_SIZE: 16
+    IN_CHANS: 3
+    INIT_VALUES: 0.1
+    USE_APE: True
+    USE_FPE: False
+    USE_RPB: False
+    USE_SHARED_RPB: False
+    USE_MEAN_POOLING: True
+    MLP_RATIO: 4.0
+    QKV_BIAS: True
+    DECODER:
+      DEPTH: 8
+      EMBED_DIM: 512
+      NUM_HEADS: 16
+
+DATA:
+  DATA_PATH: /path/to/your/dataset  # Update this path
+  IMG_SIZE: 224
+  BATCH_SIZE: 32
+  NUM_WORKERS: 8
+  MIN_CROP_SCALE: 0.2
+  FILTER_TYPE: spatial_ssl  # Use spatial domain instead of frequency domain
+  INTERPOLATION: bicubic
+  MASK_RATIO: 0.5      # Ratio of image patches to mask
+  MASK_PATCH_SIZE: 32  # Size of each mask patch
+
+TRAIN:
+  EPOCHS: 100
+  START_EPOCH: 0
+  WARMUP_EPOCHS: 5
+  BASE_LR: 1.5e-4
+  WARMUP_LR: 1e-6
+  MIN_LR: 1e-5
+  WEIGHT_DECAY: 0.05
+  CLIP_GRAD: 1.0
+  ACCUMULATION_STEPS: 1
+  USE_CHECKPOINT: False
+  SCALE_LR: True
+
+OPTIMIZER:
+  NAME: adamw
+  MOMENTUM: 0.9
+  WEIGHT_DECAY: 0.05
+  BETAS: [0.9, 0.999]
+
+LR_SCHEDULER:
+  NAME: cosine
+  DECAY_EPOCHS: 30
+  DECAY_RATE: 0.1
+  WARMUP_EPOCHS: 5
+  WARMUP_LR: 1e-6
+
+AMP_OPT_LEVEL: O1
+SEED: 42
+OUTPUT: ./output/spatial_ssl
+TAG: spatial_ssl_pretrain
+PRINT_FREQ: 100
+SAVE_FREQ: 1
+AUTO_RESUME: True

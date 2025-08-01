@@ -15,6 +15,7 @@
 # limitations under the License.
 
 from .data_mfm import build_loader_mfm
+from .data_spatial_ssl import build_loader_spatial_ssl
 from .data_finetune import build_loader_finetune, build_loader_test
 
 def build_loader(config, logger, is_pretrain, is_test):

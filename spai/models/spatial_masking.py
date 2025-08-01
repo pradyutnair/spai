@@ -7,48 +7,6 @@ from .mfm import SwinTransformerForMFM, VisionTransformerForMFM, VisionTransform
 from timm.models.resnet import Bottleneck, ResNet
 from functools import partial
 
-class RandomImageMasking(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.mask_ratio = 0.5 # config.DATA.MASK_RATIO
-        self.mask_patch_size = 32  # config.DATA.MASK_PATCH_SIZE
-        self.normalize_img = T.Normalize(mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD)
-
-    def random_masking(self, x):
-        """Apply random masking to input image"""
-        B, C, H, W = x.shape
-
-        # Calculate number of patches in each dimension
-        h_patches = (H + self.mask_patch_size - 1) // self.mask_patch_size
-        w_patches = (W + self.mask_patch_size - 1) // self.mask_patch_size
-
-        # Create a mask for each patch
-        mask = torch.ones(B, h_patches, w_patches, device=x.device)
-        mask = torch.bernoulli(mask * (1 - self.mask_ratio))  # 1=keep, 0=mask
-
-        # Upscale mask to image size
-        mask = mask.repeat_interleave(self.mask_patch_size, dim=1)
-        mask = mask.repeat_interleave(self.mask_patch_size, dim=2)
-
-        # Crop to image size
-        mask = mask[:, :H, :W]
-
-        # Add channel dimension and broadcast
-        mask = mask.unsqueeze(1)  # shape: [B, 1, H, W]
-        masked_x = x * mask
-
-        return masked_x, mask
-
-    def forward(self, x, x_lq=None, mask=None):
-        # Apply random masking
-        x_masked, mask = self.random_masking(x)
-
-        # Normalize images
-        x = self.normalize_img(x)
-        x_masked = self.normalize_img(x_masked)
-
-        return x_masked, mask
-
 
 class ImageMaskedMFM(nn.Module):
     def __init__(self, encoder, encoder_stride, decoder, config):
@@ -56,33 +14,43 @@ class ImageMaskedMFM(nn.Module):
         self.encoder = encoder
         self.encoder_stride = encoder_stride
         self.decoder = decoder
-        self.masking = RandomImageMasking(config)
-        self.recover_target_type = config.MODEL.RECOVER_TARGET_TYPE
+        self.recover_target_type = getattr(config.MODEL, 'RECOVER_TARGET_TYPE', 'normal')
         
         # Loss function - can use same frequency loss or switch to MSE
         self.criterion = nn.MSELoss()
         
         if self.decoder is None:
+            # For ViT, we need to get the embed_dim instead of num_features
+            if hasattr(self.encoder, 'embed_dim'):
+                in_channels = self.encoder.embed_dim
+            elif hasattr(self.encoder, 'num_features'):
+                in_channels = self.encoder.num_features
+            else:
+                # Default fallback
+                in_channels = 768
+                
             self.decoder = nn.Sequential(
                 nn.Conv2d(
-                    in_channels=self.encoder.num_features,
+                    in_channels=in_channels,
                     out_channels=self.encoder_stride ** 2 * 3, kernel_size=1),
                 nn.PixelShuffle(self.encoder_stride),
             )
 
-    def forward(self, x, x_lq=None, mask=None):
-        # Apply random masking
-        x_masked, mask = self.masking(x)
+    def forward(self, x, x_lq, mask):
+        # Use the pre-computed masked image and mask from dataloader
+        # x = original image, x_lq = masked image, mask = spatial mask
         
         # Get encoder features from masked image
-        z = self.encoder(x_masked, None)
+        # For spatial SSL, we use the spatial domain (x_lq) as input
+        # The encoder will use x_lq based on filter_type setting
+        z = self.encoder(x_lq, x_lq)  # Pass masked image as both spatial and frequency input
         
         # Reconstruct original image
         x_rec = self.decoder(z)
         
         # Calculate reconstruction loss
         if self.recover_target_type == 'masked':
-            # Only compute loss on masked regions
+            # Only compute loss on masked regions (where mask == 0)
             loss = self.criterion(x_rec * (1 - mask), x * (1 - mask))
         elif self.recover_target_type == 'normal':
             # Compute loss on entire image
